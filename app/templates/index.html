@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>m4b Toolbox</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 20px;
+    }
+    form {
+      margin-bottom: 20px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+    label {
+      display: inline-block;
+      margin-right: 12px;
+    }
+    select, button {
+      padding: 4px 8px;
+      margin-right: 8px;
+    }
+    button {
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      height: 500px;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>m4b Toolbox</h1>
+  <form method="post">
+    <label>
+      Mode:
+      <select name="mode">
+        <option value="convert" {{ 'selected' if mode == 'convert' else '' }}>convert (create + backup)</option>
+        <option value="cleanup" {{ 'selected' if mode == 'cleanup' else '' }}>cleanup (delete _backup_files)</option>
+        <option value="correct" {{ 'selected' if mode == 'correct' else '' }}>correct (rename .m4b)</option>
+      </select>
+    </label>
+
+    <label>
+      Dry-run:
+      <select name="dry_run">
+        <option value="true" {{ 'selected' if dry_run == 'true' else '' }}>true (simulate only)</option>
+        <option value="false" {{ 'selected' if dry_run == 'false' else '' }}>false (make changes)</option>
+      </select>
+    </label>
+
+    <button type="submit">Run</button>
+  </form>
+
+  {% if output %}
+    <h2>Output</h2>
+    <textarea readonly>{{ output }}</textarea>
+  {% endif %}
+</body>
+</html>
