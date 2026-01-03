@@ -1,16 +1,17 @@
 FROM python:3.12-slim
 
 LABEL app.name="m4b-toolbox" \
-      app.version="0.1.0" \
+      app.version="0.2.0" \
       app.release_date="2026-01-02" \
       app.description="Audiobook source manager and M4B converter"
 
-# Install bash and curl (needed to install Docker CLI)
+# Install bash, curl and ffmpeg/ffprobe
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       bash \
       ca-certificates \
-      curl && \
+      curl \
+      ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Docker CLI (so the script's docker commands can be sent to the host via docker.sock)

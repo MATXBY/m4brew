@@ -5,7 +5,7 @@ IFS=$'\n\t'
 ############################################
 # MP3/M4A → M4B sweep (Author/Book folders)
 # m4b-toolbox
-# Version: 0.1.0
+# Version: 0.2.0
 # Release date: 2026-01-02
 #
 # Modes:
@@ -35,8 +35,8 @@ IFS=$'\n\t'
 ############################################
 
 # Root of your audiobooks (Author/Book folders)
-ROOT="/mnt/remotes/192.168.4.4_media/Audiobooks"
-# ROOT="/mnt/cache/media/Audiobooks"
+ROOT_DEFAULT="/mnt/remotes/192.168.4.4_media/Audiobooks"
+ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
 
 # Operation mode (can be overridden via environment variable MODE):
 #   convert = convert & backup
@@ -60,7 +60,8 @@ M4B_IMAGE="sandreas/m4b-tool:latest"
 FFMPEG_IMAGE="linuxserver/ffmpeg"
 
 # Target bitrate for all MP3→M4B outputs
-BITRATE="64k"
+BITRATE_DEFAULT="64"
+BITRATE="${BITRATE:-$BITRATE_DEFAULT}k"
 
 # Minimum acceptable output size (5 MB) to consider conversion valid
 MIN_BYTES=$((5 * 1024 * 1024))
@@ -79,7 +80,7 @@ safe_name() {
   echo "$1" | sed 's#/#-#g'
 }
 
-# Detect mono vs stereo using ffprobe inside the m4b-tool image
+# Detect audio channel count (1 = mono, 2 = stereo) using ffprobe
 detect_channels() {
   local first_file="$1"
   local ch
@@ -91,10 +92,27 @@ detect_channels() {
       -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
 
   if [[ "$ch" == "1" ]]; then
-    echo "1"   # mono
+    echo "1"
   else
-    echo "2"   # stereo (default if unsure)
+    echo "2"
   fi
+}
+
+# Resolve audio channels based on AUDIO_MODE
+resolve_channels() {
+  local detected="$1"
+
+  case "${AUDIO_MODE:-match}" in
+    mono)
+      echo "1"
+      ;;
+    stereo)
+      echo "2"
+      ;;
+    match|*)
+      echo "$detected"
+      ;;
+  esac
 }
 
 ############################################
@@ -300,7 +318,8 @@ while IFS= read -r -d '' book_dir; do
   ##########################################
   if [[ "$mp3_count" -gt 0 ]]; then
     first_mp3="${mp3s[0]}"
-    channels="$(detect_channels "$first_mp3")"
+    detected="$(detect_channels "$first_mp3")"
+    channels="$(resolve_channels "$detected")"
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
     log "MODE:   ${mode_desc} @ ${BITRATE}"
     log "OUTPUT: ${out_path}"
@@ -403,7 +422,8 @@ while IFS= read -r -d '' book_dir; do
   else
     # Multiple M4As: merge via m4b-tool (may re-encode)
     first_m4a="${m4as[0]}"
-    channels="$(detect_channels "$first_m4a")"
+    detected="$(detect_channels "$first_m4a")"
+    channels="$(resolve_channels "$detected")"
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
     log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"

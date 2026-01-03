@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Settings</title>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 24px;
+    }
+
+    form {
+      margin-bottom: 20px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    label {
+      display: inline-block;
+      width: 140px;
+      font-weight: 500;
+      vertical-align: top;
+      padding-top: 6px;
+    }
+
+    input[type="text"] {
+      width: 640px;
+      max-width: 100%;
+      padding: 6px 8px;
+    }
+
+    select, button {
+      padding: 6px 8px;
+    }
+
+    .row {
+      margin-bottom: 12px;
+    }
+
+    pre {
+      background: #f3f3f3;
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+    }
+
+    a {
+      text-decoration: none;
+      color: #0066cc;
+    }
+  </style>
+</head>
+
+<body>
+
+  <p><a href="/">← Back</a></p>
+
+  <h1>Settings</h1>
+
+  <form method="post" action="/settings">
+
+    <div class="row">
+      <label for="root_folder">Root folder:</label>
+      <input
+        id="root_folder"
+        name="root_folder"
+        type="text"
+        value="{{ settings.root_folder }}"
+      />
+    </div>
+
+    <div class="row">
+      <label for="bitrate">Bitrate (kbps):</label>
+      <select id="bitrate" name="bitrate">
+        {% for b in [32, 64, 96, 128, 160, 192] %}
+          <option value="{{ b }}" {% if settings.bitrate == b %}selected{% endif %}>
+            {{ b }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="row">
+      <label for="audio_mode">Audio mode:</label>
+      <select id="audio_mode" name="audio_mode">
+        {% for m in ["match", "mono", "stereo"] %}
+          <option value="{{ m }}" {% if settings.audio_mode == m %}selected{% endif %}>
+            {{ m }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <button type="submit">Save</button>
+  </form>
+
+  <h2>Current settings.json</h2>
+  <pre>{{ settings | tojson(indent=2) }}</pre>
+
+</body>
+</html>
