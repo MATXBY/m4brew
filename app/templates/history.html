@@ -2,109 +2,157 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>m4b-toolbox — History</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>m4brew — History</title>
+
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
-    nav a { margin-right: 12px; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 14px 0; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin: 24px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #111;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .btn.danger { border-color: #f2b8b5; }
+
     .muted { color: #666; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; vertical-align: top; }
-    tr:hover { background: #fafafa; }
-    a { text-decoration: none; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size: 12px; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f7f7f7; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-    .ok { color: #0a7a0a; }
-    .bad { color: #b00020; }
-    .split { display:flex; gap:14px; flex-wrap:wrap; }
-    .left { flex: 1; min-width: 420px; }
-    .right { flex: 1; min-width: 420px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    tr.fail { background: #fff5f5; }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+                   "Liberation Mono", monospace;
+    }
+
+    /* Option A.2: subtle emphasis */
+    .status {
+      font-weight: 700;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+    }
+    .status.ok {
+      color: #0b6b2a;
+      border-color: #bfe6c9;
+      background: #f0fbf3;
+    }
+    .status.bad {
+      color: #b42318;
+      border-color: #f2b8b5;
+      background: #fff5f5;
+    }
   </style>
 </head>
+
 <body>
-  <h1>History</h1>
-
-  <nav class="muted">
-    <a href="/">Run</a>
-    <a href="/settings">Settings</a>
-    <a href="/history">History</a>
-  </nav>
-
-  <div class="split">
-    <div class="left card">
-      <h2>Runs (newest first)</h2>
-
-      {% if not items %}
-        <p class="muted">No history yet.</p>
-      {% else %}
-      <table>
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>Mode</th>
-            <th>Dry</th>
-            <th>Exit</th>
-            <th>Counts</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in items %}
-            {% set i = loop.index0 %}
-            {% set s = item.summary or {} %}
-            <tr>
-              <td><a href="/history/{{ i }}">{{ item.ts }}</a></td>
-              <td><span class="pill">{{ item.mode }}</span></td>
-              <td>{{ "true" if item.dry_run else "false" }}</td>
-              <td>
-                {% if item.exit_code == 0 %}
-                  <span class="ok">{{ item.exit_code }}</span>
-                {% else %}
-                  <span class="bad">{{ item.exit_code }}</span>
-                {% endif %}
-              </td>
-              <td class="muted">
-                created={{ s.get("created","-") }},
-                skipped={{ s.get("skipped","-") }},
-                failed={{ s.get("failed","-") }},
-                renamed={{ s.get("renamed","-") }},
-                deleted={{ s.get("deleted","-") }}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% endif %}
+  <div class="topbar">
+    <div>
+      <h1 style="margin:0;">m4brew — History</h1>
+      <div class="muted">
+        Stored in <span class="mono">/config/history.jsonl</span> • {{ count }} run(s)
+      </div>
     </div>
 
-    <div class="right card">
-      <h2>Details</h2>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <!-- NEW: back to home/run -->
+      <a class="btn" href="/">← Back to Run</a>
 
-      {% if selected %}
-        <p class="muted">
-          Run ID: <code>{{ selected_id }}</code><br/>
-          ts: <code>{{ selected.ts }}</code><br/>
-          mode: <code>{{ selected.mode }}</code><br/>
-          dry_run: <code>{{ selected.dry_run }}</code><br/>
-          exit_code:
-          {% if selected.exit_code == 0 %}
-            <strong class="ok">{{ selected.exit_code }}</strong>
-          {% else %}
-            <strong class="bad">{{ selected.exit_code }}</strong>
-          {% endif %}
-        </p>
+      <a class="btn" href="/history/download">Download history.jsonl</a>
 
-        {% if selected.summary %}
-          <p class="muted"><strong>Summary JSON</strong></p>
-          <pre>{{ selected.summary | tojson(indent=2) }}</pre>
-        {% endif %}
-
-        <p class="muted"><strong>Output</strong></p>
-        <pre>{{ selected.output }}</pre>
-      {% else %}
-        <p class="muted">Click a run on the left to view details.</p>
-      {% endif %}
+      <form method="post"
+            action="/history/clear"
+            onsubmit="return confirm('Clear history? This cannot be undone.');"
+            style="margin:0;">
+        <button class="btn danger" type="submit">Clear history</button>
+      </form>
     </div>
   </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>When</th>
+        <th>Mode</th>
+        <th>Dry run</th>
+        <th>Runtime</th>
+        <th>Created</th>
+        <th>Skipped</th>
+        <th>Failed</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for r in runs %}
+      <tr class="{% if not r.success %}fail{% endif %}">
+        <td>
+          {% if r.success %}
+            <span class="status ok" title="Success">✓</span>
+          {% else %}
+            <span class="status bad" title="Failed">!</span>
+          {% endif %}
+        </td>
+
+        <td>
+          <div>{{ r.ts_human }}</div>
+          <div class="muted mono">{{ r.ts }}</div>
+        </td>
+
+        <td class="mono">{{ r.mode }}</td>
+        <td>{{ "yes" if r.dry_run else "no" }}</td>
+        <td>{{ (r.runtime_s|string) + "s" if r.runtime_s is not none else "—" }}</td>
+        <td>{{ r.created if r.created is not none else "—" }}</td>
+        <td>{{ r.skipped if r.skipped is not none else "—" }}</td>
+        <td>{{ r.failed if r.failed is not none else "—" }}</td>
+
+        <td>
+          <a class="btn" href="/history/{{ r.idx }}">View</a>
+        </td>
+      </tr>
+      {% endfor %}
+
+      {% if runs|length == 0 %}
+      <tr>
+        <td colspan="9" class="muted">
+          No history yet — run a job and it will appear here.
+        </td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
 </body>
 </html>

@@ -1,8 +1,8 @@
 FROM python:3.12-slim
 
-LABEL app.name="m4b-toolbox" \
-      app.version="0.2.0" \
-      app.release_date="2026-01-02" \
+LABEL app.name="m4brew" \
+      app.version="0.3.0-dev" \
+      app.release_date="2026-01-04" \
       app.description="Audiobook source manager and M4B converter"
 
 # Install bash, curl and ffmpeg/ffprobe
@@ -27,7 +27,7 @@ COPY app/ /app/
 
 # Copy scripts
 COPY scripts/ /scripts/
-RUN chmod +x /scripts/m4b-toolbox.sh
+RUN chmod +x /scripts/m4brew.sh
 
 # Install Python dependencies
 RUN pip install --no-cache-dir flask

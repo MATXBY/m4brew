@@ -98,22 +98,25 @@ emit_summary() {
 detect_channels() {
   local first_file="$1"
 
-  # DRY-RUN must not hit Docker at all
+  # DRY_RUN should never spin up helper containers.
+  # Default to stereo (2) to keep the run fast and safe.
   if is_dry_run; then
     echo "2"
     return 0
   fi
 
   local ch
-  ch=$(
-    docker run --rm \
+  ch=$(docker run --rm \
       -v "$(dirname "$first_file"):/data" \
       "$M4B_IMAGE" \
       ffprobe -v error -select_streams a:0 -show_entries stream=channels \
-      -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2"
-  )
+      -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
 
-  [[ "$ch" == "1" ]] && echo "1" || echo "2"
+  if [[ "$ch" == "1" ]]; then
+    echo "1"
+  else
+    echo "2"
+  fi
 }
 
 # Resolve audio channels based on AUDIO_MODE policy

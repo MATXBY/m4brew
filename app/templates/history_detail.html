@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>m4brew — Run detail</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .btn { display:inline-block; padding:8px 12px; border:1px solid #ccc; border-radius:10px; text-decoration:none; color:#111; background:#fff; }
+    .muted { color:#666; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .card { border:1px solid #eee; border-radius:12px; padding:14px; margin-top:14px; }
+    pre { white-space:pre-wrap; word-break:break-word; background:#fafafa; border:1px solid #eee; border-radius:12px; padding:12px; }
+    .kv { display:grid; grid-template-columns: 160px 1fr; gap:8px 12px; }
+    .status-ok { display:inline-flex; align-items:center; gap:8px; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div>
+      <h1 style="margin:0;">m4brew — Run detail</h1>
+      <div class="muted">
+        {{ detail.ts_human }} • <span class="mono">{{ detail.ts }}</span>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+      <a class="btn" href="/">← Back to Run</a>
+      <a class="btn" href="/history">Back to History</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="kv">
+      <div class="muted">Status</div>
+      <div class="status-ok">
+        {% if (detail.summary and detail.summary.success) or (detail.exit_code == 0) %}
+          <span title="Success">✅</span>
+          <span>Success</span>
+        {% else %}
+          <span title="Failed">❌</span>
+          <span>Failed</span>
+        {% endif %}
+        <span class="muted">(exit code: {{ detail.exit_code }})</span>
+      </div>
+
+      <div class="muted">Mode</div>
+      <div class="mono">{{ detail.mode }}</div>
+
+      <div class="muted">Dry run</div>
+      <div>{{ "yes" if detail.dry_run else "no" }}</div>
+
+      <div class="muted">Settings</div>
+      <div class="mono">{{ detail.settings | tojson(indent=2) }}</div>
+
+      <div class="muted">Summary</div>
+      <div class="mono">
+        {% if detail.summary %}
+          {{ detail.summary | tojson(indent=2) }}
+        {% else %}
+          <span class="muted">No summary captured.</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Output</h2>
+    {% if detail.output %}
+      <pre class="mono">{{ detail.output }}</pre>
+    {% else %}
+      <div class="muted">No output captured.</div>
+    {% endif %}
+  </div>
+
+</body>
+</html>

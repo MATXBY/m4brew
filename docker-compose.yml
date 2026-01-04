@@ -1,25 +1,21 @@
-version: "3.8"
-
 services:
-  m4b-toolbox:
+  m4brew:
     build: .
-    container_name: m4b-toolbox-010
+    container_name: m4brew
 
     ports:
-      - "8080:8080"  # host:container
+      - "8585:8080"
 
     volumes:
-      # Audiobooks library, same path as your script expects
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/mnt/remotes/192.168.4.4_media/Audiobooks:rw
 
-      # Persistent config, settings, logs, jobs
-      - /mnt/cache/appdata/m4b-toolbox-0.1.0/config:/config
+      # Persistent config (settings.json + history.jsonl)
+      - /mnt/cache/appdata/m4brew/config:/config
 
-      # Docker socket so the script's `docker run` uses host Docker engine
+      # Docker socket so the script can run docker on the host
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
     environment:
-      # Default values (can still be changed in the web UI form)
       MODE: "convert"
       DRY_RUN: "true"
 
