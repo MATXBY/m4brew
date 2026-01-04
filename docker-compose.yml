@@ -1,15 +1,17 @@
+version: "3.8"
+
 services:
   m4brew:
     build: .
     container_name: m4brew
 
     ports:
-      - "8585:8080"
+      - "8585:8080"  # host:container
 
     volumes:
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/mnt/remotes/192.168.4.4_media/Audiobooks:rw
 
-      # Persistent config (settings.json + history.jsonl)
+      # Persistent config (settings.json + history.jsonl + job status)
       - /mnt/cache/appdata/m4brew/config:/config
 
       # Docker socket so the script can run docker on the host
@@ -19,4 +21,11 @@ services:
       MODE: "convert"
       DRY_RUN: "true"
 
+    networks:
+      - matt-net
+
     restart: unless-stopped
+
+networks:
+  matt-net:
+    external: true

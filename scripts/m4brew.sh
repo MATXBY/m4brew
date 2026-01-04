@@ -2,29 +2,6 @@
 set -u
 IFS=$'\n\t'
 
-############################################
-# MP3/M4A → M4B sweep (Author/Book folders)
-# m4brew
-#
-# Modes:
-#   MODE=convert  → create M4Bs + backup sources
-#   MODE=cleanup  → delete _backup_files folders only
-#   MODE=correct  → rename .m4b files to match folder names
-#
-# DRY_RUN:
-#   DRY_RUN=true  → simulate actions only (no changes)
-#   DRY_RUN=false → perform real actions
-#
-# Settings (via env, set by web UI):
-#   ROOT_FOLDER   → root of audiobooks
-#   BITRATE       → numeric kbps (e.g. 64, 96, 128)
-#   AUDIO_MODE    → match | mono | stereo
-#
-# 0.3.0 contract (observability):
-#   At the end of every run, we emit one special line:
-#     __M4B_SUMMARY_JSON__ {...}
-############################################
-
 # Root of your audiobooks (Author/Book folders)
 ROOT_DEFAULT="/mnt/remotes/192.168.4.4_media/Audiobooks"
 ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
@@ -34,6 +11,9 @@ MODE="${MODE:-convert}"
 
 # DRY_RUN (can be overridden via environment variable DRY_RUN):
 DRY_RUN="${DRY_RUN:-true}"
+
+# Ensure helper containers join the same docker network as m4brew
+DOCKER_NETWORK="${DOCKER_NETWORK:-matt-net}"
 
 # Audio mode policy (can be overridden via environment variable AUDIO_MODE):
 AUDIO_MODE_DEFAULT="match"
@@ -106,7 +86,7 @@ detect_channels() {
   fi
 
   local ch
-  ch=$(docker run --rm \
+  ch=$(docker run --rm --network "${DOCKER_NETWORK}" \
       -v "$(dirname "$first_file"):/data" \
       "$M4B_IMAGE" \
       ffprobe -v error -select_streams a:0 -show_entries stream=channels \
@@ -356,7 +336,7 @@ while IFS= read -r -d '' book_dir; do
 
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
-    cmd=(docker run --rm -u "${DOCKER_UID_GID}"
+    cmd=(docker run --rm --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "${book_dir}:/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
@@ -421,7 +401,7 @@ while IFS= read -r -d '' book_dir; do
     log "INPUT:  ${in_file}"
     log "OUTPUT: ${out_path}"
 
-    cmd=(docker run --rm
+    cmd=(docker run --rm --network "${DOCKER_NETWORK}"
       -e "PUID=${DOCKER_UID_GID%%:*}"
       -e "PGID=${DOCKER_UID_GID##*:}"
       -v "${book_dir}:/data"
@@ -457,7 +437,7 @@ while IFS= read -r -d '' book_dir; do
 
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
-    cmd=(docker run --rm -u "${DOCKER_UID_GID}"
+    cmd=(docker run --rm --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "${book_dir}:/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"

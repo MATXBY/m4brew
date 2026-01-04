@@ -181,52 +181,56 @@ def _job_is_running(job: Dict[str, Any]) -> bool:
 def _has_any(dir_path: Path, pattern: str) -> bool:
     return any(dir_path.glob(pattern))
 
-
 def _scan_total(mode: str, root_folder: str) -> int:
     root = Path(root_folder)
     if not root.exists():
         return 0
 
-    # Expect ROOT/Author/Book/
+    mode = (mode or "").strip().lower()
+
+    # build list of ROOT/Author/Book dirs
     book_dirs: List[Path] = []
     try:
-        for author in root.iterdir():
-            if not author.is_dir():
+        for author_dir in root.iterdir():
+            if not author_dir.is_dir():
                 continue
-            if author.name == "#recycle":
+            if author_dir.name == "#recycle":
                 continue
-            for book in author.iterdir():
-                if book.is_dir():
-                    book_dirs.append(book)
+            for book_dir in author_dir.iterdir():
+                if book_dir.is_dir():
+                    book_dirs.append(book_dir)
     except Exception:
         return 0
 
     if mode == "cleanup":
-        # count backup dirs
-        n = 0
-        for b in book_dirs:
-            if (b / "_backup_files").is_dir():
-                n += 1
-        return n
+        # match the script: count any "_backup_files" directory anywhere under ROOT
+        try:
+            return sum(1 for p in root.rglob("_backup_files") if p.is_dir())
+        except Exception:
+            return 0
 
     if mode == "correct":
-        # count books with exactly 1 m4b and wrong filename
+        # desired is: "Book - Author.m4b"
         n = 0
-        for b in book_dirs:
-            m4bs = list(b.glob("*.m4b"))
+        for book_dir in book_dirs:
+            author = book_dir.parent.name
+            book = book_dir.name
+
+            m4bs = list(book_dir.glob("*.m4b"))
             if len(m4bs) != 1:
                 continue
-            desired = b / f"{b.name}.m4b"
-            if m4bs[0].name != desired.name:
+
+            desired_name = f"{book} - {author}.m4b"
+            if m4bs[0].name != desired_name:
                 n += 1
         return n
 
     # convert
     n = 0
-    for b in book_dirs:
-        if list(b.glob("*.m4b")):
+    for book_dir in book_dirs:
+        if list(book_dir.glob("*.m4b")):
             continue
-        if list(b.glob("*.mp3")) or list(b.glob("*.m4a")):
+        if list(book_dir.glob("*.mp3")) or list(book_dir.glob("*.m4a")):
             n += 1
     return n
 
@@ -411,9 +415,18 @@ def index_post():
     audio_mode = request.form.get("audio_mode") or settings.get("audio_mode") or "match"
     bitrate = int(request.form.get("bitrate") or settings.get("bitrate") or 64)
 
-    start_job(mode, dry_run, root_folder, audio_mode, bitrate)
-    return redirect(url_for("index_get"))
+    # ✅ Persist last selections so the UI doesn't reset after redirect/refresh
+    save_settings({
+        "mode": mode,
+        "dry_run": "true" if dry_run else "false",
+        "root_folder": root_folder,
+        "audio_mode": audio_mode,
+        "bitrate": bitrate,
+    })
 
+    # Start background job
+    job = start_job(mode, dry_run, root_folder, audio_mode, bitrate)
+    return redirect(url_for("index_get"))
 
 @app.get("/api/job")
 def api_job():

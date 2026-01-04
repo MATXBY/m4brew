@@ -189,11 +189,23 @@
         jobStarted.textContent = j.started || "—";
 
         const cur = (typeof j.current === "number") ? j.current : 0;
-        const tot = (typeof j.total === "number" && j.total > 0) ? j.total : null;
-        jobProgress.textContent = tot ? `${cur}/${tot}` : `${cur}/?`;
+        const totNum = (typeof j.total === "number") ? j.total : 0;
 
-        jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
-        jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
+        if (totNum <= 0) {
+          const m = (j.mode || "").toLowerCase();
+          let msg = "Nothing to do";
+          if (m === "cleanup") msg = "Nothing to delete";
+          else if (m === "correct") msg = "All names correct";
+          else if (m === "convert") msg = "Nothing to convert";
+
+          jobProgress.textContent = msg;
+          jobBook.textContent = "—";
+          jobPath.textContent = "—";
+        } else {
+          jobProgress.textContent = `${cur}/${totNum}`;
+          jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
+          jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
+        }
       } catch (e) {
         // ignore polling errors
       }
