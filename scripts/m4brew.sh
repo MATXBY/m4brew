@@ -242,7 +242,7 @@ if [[ "$MODE" == "correct" ]]; then
 
     existing_path="${m4bs[0]}"
     existing_base="$(basename "$existing_path")"
-    desired_name="${book}.m4b"
+    desired_name="${book} - ${author}.m4b"
     desired_path="${book_dir}/${desired_name}"
 
     if [[ "$existing_base" == "$desired_name" ]]; then
