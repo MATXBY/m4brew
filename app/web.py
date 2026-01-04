@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -10,6 +12,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from flask import (
     Flask,
     Response,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -17,44 +20,28 @@ from flask import (
     url_for,
 )
 
-# -------------------------------------------------------------------
-# Paths & constants
-# -------------------------------------------------------------------
-
 APP_DIR = Path(__file__).resolve().parent
-
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config"))
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 SETTINGS_PATH = CONFIG_DIR / "settings.json"
 HISTORY_PATH = CONFIG_DIR / "history.jsonl"
 
-SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
+# Job state + output
+JOB_PATH = CONFIG_DIR / "job.json"
+JOB_OUT_PATH = CONFIG_DIR / "job_output.log"
 
+SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
 app = Flask(__name__)
 
-# -------------------------------------------------------------------
-# Helpers
-# -------------------------------------------------------------------
 
-
+# -------------------------
+# Time helpers
+# -------------------------
 def now_utc_iso() -> str:
-    return (
-        datetime.now(timezone.utc)
-        .replace(microsecond=0)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
-
-
-def parse_bool(value: Any, default: bool = False) -> bool:
-    if value is None:
-        return default
-    if isinstance(value, bool):
-        return value
-    return str(value).lower() in {"1", "true", "yes", "on"}
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def parse_ts(ts: str) -> Optional[datetime]:
@@ -74,27 +61,24 @@ def humanize_ts(ts: str) -> str:
     if not dt:
         return ts
 
-    delta = int((datetime.now(timezone.utc) - dt).total_seconds())
-
-    if delta < 10:
+    delta_s = int((datetime.now(timezone.utc) - dt).total_seconds())
+    if delta_s < 10:
         return "just now"
-    if delta < 60:
-        return f"{delta}s ago"
-    if delta < 3600:
-        m = delta // 60
-        return f"{m} minute{'s' if m != 1 else ''} ago"
-    if delta < 172800:
-        h = delta // 3600
-        return f"{h} hour{'s' if h != 1 else ''} ago"
-    d = delta // 86400
-    return f"{d} day{'s' if d != 1 else ''} ago"
+    if delta_s < 60:
+        return f"{delta_s}s ago"
+    mins = delta_s // 60
+    if mins < 60:
+        return f"{mins} minute{'s' if mins != 1 else ''} ago"
+    hours = mins // 60
+    if hours < 48:
+        return f"{hours} hour{'s' if hours != 1 else ''} ago"
+    days = hours // 24
+    return f"{days} day{'s' if days != 1 else ''} ago"
 
 
-# -------------------------------------------------------------------
+# -------------------------
 # Settings
-# -------------------------------------------------------------------
-
-
+# -------------------------
 def load_settings() -> Dict[str, Any]:
     if SETTINGS_PATH.exists():
         try:
@@ -105,47 +89,38 @@ def load_settings() -> Dict[str, Any]:
 
 
 def save_settings(settings: Dict[str, Any]) -> None:
-    SETTINGS_PATH.write_text(
-        json.dumps(settings, indent=2) + "\n", encoding="utf-8"
-    )
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    SETTINGS_PATH.write_text(json.dumps(settings, indent=2) + "\n", encoding="utf-8")
 
 
-# -------------------------------------------------------------------
+# -------------------------
 # History
-# -------------------------------------------------------------------
-
-
+# -------------------------
 def read_history() -> List[Dict[str, Any]]:
     if not HISTORY_PATH.exists():
         return []
-
-    records: List[Dict[str, Any]] = []
+    out: List[Dict[str, Any]] = []
     for line in HISTORY_PATH.read_text(encoding="utf-8", errors="replace").splitlines():
         line = line.strip()
         if not line:
             continue
         try:
-            records.append(json.loads(line))
+            out.append(json.loads(line))
         except Exception:
             continue
-    return records
+    return out
 
 
 def write_history(records: List[Dict[str, Any]]) -> None:
-    trimmed = records[-HISTORY_MAX_LINES :]
-    text = "\n".join(json.dumps(r, ensure_ascii=False) for r in trimmed)
-    HISTORY_PATH.write_text(text + ("\n" if text else ""), encoding="utf-8")
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    lines = [json.dumps(r, ensure_ascii=False) for r in records][-HISTORY_MAX_LINES:]
+    HISTORY_PATH.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
 
 def append_history_record(record: Dict[str, Any]) -> None:
     records = read_history()
     records.append(record)
     write_history(records)
-
-
-# -------------------------------------------------------------------
-# Script execution
-# -------------------------------------------------------------------
 
 
 def parse_summary_from_output(output: str) -> Optional[Dict[str, Any]]:
@@ -156,7 +131,6 @@ def parse_summary_from_output(output: str) -> Optional[Dict[str, Any]]:
             last = line
     if not last:
         return None
-
     try:
         payload = last.split(marker, 1)[1].strip()
         return json.loads(payload)
@@ -164,13 +138,236 @@ def parse_summary_from_output(output: str) -> Optional[Dict[str, Any]]:
         return None
 
 
-def run_script(
-    mode: str,
-    dry_run: bool,
-    root_folder: str,
-    audio_mode: str,
-    bitrate: int,
-) -> Tuple[int, str, Dict[str, str]]:
+# -------------------------
+# Job persistence
+# -------------------------
+def _load_job() -> Dict[str, Any]:
+    if not JOB_PATH.exists():
+        return {}
+    try:
+        return json.loads(JOB_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _save_job(job: Dict[str, Any]) -> None:
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    JOB_PATH.write_text(json.dumps(job, indent=2) + "\n", encoding="utf-8")
+
+
+def _pid_is_running(pid: Optional[int]) -> bool:
+    if not pid or pid <= 0:
+        return False
+    # Linux proc check
+    return Path(f"/proc/{pid}").exists()
+
+
+def _job_is_running(job: Dict[str, Any]) -> bool:
+    if not job:
+        return False
+    if job.get("status") != "running":
+        return False
+    pid = job.get("pid")
+    try:
+        pid = int(pid) if pid is not None else None
+    except Exception:
+        pid = None
+    return _pid_is_running(pid)
+
+
+# -------------------------
+# Scanning totals (best-effort)
+# -------------------------
+def _has_any(dir_path: Path, pattern: str) -> bool:
+    return any(dir_path.glob(pattern))
+
+
+def _scan_total(mode: str, root_folder: str) -> int:
+    root = Path(root_folder)
+    if not root.exists():
+        return 0
+
+    # Expect ROOT/Author/Book/
+    book_dirs: List[Path] = []
+    try:
+        for author in root.iterdir():
+            if not author.is_dir():
+                continue
+            if author.name == "#recycle":
+                continue
+            for book in author.iterdir():
+                if book.is_dir():
+                    book_dirs.append(book)
+    except Exception:
+        return 0
+
+    if mode == "cleanup":
+        # count backup dirs
+        n = 0
+        for b in book_dirs:
+            if (b / "_backup_files").is_dir():
+                n += 1
+        return n
+
+    if mode == "correct":
+        # count books with exactly 1 m4b and wrong filename
+        n = 0
+        for b in book_dirs:
+            m4bs = list(b.glob("*.m4b"))
+            if len(m4bs) != 1:
+                continue
+            desired = b / f"{b.name}.m4b"
+            if m4bs[0].name != desired.name:
+                n += 1
+        return n
+
+    # convert
+    n = 0
+    for b in book_dirs:
+        if list(b.glob("*.m4b")):
+            continue
+        if list(b.glob("*.mp3")) or list(b.glob("*.m4a")):
+            n += 1
+    return n
+
+
+# -------------------------
+# Background runner (stream output, update progress)
+# -------------------------
+def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
+    # Reset output log
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    JOB_OUT_PATH.write_text("", encoding="utf-8")
+
+    job_id = job.get("id", "")
+    start = time.time()
+
+    def bump(**kwargs: Any) -> None:
+        j = _load_job() or job
+        if j.get("id") != job_id:
+            return
+        j.update(kwargs)
+        j["updated"] = now_utc_iso()
+        _save_job(j)
+
+    def write_line(line: str) -> None:
+        with JOB_OUT_PATH.open("a", encoding="utf-8", errors="replace") as f:
+            f.write(line)
+
+    def strip_log_prefix(s: str) -> str:
+        # Convert:
+        #   "[2026-01-04 01:09:53] BOOK:   test book"
+        # into:
+        #   "BOOK:   test book"
+        s = s.strip()
+        if s.startswith("[") and "] " in s:
+            return s.split("] ", 1)[1].strip()
+        return s
+
+    cmd = ["/bin/bash", str(SCRIPT_PATH)]
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env=env,
+        bufsize=1,
+    )
+
+    bump(pid=proc.pid, status="running", current=0, current_book="", current_path="")
+
+    current_book = ""
+    current_path = ""
+    current = 0
+    total = int(job.get("total") or 0)
+
+    try:
+        assert proc.stdout is not None
+        for raw in proc.stdout:
+            line = raw if raw.endswith("\n") else raw + "\n"
+            write_line(line)
+
+            s = strip_log_prefix(line)
+
+            # New book block begins
+            if s.startswith("----------------------------------------"):
+                current += 1
+                bump(current=current, current_book=current_book, current_path=current_path)
+                continue
+
+            if s.startswith("BOOK:"):
+                current_book = s.split("BOOK:", 1)[1].strip()
+                bump(current=current, current_book=current_book, current_path=current_path)
+                continue
+
+            if s.startswith("PATH:"):
+                current_path = s.split("PATH:", 1)[1].strip()
+                bump(current=current, current_book=current_book, current_path=current_path)
+                continue
+
+        rc = proc.wait()
+
+        full_output = JOB_OUT_PATH.read_text(encoding="utf-8", errors="replace")
+        summary = parse_summary_from_output(full_output)
+        runtime_s = int(time.time() - start)
+
+        # Ensure finished jobs display X/X
+        if total > 0:
+            current = total
+
+        bump(
+            status=("finished" if rc == 0 else "failed"),
+            exit_code=rc,
+            runtime_s=runtime_s,
+            summary=summary,
+            current=current,
+            current_book=current_book,
+            current_path=current_path,
+        )
+
+        record = {
+            "ts": now_utc_iso(),
+            "mode": job.get("mode"),
+            "dry_run": job.get("dry_run"),
+            "settings": job.get("settings"),
+            "exit_code": rc,
+            "summary": summary,
+            "output": full_output,
+        }
+        append_history_record(record)
+
+    except Exception as e:
+        runtime_s = int(time.time() - start)
+        bump(status="failed", exit_code=1, runtime_s=runtime_s)
+        write_line(f"\n[worker-error] {e}\n")
+
+def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate: int) -> Dict[str, Any]:
+    existing = _load_job()
+    if _job_is_running(existing):
+        return existing
+
+    job_id = now_utc_iso().replace(":", "").replace("-", "").replace("T", "_").replace("Z", "")
+    total = _scan_total(mode, root_folder)
+
+    job = {
+        "id": job_id,
+        "status": "running",
+        "started": now_utc_iso(),
+        "updated": now_utc_iso(),
+        "mode": mode,
+        "dry_run": dry_run,
+        "settings": {"root_folder": root_folder, "audio_mode": audio_mode, "bitrate": bitrate},
+        "current": 0,
+        "total": total,
+        "current_book": "",
+        "current_path": "",
+        "pid": None,
+        "exit_code": None,
+        "runtime_s": None,
+        "summary": None,
+    }
+    _save_job(job)
+
     env = os.environ.copy()
     env.update(
         {
@@ -182,31 +379,25 @@ def run_script(
         }
     )
 
-    cmd = ["/bin/bash", str(SCRIPT_PATH)]
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        env=env,
-    )
+    t = threading.Thread(target=_run_script_background, args=(job, env), daemon=True)
+    t.start()
 
-    output = (proc.stdout or "") + (proc.stderr or "")
-    return proc.returncode, output, env
+    return job
 
 
-# -------------------------------------------------------------------
+# -------------------------
 # Routes
-# -------------------------------------------------------------------
-
-
+# -------------------------
 @app.get("/")
 def index_get():
     settings = load_settings()
+    job = _load_job()
     return render_template(
         "index.html",
         settings=settings,
         last_output=None,
         last_summary=None,
+        job=job,
     )
 
 
@@ -215,55 +406,55 @@ def index_post():
     settings = load_settings()
 
     mode = request.form.get("mode") or settings.get("mode") or "convert"
-
-    dry_run = parse_bool(
-        request.form.get("dry_run"),
-        default=parse_bool(settings.get("dry_run"), True),
-    )
-
+    dry_run = (request.form.get("dry_run") or settings.get("dry_run") or "true").lower() == "true"
     root_folder = request.form.get("root_folder") or settings.get("root_folder") or ""
     audio_mode = request.form.get("audio_mode") or settings.get("audio_mode") or "match"
     bitrate = int(request.form.get("bitrate") or settings.get("bitrate") or 64)
 
-    exit_code, output, _env = run_script(
-        mode, dry_run, root_folder, audio_mode, bitrate
-    )
+    start_job(mode, dry_run, root_folder, audio_mode, bitrate)
+    return redirect(url_for("index_get"))
 
-    summary = parse_summary_from_output(output)
 
-    record = {
-        "ts": now_utc_iso(),
-        "mode": mode,
-        "dry_run": dry_run,
-        "settings": {
-            "root_folder": root_folder,
-            "audio_mode": audio_mode,
-            "bitrate": bitrate,
-        },
-        "exit_code": exit_code,
-        "summary": summary,
-        "output": output,
-    }
+@app.get("/api/job")
+def api_job():
+    job = _load_job()
+    if not job:
+        return jsonify({"status": "none"})
+    # If job claims running but PID is gone, mark it failed (defensive)
+    if job.get("status") == "running" and not _job_is_running(job):
+        job["status"] = "failed"
+        job["updated"] = now_utc_iso()
+        _save_job(job)
+    return jsonify(job)
 
-    append_history_record(record)
 
-    return render_template(
-        "index.html",
-        settings={
-            "mode": mode,
-            "dry_run": "true" if dry_run else "false",
-            "root_folder": root_folder,
-            "audio_mode": audio_mode,
-            "bitrate": bitrate,
-        },
-        last_output=output,
-        last_summary=summary,
-    )
+@app.get("/job/output")
+def job_output():
+    if not JOB_OUT_PATH.exists():
+        return Response("", mimetype="text/plain")
+    return Response(JOB_OUT_PATH.read_text(encoding="utf-8", errors="replace"), mimetype="text/plain")
+
+
+@app.post("/job/clear")
+def job_clear():
+    job = _load_job()
+    if job and job.get("status") == "running":
+        return redirect(url_for("index_get"))
+    try:
+        JOB_PATH.unlink(missing_ok=True)  # type: ignore[arg-type]
+    except Exception:
+        pass
+    try:
+        JOB_OUT_PATH.unlink(missing_ok=True)  # type: ignore[arg-type]
+    except Exception:
+        pass
+    return redirect(url_for("index_get"))
 
 
 @app.get("/settings")
 def settings_get():
-    return render_template("settings.html", settings=load_settings())
+    settings = load_settings()
+    return render_template("settings.html", settings=settings)
 
 
 @app.post("/settings")
@@ -279,17 +470,22 @@ def settings_post():
 
 @app.get("/history")
 def history_get():
-    records = list(reversed(read_history()))
+    records = read_history()
+    records = list(reversed(records))  # newest first
 
-    runs = []
+    enriched = []
     for i, r in enumerate(records):
         ts = r.get("ts", "")
         summary = r.get("summary") or {}
         exit_code = int(r.get("exit_code", 0))
 
         success = bool(summary.get("success", exit_code == 0))
+        runtime_s = summary.get("runtime_s")
+        created = summary.get("created")
+        skipped = summary.get("skipped")
+        failed = summary.get("failed")
 
-        runs.append(
+        enriched.append(
             {
                 "idx": i,
                 "ts": ts,
@@ -297,14 +493,15 @@ def history_get():
                 "mode": r.get("mode", ""),
                 "dry_run": r.get("dry_run", False),
                 "success": success,
-                "runtime_s": summary.get("runtime_s"),
-                "created": summary.get("created"),
-                "skipped": summary.get("skipped"),
-                "failed": summary.get("failed"),
+                "exit_code": exit_code,
+                "runtime_s": runtime_s,
+                "created": created,
+                "skipped": skipped,
+                "failed": failed,
             }
         )
 
-    return render_template("history.html", runs=runs, count=len(runs))
+    return render_template("history.html", runs=enriched, count=len(enriched))
 
 
 @app.get("/history/<int:idx>")
@@ -314,8 +511,8 @@ def history_detail(idx: int):
         return "Not found", 404
 
     r = records[idx]
-    r["ts_human"] = humanize_ts(r.get("ts", ""))
-
+    ts = r.get("ts", "")
+    r["ts_human"] = humanize_ts(ts) if ts else ""
     return render_template("history_detail.html", detail=r)
 
 
@@ -336,10 +533,6 @@ def history_clear():
     write_history([])
     return redirect(url_for("history_get"))
 
-
-# -------------------------------------------------------------------
-# Entrypoint
-# -------------------------------------------------------------------
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8080"))

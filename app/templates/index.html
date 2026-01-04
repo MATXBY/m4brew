@@ -2,85 +2,205 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>m4brew</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
-    nav a { margin-right: 12px; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 14px 0; }
-    label { display: block; margin: 8px 0 4px; }
-    select, input[type="text"], input[type="number"] { width: 100%; max-width: 640px; padding: 8px; }
-    .row { display: flex; gap: 14px; flex-wrap: wrap; }
-    .row > div { flex: 1; min-width: 240px; }
-    pre { white-space: pre-wrap; word-break: break-word; background: #f7f7f7; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-    .ok { color: #0a7a0a; }
-    .bad { color: #b00020; }
-    .muted { color: #666; }
-    button { padding: 10px 14px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; color:#111; }
+    a { color: inherit; }
+    .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .muted { color:#666; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .btn { display:inline-block; padding:8px 12px; border:1px solid #ccc; border-radius:10px; text-decoration:none; color:#111; background:#fff; cursor:pointer; }
+    .btn.primary { border-color:#bbb; font-weight:600; }
+    .btn:disabled { opacity:0.6; cursor:not-allowed; }
+    .card { border:1px solid #eee; border-radius:14px; padding:14px; margin-top:16px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+    label { display:block; font-size:13px; color:#333; margin-bottom:6px; }
+    input[type="text"], input[type="number"], select {
+      width:100%; padding:10px 10px; border:1px solid #ddd; border-radius:10px; font-size:14px;
+    }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #ddd; }
+    .pill.ok { border-color:#b9e3c6; background:#f3fff6; }
+    .pill.fail { border-color:#f2b8b5; background:#fff5f5; }
+    .pill.run { border-color:#c7d2fe; background:#eef2ff; }
+    .spinner {
+      width:14px; height:14px;
+      border:3px solid #ddd;
+      border-top-color:#666;
+      border-radius:50%;
+      animation: spin 0.9s linear infinite;
+      display:inline-block;
+      vertical-align:middle;
+      margin-right:8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      background:#fafafa;
+      border:1px solid #eee;
+      border-radius:12px;
+      padding:12px;
+      max-height: 45vh;
+      overflow:auto;
+    }
   </style>
 </head>
 <body>
-  <h1>m4brew</h1>
+  <div class="topbar">
+    <div>
+      <h1 style="margin:0;">m4brew</h1>
+      <div class="muted">Run tasks against your audiobook folders • History is stored in <span class="mono">/config/history.jsonl</span></div>
+    </div>
+    <div class="row">
+      <a class="btn" href="/history">History</a>
+      <a class="btn" href="/settings">Settings</a>
+    </div>
+  </div>
 
-  <nav class="muted">
-    <a href="/">Run</a>
-    <a href="/settings">Settings</a>
-    <a href="/history">History</a>
-  </nav>
+  <!-- Job status card (always present, populated by polling) -->
+  <div class="card" id="jobCard" style="display:none;">
+    <div class="row" style="justify-content:space-between;">
+      <div>
+        <strong>Job</strong>
+        <span class="pill run" id="jobStatusPill"><span class="spinner"></span>running</span>
+      </div>
+      <div class="row">
+        <a class="btn" href="/job/output" target="_blank" rel="noreferrer">Live output</a>
+        <form method="post" action="/job/clear" style="margin:0;">
+          <button class="btn" type="submit" id="clearJobBtn" disabled>Clear job</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="muted" style="margin-top:10px;">
+      <span class="mono">mode</span>: <span id="jobMode">—</span> •
+      <span class="mono">dry_run</span>: <span id="jobDryRun">—</span> •
+      <span class="mono">started</span>: <span id="jobStarted">—</span>
+    </div>
+
+    <div style="margin-top:10px;">
+      <div><strong>Progress:</strong> <span id="jobProgress">—</span></div>
+      <div class="muted"><span class="mono" id="jobBook">—</span></div>
+      <div class="muted"><span class="mono" id="jobPath">—</span></div>
+    </div>
+  </div>
 
   <div class="card">
-    <h2>Run</h2>
-    <form method="post" action="/">
-      <div class="row">
+    <form id="runForm" method="post" action="/">
+      <div class="grid">
         <div>
           <label for="mode">Mode</label>
           <select id="mode" name="mode">
-            <option value="convert">convert</option>
-            <option value="correct">correct</option>
-            <option value="cleanup">cleanup</option>
+            <option value="convert" {% if (settings.get("mode") or "convert") == "convert" %}selected{% endif %}>convert (create .m4b + backup sources)</option>
+            <option value="correct" {% if (settings.get("mode") or "") == "correct" %}selected{% endif %}>correct (rename .m4b to match folder)</option>
+            <option value="cleanup" {% if (settings.get("mode") or "") == "cleanup" %}selected{% endif %}>cleanup (delete _backup_files)</option>
           </select>
         </div>
+
         <div>
-          <label>&nbsp;</label>
-          <label style="display:flex;gap:8px;align-items:center;">
-            <input type="checkbox" name="dry_run" checked />
-            Dry run
-          </label>
+          <label for="dry_run">Dry run</label>
+          <select id="dry_run" name="dry_run">
+            {% set dr = (settings.get("dry_run") if settings else "true") %}
+            <option value="true" {% if (dr|string).lower() == "true" %}selected{% endif %}>true (simulate only)</option>
+            <option value="false" {% if (dr|string).lower() == "false" %}selected{% endif %}>false (make changes)</option>
+          </select>
+        </div>
+
+        <div style="grid-column: 1 / -1;">
+          <label for="root_folder">Root folder</label>
+          <input id="root_folder" type="text" name="root_folder" placeholder="/mnt/remotes/.../Audiobooks"
+                 value="{{ settings.get('root_folder','') if settings else '' }}">
+        </div>
+
+        <div>
+          <label for="audio_mode">Audio mode</label>
+          <select id="audio_mode" name="audio_mode">
+            {% set am = (settings.get("audio_mode") if settings else "match") %}
+            <option value="match" {% if am == "match" %}selected{% endif %}>match (detect mono/stereo)</option>
+            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
+            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="bitrate">Bitrate (kbps)</label>
+          <input id="bitrate" type="number" name="bitrate" min="32" max="320" step="1"
+                 value="{{ settings.get('bitrate', 64) if settings else 64 }}">
         </div>
       </div>
 
-      <p class="muted">
-        Current settings: <br/>
-        ROOT_FOLDER=<code>{{ settings.root_folder }}</code><br/>
-        AUDIO_MODE=<code>{{ settings.audio_mode }}</code><br/>
-        BITRATE=<code>{{ settings.bitrate }}</code>
-      </p>
-
-      <button type="submit">Run</button>
+      <div class="row" style="margin-top:12px;">
+        <button id="runBtn" class="btn primary" type="submit">Run</button>
+        <span class="muted" id="hint">Runs now happen in the background — you can refresh safely.</span>
+      </div>
     </form>
   </div>
 
-  {% if last_exit_code is not none %}
-  <div class="card">
-    <h2>Last run</h2>
-    <p>
-      Exit code:
-      {% if last_exit_code == 0 %}
-        <strong class="ok">{{ last_exit_code }}</strong>
-      {% else %}
-        <strong class="bad">{{ last_exit_code }}</strong>
-      {% endif %}
-    </p>
+  <script>
+    const jobCard = document.getElementById("jobCard");
+    const jobStatusPill = document.getElementById("jobStatusPill");
+    const clearJobBtn = document.getElementById("clearJobBtn");
 
-    {% if last_summary %}
-      <p class="muted"><strong>Summary</strong></p>
-      <pre>{{ last_summary | tojson(indent=2) }}</pre>
-    {% endif %}
+    const jobMode = document.getElementById("jobMode");
+    const jobDryRun = document.getElementById("jobDryRun");
+    const jobStarted = document.getElementById("jobStarted");
+    const jobProgress = document.getElementById("jobProgress");
+    const jobBook = document.getElementById("jobBook");
+    const jobPath = document.getElementById("jobPath");
 
-    <p class="muted"><strong>Output</strong></p>
-    <pre>{{ last_output }}</pre>
-  </div>
-  {% endif %}
+    function setPill(status) {
+      if (status === "running") {
+        jobStatusPill.className = "pill run";
+        jobStatusPill.innerHTML = '<span class="spinner"></span>running';
+        clearJobBtn.disabled = true;
+      } else if (status === "finished") {
+        jobStatusPill.className = "pill ok";
+        jobStatusPill.textContent = "✅ finished";
+        clearJobBtn.disabled = false;
+      } else if (status === "failed") {
+        jobStatusPill.className = "pill fail";
+        jobStatusPill.textContent = "❌ failed";
+        clearJobBtn.disabled = false;
+      } else {
+        jobStatusPill.className = "pill";
+        jobStatusPill.textContent = status;
+        clearJobBtn.disabled = false;
+      }
+    }
 
+    async function pollJob() {
+      try {
+        const r = await fetch("/api/job", { cache: "no-store" });
+        const j = await r.json();
+
+        if (!j || j.status === "none") {
+          jobCard.style.display = "none";
+          return;
+        }
+
+        jobCard.style.display = "block";
+        setPill(j.status || "unknown");
+
+        jobMode.textContent = j.mode || "—";
+        jobDryRun.textContent = (j.dry_run === true) ? "true" : (j.dry_run === false ? "false" : "—");
+        jobStarted.textContent = j.started || "—";
+
+        const cur = (typeof j.current === "number") ? j.current : 0;
+        const tot = (typeof j.total === "number" && j.total > 0) ? j.total : null;
+        jobProgress.textContent = tot ? `${cur}/${tot}` : `${cur}/?`;
+
+        jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
+        jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
+      } catch (e) {
+        // ignore polling errors
+      }
+    }
+
+    pollJob();
+    setInterval(pollJob, 2000);
+  </script>
 </body>
 </html>
