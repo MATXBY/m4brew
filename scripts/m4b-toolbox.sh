@@ -5,8 +5,6 @@ IFS=$'\n\t'
 ############################################
 # MP3/M4A → M4B sweep (Author/Book folders)
 # m4b-toolbox
-# Version: 0.2.0
-# Release date: 2026-01-02
 #
 # Modes:
 #   MODE=convert  → create M4Bs + backup sources
@@ -17,21 +15,14 @@ IFS=$'\n\t'
 #   DRY_RUN=true  → simulate actions only (no changes)
 #   DRY_RUN=false → perform real actions
 #
-# Behaviour:
-#   - Convert mode:
-#       * MP3 → M4B (re-encode @ BITRATE, mono/stereo preserved)
-#       * M4A (single) → M4B (remux via ffmpeg -c copy)
-#       * M4A (multi) → M4B (merge via m4b-tool)
-#       * After success:
-#           MP3  → moved to _backup_files/
-#           M4A  → moved to _backup_files/
-#   - Cleanup mode:
-#       * Deletes _backup_files under ROOT
-#   - Correct mode:
-#       * For each Book folder:
-#           If exactly one .m4b exists:
-#             rename it to: Book.m4b
-#           If 0 or >1 .m4b: log and skip
+# Settings (via env, set by web UI):
+#   ROOT_FOLDER   → root of audiobooks
+#   BITRATE       → numeric kbps (e.g. 64, 96, 128)
+#   AUDIO_MODE    → match | mono | stereo
+#
+# 0.3.0 contract (observability):
+#   At the end of every run, we emit one special line:
+#     __M4B_SUMMARY_JSON__ {...}
 ############################################
 
 # Root of your audiobooks (Author/Book folders)
@@ -39,15 +30,14 @@ ROOT_DEFAULT="/mnt/remotes/192.168.4.4_media/Audiobooks"
 ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
 
 # Operation mode (can be overridden via environment variable MODE):
-#   convert = convert & backup
-#   cleanup = delete _backup_files folders
-#   correct = rename .m4b to match Book folder name
 MODE="${MODE:-convert}"
 
 # DRY_RUN (can be overridden via environment variable DRY_RUN):
-#   true  = simulate actions only (no changes)
-#   false = perform real actions
 DRY_RUN="${DRY_RUN:-true}"
+
+# Audio mode policy (can be overridden via environment variable AUDIO_MODE):
+AUDIO_MODE_DEFAULT="match"
+AUDIO_MODE="${AUDIO_MODE:-$AUDIO_MODE_DEFAULT}"   # match | mono | stereo
 
 # Docker user:group (match your mount ownership)
 DOCKER_UID_GID="1026:100"
@@ -59,7 +49,7 @@ M4B_IMAGE="sandreas/m4b-tool:latest"
 # Docker image for ffmpeg (for single-file M4A remux)
 FFMPEG_IMAGE="linuxserver/ffmpeg"
 
-# Target bitrate for all MP3→M4B outputs
+# Target bitrate for all MP3→M4B outputs (numeric kbps from env → append "k")
 BITRATE_DEFAULT="64"
 BITRATE="${BITRATE:-$BITRATE_DEFAULT}k"
 
@@ -80,7 +70,31 @@ safe_name() {
   echo "$1" | sed 's#/#-#g'
 }
 
-# Detect audio channel count (1 = mono, 2 = stereo) using ffprobe
+# Emit the special summary line (must be ONE line, machine readable)
+emit_summary() {
+  local success="$1"          # true|false
+  local runtime_s="$2"        # integer seconds
+  local created="$3"          # integer
+  local skipped="$4"          # integer
+  local failed="$5"           # integer
+  local renamed="$6"          # integer
+  local deleted="$7"          # integer
+  local reason="${8:-""}"     # optional string
+
+  # Parse BITRATE like "96k" → 96 (best effort)
+  local bitrate_num
+  bitrate_num="$(echo "${BITRATE}" | sed 's/[^0-9]//g')"
+  [[ -z "${bitrate_num}" ]] && bitrate_num=0
+
+  # Build compact JSON (no pretty-print, must be single line)
+  if [[ -n "${reason}" ]]; then
+    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted},\"reason\":\"${reason}\"}"
+  else
+    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted}}"
+  fi
+}
+
+# Detect mono vs stereo using ffprobe inside the m4b-tool image
 detect_channels() {
   local first_file="$1"
   local ch
@@ -92,13 +106,13 @@ detect_channels() {
       -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
 
   if [[ "$ch" == "1" ]]; then
-    echo "1"
+    echo "1"   # mono
   else
-    echo "2"
+    echo "2"   # stereo (default if unsure)
   fi
 }
 
-# Resolve audio channels based on AUDIO_MODE
+# Resolve audio channels based on AUDIO_MODE policy
 resolve_channels() {
   local detected="$1"
 
@@ -125,10 +139,14 @@ log "MODE=${MODE}"
 log "ROOT=${ROOT}"
 log "DRY_RUN=${DRY_RUN}"
 log "BITRATE=${BITRATE}"
+log "AUDIO_MODE=${AUDIO_MODE}"
 log "DOCKER_UID:GID=${DOCKER_UID_GID}"
 
 if [[ ! -d "${ROOT}" ]]; then
   log "ERROR: ROOT does not exist: ${ROOT}"
+  END_EPOCH=$(date +%s)
+  RUNTIME=$((END_EPOCH - START_EPOCH))
+  emit_summary false "${RUNTIME}" 0 0 1 0 0 "root_missing"
   exit 1
 fi
 
@@ -147,6 +165,9 @@ if [[ "$MODE" == "cleanup" ]]; then
   if [[ ${#backup_dirs[@]} -eq 0 ]]; then
     log "No _backup_files folders found — nothing to delete."
     log "===== END CLEANUP ====="
+    END_EPOCH=$(date +%s)
+    RUNTIME=$((END_EPOCH - START_EPOCH))
+    emit_summary true "${RUNTIME}" 0 0 0 0 0
     exit 0
   fi
 
@@ -156,6 +177,7 @@ if [[ "$MODE" == "cleanup" ]]; then
     log "Deleting: $dir"
     if is_dry_run; then
       log "[DRY-RUN] rm -rf \"$dir\""
+      deleted_count=$((deleted_count + 1))
     else
       rm -rf "$dir"
       deleted_count=$((deleted_count + 1))
@@ -164,6 +186,9 @@ if [[ "$MODE" == "cleanup" ]]; then
 
   log "Cleanup complete. Deleted backup folders: ${deleted_count}"
   log "===== END CLEANUP ====="
+  END_EPOCH=$(date +%s)
+  RUNTIME=$((END_EPOCH - START_EPOCH))
+  emit_summary true "${RUNTIME}" 0 0 0 0 "${deleted_count}"
   exit 0
 fi
 
@@ -234,6 +259,9 @@ if [[ "$MODE" == "correct" ]]; then
   log "Skipped (no .m4b)      : ${skipped_none_count}"
   log "Skipped (multiple .m4b): ${skipped_multi_count}"
   log "===== END CORRECT MODE ====="
+
+  # For the contract: "renamed" is the primary counter in correct mode
+  emit_summary true "${RUNTIME}" 0 0 0 "${renamed_count}" 0
   exit 0
 fi
 
@@ -320,6 +348,7 @@ while IFS= read -r -d '' book_dir; do
     first_mp3="${mp3s[0]}"
     detected="$(detect_channels "$first_mp3")"
     channels="$(resolve_channels "$detected")"
+
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
     log "MODE:   ${mode_desc} @ ${BITRATE}"
     log "OUTPUT: ${out_path}"
@@ -424,6 +453,7 @@ while IFS= read -r -d '' book_dir; do
     first_m4a="${m4as[0]}"
     detected="$(detect_channels "$first_m4a")"
     channels="$(resolve_channels "$detected")"
+
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
     log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"
@@ -513,3 +543,11 @@ if [[ "${#failed_books[@]}" -gt 0 ]]; then
 fi
 
 log "===== END CONVERT MODE ====="
+
+# success = true if failed_count == 0
+if [[ "${failed_count}" -eq 0 ]]; then
+  emit_summary true "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0
+else
+  emit_summary false "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0
+fi
+

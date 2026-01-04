@@ -1,70 +1,86 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>m4b Toolbox</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>m4b-toolbox</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 20px;
-    }
-    form {
-      margin-bottom: 20px;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fafafa;
-    }
-    label {
-      display: inline-block;
-      margin-right: 12px;
-    }
-    select, button {
-      padding: 4px 8px;
-      margin-right: 8px;
-    }
-    button {
-      cursor: pointer;
-    }
-    textarea {
-      width: 100%;
-      height: 500px;
-      font-family: monospace;
-      font-size: 12px;
-      white-space: pre;
-    }
-    h1 {
-      margin-bottom: 10px;
-    }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+    nav a { margin-right: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 14px 0; }
+    label { display: block; margin: 8px 0 4px; }
+    select, input[type="text"], input[type="number"] { width: 100%; max-width: 640px; padding: 8px; }
+    .row { display: flex; gap: 14px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 240px; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f7f7f7; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
+    .ok { color: #0a7a0a; }
+    .bad { color: #b00020; }
+    .muted { color: #666; }
+    button { padding: 10px 14px; }
   </style>
 </head>
 <body>
-<p><a href="/settings">Settings</a></p>
-  <h1>m4b Toolbox</h1>
-  <form method="post">
-    <label>
-      Mode:
-      <select name="mode">
-        <option value="convert" {{ 'selected' if mode == 'convert' else '' }}>convert (create + backup)</option>
-        <option value="cleanup" {{ 'selected' if mode == 'cleanup' else '' }}>cleanup (delete _backup_files)</option>
-        <option value="correct" {{ 'selected' if mode == 'correct' else '' }}>correct (rename .m4b)</option>
-      </select>
-    </label>
+  <h1>m4b-toolbox</h1>
 
-    <label>
-      Dry-run:
-      <select name="dry_run">
-        <option value="true" {{ 'selected' if dry_run == 'true' else '' }}>true (simulate only)</option>
-        <option value="false" {{ 'selected' if dry_run == 'false' else '' }}>false (make changes)</option>
-      </select>
-    </label>
+  <nav class="muted">
+    <a href="/">Run</a>
+    <a href="/settings">Settings</a>
+    <a href="/history">History</a>
+  </nav>
 
-    <button type="submit">Run</button>
-  </form>
+  <div class="card">
+    <h2>Run</h2>
+    <form method="post" action="/">
+      <div class="row">
+        <div>
+          <label for="mode">Mode</label>
+          <select id="mode" name="mode">
+            <option value="convert">convert</option>
+            <option value="correct">correct</option>
+            <option value="cleanup">cleanup</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <label style="display:flex;gap:8px;align-items:center;">
+            <input type="checkbox" name="dry_run" checked />
+            Dry run
+          </label>
+        </div>
+      </div>
 
-  {% if output %}
-    <h2>Output</h2>
-    <textarea readonly>{{ output }}</textarea>
+      <p class="muted">
+        Current settings: <br/>
+        ROOT_FOLDER=<code>{{ settings.root_folder }}</code><br/>
+        AUDIO_MODE=<code>{{ settings.audio_mode }}</code><br/>
+        BITRATE=<code>{{ settings.bitrate }}</code>
+      </p>
+
+      <button type="submit">Run</button>
+    </form>
+  </div>
+
+  {% if last_exit_code is not none %}
+  <div class="card">
+    <h2>Last run</h2>
+    <p>
+      Exit code:
+      {% if last_exit_code == 0 %}
+        <strong class="ok">{{ last_exit_code }}</strong>
+      {% else %}
+        <strong class="bad">{{ last_exit_code }}</strong>
+      {% endif %}
+    </p>
+
+    {% if last_summary %}
+      <p class="muted"><strong>Summary</strong></p>
+      <pre>{{ last_summary | tojson(indent=2) }}</pre>
+    {% endif %}
+
+    <p class="muted"><strong>Output</strong></p>
+    <pre>{{ last_output }}</pre>
+  </div>
   {% endif %}
+
 </body>
 </html>

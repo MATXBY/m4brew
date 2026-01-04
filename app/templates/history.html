@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>m4b-toolbox — History</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+    nav a { margin-right: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px; margin: 14px 0; }
+    .muted { color: #666; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #eee; padding: 10px 8px; text-align: left; vertical-align: top; }
+    tr:hover { background: #fafafa; }
+    a { text-decoration: none; }
+    .pill { display:inline-block; padding:2px 8px; border:1px solid #ddd; border-radius:999px; font-size: 12px; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #f7f7f7; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
+    .ok { color: #0a7a0a; }
+    .bad { color: #b00020; }
+    .split { display:flex; gap:14px; flex-wrap:wrap; }
+    .left { flex: 1; min-width: 420px; }
+    .right { flex: 1; min-width: 420px; }
+  </style>
+</head>
+<body>
+  <h1>History</h1>
+
+  <nav class="muted">
+    <a href="/">Run</a>
+    <a href="/settings">Settings</a>
+    <a href="/history">History</a>
+  </nav>
+
+  <div class="split">
+    <div class="left card">
+      <h2>Runs (newest first)</h2>
+
+      {% if not items %}
+        <p class="muted">No history yet.</p>
+      {% else %}
+      <table>
+        <thead>
+          <tr>
+            <th>When</th>
+            <th>Mode</th>
+            <th>Dry</th>
+            <th>Exit</th>
+            <th>Counts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+            {% set i = loop.index0 %}
+            {% set s = item.summary or {} %}
+            <tr>
+              <td><a href="/history/{{ i }}">{{ item.ts }}</a></td>
+              <td><span class="pill">{{ item.mode }}</span></td>
+              <td>{{ "true" if item.dry_run else "false" }}</td>
+              <td>
+                {% if item.exit_code == 0 %}
+                  <span class="ok">{{ item.exit_code }}</span>
+                {% else %}
+                  <span class="bad">{{ item.exit_code }}</span>
+                {% endif %}
+              </td>
+              <td class="muted">
+                created={{ s.get("created","-") }},
+                skipped={{ s.get("skipped","-") }},
+                failed={{ s.get("failed","-") }},
+                renamed={{ s.get("renamed","-") }},
+                deleted={{ s.get("deleted","-") }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+
+    <div class="right card">
+      <h2>Details</h2>
+
+      {% if selected %}
+        <p class="muted">
+          Run ID: <code>{{ selected_id }}</code><br/>
+          ts: <code>{{ selected.ts }}</code><br/>
+          mode: <code>{{ selected.mode }}</code><br/>
+          dry_run: <code>{{ selected.dry_run }}</code><br/>
+          exit_code:
+          {% if selected.exit_code == 0 %}
+            <strong class="ok">{{ selected.exit_code }}</strong>
+          {% else %}
+            <strong class="bad">{{ selected.exit_code }}</strong>
+          {% endif %}
+        </p>
+
+        {% if selected.summary %}
+          <p class="muted"><strong>Summary JSON</strong></p>
+          <pre>{{ selected.summary | tojson(indent=2) }}</pre>
+        {% endif %}
+
+        <p class="muted"><strong>Output</strong></p>
+        <pre>{{ selected.output }}</pre>
+      {% else %}
+        <p class="muted">Click a run on the left to view details.</p>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>
