@@ -1,73 +1,16 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>m4brew</title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; color:#111; }
-    a { color: inherit; }
-    .topbar { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .muted { color:#666; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-    .btn { display:inline-block; padding:8px 12px; border:1px solid #ccc; border-radius:10px; text-decoration:none; color:#111; background:#fff; cursor:pointer; }
-    .btn.primary { border-color:#bbb; font-weight:600; }
-    .btn:disabled { opacity:0.6; cursor:not-allowed; }
-    .card { border:1px solid #eee; border-radius:14px; padding:14px; margin-top:16px; }
-    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
-    label { display:block; font-size:13px; color:#333; margin-bottom:6px; }
-    input[type="text"], input[type="number"], select {
-      width:100%; padding:10px 10px; border:1px solid #ddd; border-radius:10px; font-size:14px;
-    }
-    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .pill { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #ddd; }
-    .pill.ok { border-color:#b9e3c6; background:#f3fff6; }
-    .pill.fail { border-color:#f2b8b5; background:#fff5f5; }
-    .pill.run { border-color:#c7d2fe; background:#eef2ff; }
-    .spinner {
-      width:14px; height:14px;
-      border:3px solid #ddd;
-      border-top-color:#666;
-      border-radius:50%;
-      animation: spin 0.9s linear infinite;
-      display:inline-block;
-      vertical-align:middle;
-      margin-right:8px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      background:#fafafa;
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:12px;
-      max-height: 45vh;
-      overflow:auto;
-    }
-  </style>
-</head>
-<body>
-  <div class="topbar">
-    <div>
-      <h1 style="margin:0;">m4brew</h1>
-      <div class="muted">Run tasks against your audiobook folders • History is stored in <span class="mono">/config/history.jsonl</span></div>
-    </div>
-    <div class="row">
-      <a class="btn" href="/history">History</a>
-      <a class="btn" href="/settings">Settings</a>
-    </div>
-  </div>
+{% extends "base.html" %}
+{% set active_page = "tasks" %}
+{% block title %}m4brew — Tasks{% endblock %}
 
-  <!-- Job status card (always present, populated by polling) -->
-  <div class="card" id="jobCard" style="display:none;">
-    <div class="row" style="justify-content:space-between;">
-      <div>
+{% block content %}
+  <!-- Job status card -->
+  <div class="card" id="jobCard" style="display:none; margin-bottom:16px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:10px;">
         <strong>Job</strong>
-        <span class="pill run" id="jobStatusPill"><span class="spinner"></span>running</span>
+        <span class="pill" id="jobStatusPill">—</span>
       </div>
-      <div class="row">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <a class="btn" href="/job/output" target="_blank" rel="noreferrer">Live output</a>
         <form method="post" action="/job/clear" style="margin:0;">
           <button class="btn" type="submit" id="clearJobBtn" disabled>Clear job</button>
@@ -81,16 +24,17 @@
       <span class="mono">started</span>: <span id="jobStarted">—</span>
     </div>
 
-    <div style="margin-top:10px;">
+    <div style="margin-top:12px;">
       <div><strong>Progress:</strong> <span id="jobProgress">—</span></div>
       <div class="muted"><span class="mono" id="jobBook">—</span></div>
       <div class="muted"><span class="mono" id="jobPath">—</span></div>
     </div>
   </div>
 
+  <!-- Task form -->
   <div class="card">
     <form id="runForm" method="post" action="/">
-      <div class="grid">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
         <div>
           <label for="mode">Mode</label>
           <select id="mode" name="mode">
@@ -111,7 +55,8 @@
 
         <div style="grid-column: 1 / -1;">
           <label for="root_folder">Root folder</label>
-          <input id="root_folder" type="text" name="root_folder" placeholder="/mnt/remotes/.../Audiobooks"
+          <input id="root_folder" type="text" name="root_folder"
+                 placeholder="/mnt/remotes/.../Audiobooks"
                  value="{{ settings.get('root_folder','') if settings else '' }}">
         </div>
 
@@ -132,87 +77,98 @@
         </div>
       </div>
 
-      <div class="row" style="margin-top:12px;">
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:14px;">
         <button id="runBtn" class="btn primary" type="submit">Run</button>
-        <span class="muted" id="hint">Runs now happen in the background — you can refresh safely.</span>
+        <span class="muted" id="hint">Jobs run in the background — refresh is safe.</span>
       </div>
     </form>
   </div>
+{% endblock %}
 
-  <script>
-    const jobCard = document.getElementById("jobCard");
-    const jobStatusPill = document.getElementById("jobStatusPill");
-    const clearJobBtn = document.getElementById("clearJobBtn");
+{% block extra_js %}
+<script>
+  const jobCard = document.getElementById("jobCard");
+  const jobStatusPill = document.getElementById("jobStatusPill");
+  const clearJobBtn = document.getElementById("clearJobBtn");
 
-    const jobMode = document.getElementById("jobMode");
-    const jobDryRun = document.getElementById("jobDryRun");
-    const jobStarted = document.getElementById("jobStarted");
-    const jobProgress = document.getElementById("jobProgress");
-    const jobBook = document.getElementById("jobBook");
-    const jobPath = document.getElementById("jobPath");
+  const jobMode = document.getElementById("jobMode");
+  const jobDryRun = document.getElementById("jobDryRun");
+  const jobStarted = document.getElementById("jobStarted");
+  const jobProgress = document.getElementById("jobProgress");
+  const jobBook = document.getElementById("jobBook");
+  const jobPath = document.getElementById("jobPath");
 
-    function setPill(status) {
-      if (status === "running") {
-        jobStatusPill.className = "pill run";
-        jobStatusPill.innerHTML = '<span class="spinner"></span>running';
-        clearJobBtn.disabled = true;
-      } else if (status === "finished") {
-        jobStatusPill.className = "pill ok";
-        jobStatusPill.textContent = "✅ finished";
-        clearJobBtn.disabled = false;
-      } else if (status === "failed") {
-        jobStatusPill.className = "pill fail";
-        jobStatusPill.textContent = "❌ failed";
-        clearJobBtn.disabled = false;
+  function setPill(status, mode, total) {
+    const safe = (status || "unknown").toLowerCase();
+    const m = (mode || "").toLowerCase();
+
+    if (safe === "running") {
+      jobStatusPill.className = "pill";
+      jobStatusPill.textContent = "⏳ running";
+      clearJobBtn.disabled = true;
+      return;
+    }
+    if (safe === "finished") {
+      jobStatusPill.className = "pill";
+      if (typeof total === "number" && total === 0) {
+        if (m === "cleanup") jobStatusPill.textContent = "✨ nothing to delete";
+        else if (m === "correct") jobStatusPill.textContent = "✨ all names correct";
+        else jobStatusPill.textContent = "✨ nothing to convert";
       } else {
-        jobStatusPill.className = "pill";
-        jobStatusPill.textContent = status;
-        clearJobBtn.disabled = false;
+        jobStatusPill.textContent = "✅ finished";
       }
+      clearJobBtn.disabled = false;
+      return;
     }
+    if (safe === "failed") {
+      jobStatusPill.className = "pill";
+      jobStatusPill.textContent = "❌ failed";
+      clearJobBtn.disabled = false;
+      return;
+    }
+    jobStatusPill.className = "pill";
+    jobStatusPill.textContent = safe;
+    clearJobBtn.disabled = false;
+  }
 
-    async function pollJob() {
-      try {
-        const r = await fetch("/api/job", { cache: "no-store" });
-        const j = await r.json();
+  async function pollJob() {
+    try {
+      const r = await fetch("/api/job", { cache: "no-store" });
+      const j = await r.json();
 
-        if (!j || j.status === "none") {
-          jobCard.style.display = "none";
-          return;
-        }
-
-        jobCard.style.display = "block";
-        setPill(j.status || "unknown");
-
-        jobMode.textContent = j.mode || "—";
-        jobDryRun.textContent = (j.dry_run === true) ? "true" : (j.dry_run === false ? "false" : "—");
-        jobStarted.textContent = j.started || "—";
-
-        const cur = (typeof j.current === "number") ? j.current : 0;
-        const totNum = (typeof j.total === "number") ? j.total : 0;
-
-        if (totNum <= 0) {
-          const m = (j.mode || "").toLowerCase();
-          let msg = "Nothing to do";
-          if (m === "cleanup") msg = "Nothing to delete";
-          else if (m === "correct") msg = "All names correct";
-          else if (m === "convert") msg = "Nothing to convert";
-
-          jobProgress.textContent = msg;
-          jobBook.textContent = "—";
-          jobPath.textContent = "—";
-        } else {
-          jobProgress.textContent = `${cur}/${totNum}`;
-          jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
-          jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
-        }
-      } catch (e) {
-        // ignore polling errors
+      if (!j || j.status === "none") {
+        jobCard.style.display = "none";
+        return;
       }
-    }
 
-    pollJob();
-    setInterval(pollJob, 2000);
-  </script>
-</body>
-</html>
+      jobCard.style.display = "block";
+
+      const cur = (typeof j.current === "number") ? j.current : 0;
+      const tot = (typeof j.total === "number") ? j.total : null;
+
+      setPill(j.status || "unknown", j.mode || "", tot);
+
+      jobMode.textContent = j.mode || "—";
+      jobDryRun.textContent = (j.dry_run === true) ? "true" : (j.dry_run === false ? "false" : "—");
+      jobStarted.textContent = j.started || "—";
+
+      if (tot === 0 && j.status === "finished") {
+        jobProgress.textContent = "—";
+        jobBook.textContent = "—";
+        jobPath.textContent = "—";
+        return;
+      }
+
+      jobProgress.textContent = (tot && tot > 0) ? `${cur}/${tot}` : `${cur}/?`;
+
+      jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
+      jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
+    } catch (e) {
+      // ignore polling errors
+    }
+  }
+
+  pollJob();
+  setInterval(pollJob, 2000);
+</script>
+{% endblock %}

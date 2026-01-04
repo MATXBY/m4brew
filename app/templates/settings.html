@@ -1,104 +1,41 @@
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Settings</title>
+{% extends "base.html" %}
+{% set active_page = "settings" %}
+{% block title %}m4brew — Settings{% endblock %}
 
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      margin: 24px;
-    }
+{% block content %}
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Settings</h2>
+    <p class="muted" style="margin:0 0 16px 0;">These are saved into <span class="mono">/config/settings.json</span>.</p>
 
-    form {
-      margin-bottom: 20px;
-      padding: 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fafafa;
-    }
+    <form method="post" action="/settings">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div style="grid-column: 1 / -1;">
+          <label for="root_folder">Root folder</label>
+          <input id="root_folder" type="text" name="root_folder"
+                 value="{{ settings.get('root_folder','') if settings else '' }}">
+        </div>
 
-    label {
-      display: inline-block;
-      width: 140px;
-      font-weight: 500;
-      vertical-align: top;
-      padding-top: 6px;
-    }
+        <div>
+          <label for="audio_mode">Audio mode</label>
+          {% set am = (settings.get("audio_mode") if settings else "match") %}
+          <select id="audio_mode" name="audio_mode">
+            <option value="match" {% if am == "match" %}selected{% endif %}>match (detect mono/stereo)</option>
+            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
+            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
+          </select>
+        </div>
 
-    input[type="text"] {
-      width: 640px;
-      max-width: 100%;
-      padding: 6px 8px;
-    }
+        <div>
+          <label for="bitrate">Bitrate (kbps)</label>
+          <input id="bitrate" type="number" name="bitrate" min="32" max="320" step="1"
+                 value="{{ settings.get('bitrate', 64) if settings else 64 }}">
+        </div>
+      </div>
 
-    select, button {
-      padding: 6px 8px;
-    }
+      <div style="margin-top:14px;">
+        <button class="btn primary" type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+{% endblock %}
 
-    .row {
-      margin-bottom: 12px;
-    }
-
-    pre {
-      background: #f3f3f3;
-      padding: 12px;
-      border-radius: 8px;
-      overflow: auto;
-    }
-
-    a {
-      text-decoration: none;
-      color: #0066cc;
-    }
-  </style>
-</head>
-
-<body>
-
-  <p><a href="/">← Back</a></p>
-
-  <h1>Settings</h1>
-
-  <form method="post" action="/settings">
-
-    <div class="row">
-      <label for="root_folder">Root folder:</label>
-      <input
-        id="root_folder"
-        name="root_folder"
-        type="text"
-        value="{{ settings.root_folder }}"
-      />
-    </div>
-
-    <div class="row">
-      <label for="bitrate">Bitrate (kbps):</label>
-      <select id="bitrate" name="bitrate">
-        {% for b in [32, 64, 96, 128, 160, 192] %}
-          <option value="{{ b }}" {% if settings.bitrate == b %}selected{% endif %}>
-            {{ b }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="row">
-      <label for="audio_mode">Audio mode:</label>
-      <select id="audio_mode" name="audio_mode">
-        {% for m in ["match", "mono", "stereo"] %}
-          <option value="{{ m }}" {% if settings.audio_mode == m %}selected{% endif %}>
-            {{ m }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <button type="submit">Save</button>
-  </form>
-
-  <h2>Current settings.json</h2>
-  <pre>{{ settings | tojson(indent=2) }}</pre>
-
-</body>
-</html>
