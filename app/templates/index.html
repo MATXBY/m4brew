@@ -1,96 +1,120 @@
 {% extends "base.html" %}
 {% set active_page = "tasks" %}
-{% block title %}m4brew — Tasks{% endblock %}
+
+{% block title %}m4brew • Tasks{% endblock %}
 
 {% block content %}
-  <!-- Job status card -->
-  <div class="card" id="jobCard" style="display:none; margin-bottom:16px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <strong>Job</strong>
-        <span class="pill" id="jobStatusPill">—</span>
+  <div class="card" style="padding: 18px;">
+    <!-- Steps -->
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <div class="stepRow">
+        <div class="stepLabel">step 1: convert to m4b</div>
+
+        <form method="post" action="/" style="margin:0; display:flex; gap:10px;">
+          <input type="hidden" name="mode" value="convert">
+          <button class="btn" type="submit" name="dry_run" value="true">Test</button>
+          <button class="btn primary" type="submit" name="dry_run" value="false">Start</button>
+        </form>
       </div>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <a class="btn" href="/job/output" target="_blank" rel="noreferrer">Live output</a>
+
+      <div class="stepRow">
+        <div class="stepLabel">step 2: rename books</div>
+
+        <form method="post" action="/" style="margin:0; display:flex; gap:10px;">
+          <input type="hidden" name="mode" value="correct">
+          <button class="btn" type="submit" name="dry_run" value="true">Test</button>
+          <button class="btn primary" type="submit" name="dry_run" value="false">Start</button>
+        </form>
+      </div>
+
+      <div class="stepRow">
+        <div class="stepLabel">step 3: remove backups</div>
+
+        <form method="post" action="/" style="margin:0; display:flex; gap:10px;">
+          <input type="hidden" name="mode" value="cleanup">
+          <button class="btn" type="submit" name="dry_run" value="true">Test</button>
+          <button class="btn primary" type="submit" name="dry_run" value="false">Start</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Output -->
+  <div class="card" style="margin-top:16px; padding: 18px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
+      <div style="font-weight: 700; font-size: 18px;">Output</div>
+
+      <div style="display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+        <label style="display:flex; align-items:center; gap: 8px; margin:0; cursor:pointer;">
+          <input id="liveToggle" type="checkbox" style="transform: translateY(1px);">
+          <span class="muted">Live output</span>
+        </label>
+
+        <button class="btn danger" type="button" disabled title="Not wired up yet">Cancel</button>
+
         <form method="post" action="/job/clear" style="margin:0;">
-          <button class="btn" type="submit" id="clearJobBtn" disabled>Clear job</button>
+          <button class="btn" type="submit" id="clearJobBtn" disabled>Clear</button>
         </form>
       </div>
     </div>
 
-    <div class="muted" style="margin-top:10px;">
-      <span class="mono">mode</span>: <span id="jobMode">—</span> •
-      <span class="mono">dry_run</span>: <span id="jobDryRun">—</span> •
-      <span class="mono">started</span>: <span id="jobStarted">—</span>
-    </div>
+    <div style="margin-top: 14px;">
+      <div class="muted" id="jobSummaryLine">Idle.</div>
 
-    <div style="margin-top:12px;">
-      <div><strong>Progress:</strong> <span id="jobProgress">—</span></div>
-      <div class="muted"><span class="mono" id="jobBook">—</span></div>
-      <div class="muted"><span class="mono" id="jobPath">—</span></div>
-    </div>
-  </div>
-
-  <!-- Task form -->
-  <div class="card">
-    <form id="runForm" method="post" action="/">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <div>
-          <label for="mode">Mode</label>
-          <select id="mode" name="mode">
-            <option value="convert" {% if (settings.get("mode") or "convert") == "convert" %}selected{% endif %}>convert (create .m4b + backup sources)</option>
-            <option value="correct" {% if (settings.get("mode") or "") == "correct" %}selected{% endif %}>correct (rename .m4b to match folder)</option>
-            <option value="cleanup" {% if (settings.get("mode") or "") == "cleanup" %}selected{% endif %}>cleanup (delete _backup_files)</option>
-          </select>
+      <div style="margin-top: 10px;">
+        <div class="muted">
+          <span class="mono">mode</span>: <span id="jobMode">—</span> •
+          <span class="mono">dry_run</span>: <span id="jobDryRun">—</span> •
+          <span class="mono">started</span>: <span id="jobStarted">—</span>
         </div>
 
-        <div>
-          <label for="dry_run">Dry run</label>
-          <select id="dry_run" name="dry_run">
-            {% set dr = (settings.get("dry_run") if settings else "true") %}
-            <option value="true" {% if (dr|string).lower() == "true" %}selected{% endif %}>true (simulate only)</option>
-            <option value="false" {% if (dr|string).lower() == "false" %}selected{% endif %}>false (make changes)</option>
-          </select>
-        </div>
-
-        <div style="grid-column: 1 / -1;">
-          <label for="root_folder">Root folder</label>
-          <input id="root_folder" type="text" name="root_folder"
-                 placeholder="/mnt/remotes/.../Audiobooks"
-                 value="{{ settings.get('root_folder','') if settings else '' }}">
-        </div>
-
-        <div>
-          <label for="audio_mode">Audio mode</label>
-          <select id="audio_mode" name="audio_mode">
-            {% set am = (settings.get("audio_mode") if settings else "match") %}
-            <option value="match" {% if am == "match" %}selected{% endif %}>match (detect mono/stereo)</option>
-            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
-            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="bitrate">Bitrate (kbps)</label>
-          <input id="bitrate" type="number" name="bitrate" min="32" max="320" step="1"
-                 value="{{ settings.get('bitrate', 64) if settings else 64 }}">
+        <div style="margin-top: 10px;">
+          <div><strong>Progress</strong> <span id="jobProgress">—</span></div>
+          <div class="muted"><span class="mono" id="jobBook">—</span></div>
+          <div class="muted"><span class="mono" id="jobPath">—</span></div>
         </div>
       </div>
 
-      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:14px;">
-        <button id="runBtn" class="btn primary" type="submit">Run</button>
-        <span class="muted" id="hint">Jobs run in the background — refresh is safe.</span>
+      <div id="liveBlock" style="margin-top: 14px; display:none;">
+        <pre id="liveOutput" style="margin:0;"></pre>
       </div>
-    </form>
+    </div>
   </div>
+
+  <style>
+    .stepRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(233,237,243,.10);
+      background: rgba(0,0,0,.12);
+    }
+    .stepLabel{
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(233,237,243,.10);
+      background: rgba(0,0,0,.18);
+      min-width: 260px;
+    }
+    @media (max-width: 720px){
+      .stepRow{ flex-direction: column; align-items: stretch; }
+      .stepLabel{ width: 100%; min-width: 0; }
+      .stepRow form{ width: 100%; justify-content: flex-end; }
+    }
+  </style>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  const jobCard = document.getElementById("jobCard");
-  const jobStatusPill = document.getElementById("jobStatusPill");
   const clearJobBtn = document.getElementById("clearJobBtn");
+  const liveToggle = document.getElementById("liveToggle");
+  const liveBlock = document.getElementById("liveBlock");
+  const liveOutput = document.getElementById("liveOutput");
 
+  const jobSummaryLine = document.getElementById("jobSummaryLine");
   const jobMode = document.getElementById("jobMode");
   const jobDryRun = document.getElementById("jobDryRun");
   const jobStarted = document.getElementById("jobStarted");
@@ -98,77 +122,94 @@
   const jobBook = document.getElementById("jobBook");
   const jobPath = document.getElementById("jobPath");
 
-  function setPill(status, mode, total) {
-    const safe = (status || "unknown").toLowerCase();
-    const m = (mode || "").toLowerCase();
+  let lastJobStatus = "none";
 
-    if (safe === "running") {
-      jobStatusPill.className = "pill";
-      jobStatusPill.textContent = "⏳ running";
-      clearJobBtn.disabled = true;
-      return;
-    }
-    if (safe === "finished") {
-      jobStatusPill.className = "pill";
-      if (typeof total === "number" && total === 0) {
-        if (m === "cleanup") jobStatusPill.textContent = "✨ nothing to delete";
-        else if (m === "correct") jobStatusPill.textContent = "✨ all names correct";
-        else jobStatusPill.textContent = "✨ nothing to convert";
-      } else {
-        jobStatusPill.textContent = "✅ finished";
-      }
-      clearJobBtn.disabled = false;
-      return;
-    }
-    if (safe === "failed") {
-      jobStatusPill.className = "pill";
-      jobStatusPill.textContent = "❌ failed";
-      clearJobBtn.disabled = false;
-      return;
-    }
-    jobStatusPill.className = "pill";
-    jobStatusPill.textContent = safe;
-    clearJobBtn.disabled = false;
+  function progressText(j) {
+    const cur = (typeof j.current === "number") ? j.current : 0;
+    const tot = (typeof j.total === "number") ? j.total : 0;
+
+    if (tot > 0) return `${cur}/${tot}`;
+
+    // tot == 0 ⇒ show friendly per-mode “nothing to do”
+    const mode = (j.mode || "").toLowerCase();
+    if (mode === "cleanup") return "Nothing to delete";
+    if (mode === "correct") return "All names correct";
+    if (mode === "convert") return "Nothing to convert";
+    return "Nothing to do";
   }
 
-  async function pollJob() {
+  async function fetchJob() {
+    const r = await fetch("/api/job", { cache: "no-store" });
+    return await r.json();
+  }
+
+  async function fetchOutput() {
+    const r = await fetch("/job/output", { cache: "no-store" });
+    return await r.text();
+  }
+
+  async function poll() {
     try {
-      const r = await fetch("/api/job", { cache: "no-store" });
-      const j = await r.json();
+      const j = await fetchJob();
 
       if (!j || j.status === "none") {
-        jobCard.style.display = "none";
+        lastJobStatus = "none";
+        clearJobBtn.disabled = true;
+
+        jobSummaryLine.textContent = "Idle.";
+        jobMode.textContent = "—";
+        jobDryRun.textContent = "—";
+        jobStarted.textContent = "—";
+        jobProgress.textContent = "—";
+        jobBook.textContent = "—";
+        jobPath.textContent = "—";
+
+        if (liveToggle.checked) {
+          liveBlock.style.display = "block";
+          liveOutput.textContent = "";
+        } else {
+          liveBlock.style.display = "none";
+        }
         return;
       }
 
-      jobCard.style.display = "block";
+      lastJobStatus = j.status || "unknown";
+      clearJobBtn.disabled = (lastJobStatus === "running");
 
-      const cur = (typeof j.current === "number") ? j.current : 0;
-      const tot = (typeof j.total === "number") ? j.total : null;
-
-      setPill(j.status || "unknown", j.mode || "", tot);
+      // Summary line
+      if (lastJobStatus === "running") jobSummaryLine.textContent = "Running.";
+      else if (lastJobStatus === "finished") jobSummaryLine.textContent = "Finished.";
+      else if (lastJobStatus === "failed") jobSummaryLine.textContent = "Failed.";
+      else jobSummaryLine.textContent = (lastJobStatus || "—");
 
       jobMode.textContent = j.mode || "—";
       jobDryRun.textContent = (j.dry_run === true) ? "true" : (j.dry_run === false ? "false" : "—");
       jobStarted.textContent = j.started || "—";
+      jobProgress.textContent = progressText(j);
 
-      if (tot === 0 && j.status === "finished") {
-        jobProgress.textContent = "—";
-        jobBook.textContent = "—";
-        jobPath.textContent = "—";
-        return;
+      jobBook.textContent = j.current_book ? `Book: ${j.current_book}` : "—";
+      jobPath.textContent = j.current_path ? `Path: ${j.current_path}` : "—";
+
+      // Live output
+      if (liveToggle.checked) {
+        liveBlock.style.display = "block";
+        const out = await fetchOutput();
+        liveOutput.textContent = out || "";
+        liveOutput.scrollTop = liveOutput.scrollHeight;
+      } else {
+        liveBlock.style.display = "none";
       }
 
-      jobProgress.textContent = (tot && tot > 0) ? `${cur}/${tot}` : `${cur}/?`;
-
-      jobBook.textContent = j.current_book ? `BOOK: ${j.current_book}` : "—";
-      jobPath.textContent = j.current_path ? `PATH: ${j.current_path}` : "—";
     } catch (e) {
-      // ignore polling errors
+      // ignore transient errors
     }
   }
 
-  pollJob();
-  setInterval(pollJob, 2000);
+  liveToggle.addEventListener("change", () => {
+    liveBlock.style.display = liveToggle.checked ? "block" : "none";
+  });
+
+  poll();
+  setInterval(poll, 2000);
 </script>
 {% endblock %}

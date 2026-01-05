@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}About • m4brew{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">About</h2>
+
+    <p class="muted" style="max-width: 72ch; line-height: 1.6; margin: 0;">
+      <strong>m4brew</strong> is a friendly, opinionated tool for audiobook housekeeping:
+      convert folders into a single chapterised <span class="mono">.m4b</span>, keep naming consistent,
+      and clean up backups when you’re happy.
+    </p>
+
+    <div style="height:12px;"></div>
+
+    <p class="muted" style="max-width: 72ch; line-height: 1.6; margin: 0;">
+      Jobs run in the background, so you can refresh or bounce between pages safely.
+      Start with <strong>Test</strong> runs first, then hit <strong>Start</strong> when you’re confident.
+    </p>
+  </div>
+{% endblock %}

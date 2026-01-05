@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}m4brew{% endblock %}</title>
+
   <style>
     :root{
       --bg: #14161a;
@@ -14,22 +15,25 @@
       --border: rgba(233,237,243,.10);
       --shadow: 0 18px 40px rgba(0,0,0,.38);
 
-      --accent: #7c5cff;   /* tasteful colour pop */
-      --accent2: #2dd4bf;  /* secondary pop */
+      --accent: #7c5cff;
+      --accent2: #2dd4bf;
       --danger: #ff5c7a;
 
       --radius: 18px;
-      --radius2: 999px;
+      --radius-pill: 999px;
+      --control-h: 44px;
     }
 
     * { box-sizing: border-box; }
     html, body { height: 100%; }
+
     body {
       margin: 0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 600px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
-                  radial-gradient(1000px 500px at 100% 10%, rgba(45,212,191,.18), transparent 55%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
+        radial-gradient(1000px 500px at 100% 10%, rgba(45,212,191,.18), transparent 55%),
+        var(--bg);
       color: var(--text);
     }
 
@@ -41,7 +45,8 @@
       padding: 26px 18px 44px;
     }
 
-    /* Header */
+    /* ================= HEADER ================= */
+
     .header {
       display: flex;
       flex-direction: column;
@@ -62,15 +67,13 @@
       width: 64px;
       height: 64px;
       border-radius: 16px;
-      background:
-        linear-gradient(135deg, rgba(124,92,255,.95), rgba(45,212,191,.75));
+      background: linear-gradient(135deg, rgba(124,92,255,.95), rgba(45,212,191,.75));
       box-shadow: 0 12px 28px rgba(0,0,0,.35);
       border: 1px solid rgba(255,255,255,.12);
     }
 
     .title {
       font-size: 28px;
-      letter-spacing: .2px;
       margin: 0;
       line-height: 1.1;
     }
@@ -81,7 +84,8 @@
       color: var(--muted);
     }
 
-    /* Nav pills */
+    /* ================= NAV ================= */
+
     .nav {
       display:flex;
       gap: 10px;
@@ -94,18 +98,24 @@
       display:inline-flex;
       align-items:center;
       gap: 8px;
-      padding: 9px 14px;
-      border-radius: var(--radius2);
+      height: var(--control-h);
+      padding: 0 16px;
+      border-radius: var(--radius-pill);
       background: rgba(255,255,255,.05);
       border: 1px solid var(--border);
-      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
       transition: transform .06s ease, background .12s ease, border-color .12s ease;
-      user-select: none;
     }
-    .pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.07); }
+
+    .pill:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.07);
+    }
+
     .pill.active {
-      background: rgba(124,92,255,.16);
-      border-color: rgba(124,92,255,.35);
+      background: rgba(124,92,255,.18);
+      border-color: rgba(124,92,255,.40);
     }
 
     .dot {
@@ -114,9 +124,11 @@
       border-radius: 999px;
       background: rgba(233,237,243,.35);
     }
+
     .pill.active .dot { background: var(--accent); }
 
-    /* Page content container */
+    /* ================= CONTENT ================= */
+
     .content {
       margin-top: 18px;
       padding: 0 2px;
@@ -130,54 +142,115 @@
       padding: 16px;
     }
 
-    /* Shared form/table basics */
-    label { display:block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
-    input[type="text"], input[type="number"], select {
-      width:100%;
-      padding: 10px 11px;
-      border-radius: 14px;
+    .muted { color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+    /* ================= CONTROLS ================= */
+
+    .field {
+      width: 100%;
+      height: var(--control-h);
+      padding: 10px 16px;              /* ✅ vertical centering for select + input */
+      border-radius: var(--radius-pill);
+
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.2;                /* ✅ do NOT use var(--control-h) here */
+
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.18);
       color: var(--text);
       outline: none;
+
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
     }
-    input::placeholder { color: rgba(233,237,243,.35); }
+
+    .field::placeholder {
+      color: rgba(233,237,243,.35);
+    }
+
+    select.field {
+      padding-right: 46px; /* space for arrow */
+      background-image:
+        linear-gradient(45deg, transparent 50%, rgba(233,237,243,.65) 50%),
+        linear-gradient(135deg, rgba(233,237,243,.65) 50%, transparent 50%);
+      background-position:
+        calc(100% - 22px) 50%,
+        calc(100% - 16px) 50%;
+      background-size: 7px 7px;
+      background-repeat: no-repeat;
+    }
+
+    .field:focus {
+      border-color: rgba(124,92,255,.55);
+      box-shadow: 0 0 0 1px rgba(124,92,255,.35);
+    }
+
+    /* ================= BUTTONS ================= */
 
     .btn {
       display:inline-flex;
       align-items:center;
       justify-content:center;
       gap: 8px;
-      padding: 10px 12px;
-      border-radius: 14px;
+      height: var(--control-h);
+      padding: 0 18px;
+      border-radius: var(--radius-pill);
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
-      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
       cursor: pointer;
-      transition: transform .06s ease, background .12s ease, border-color .12s ease;
+      transition: transform .06s ease, background .12s ease;
     }
-    .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.08); }
-    .btn.primary { background: rgba(124,92,255,.22); border-color: rgba(124,92,255,.35); font-weight: 650; }
-    .btn.danger { background: rgba(255,92,122,.14); border-color: rgba(255,92,122,.25); }
-    .btn:disabled { opacity: .55; cursor: not-allowed; transform:none; }
 
-    .muted { color: var(--muted); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.08);
+    }
+
+    .btn.primary {
+      background: rgba(124,92,255,.26);
+      border-color: rgba(124,92,255,.45);
+    }
+
+    .btn.danger {
+      background: rgba(255,92,122,.18);
+      border-color: rgba(255,92,122,.35);
+    }
+
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform:none;
+    }
+
+    /* ================= TABLES / LOGS ================= */
 
     table { width:100%; border-collapse:collapse; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.08); text-align:left; vertical-align: middle; }
-    th { color: rgba(233,237,243,.75); font-size: 12px; font-weight: 650; }
+
+    th, td {
+      padding: 10px 8px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      text-align:left;
+    }
+
+    th {
+      font-size: 12px;
+      font-weight: 650;
+      color: rgba(233,237,243,.75);
+    }
 
     pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
       background: rgba(0,0,0,.20);
       border: 1px solid rgba(255,255,255,.10);
       border-radius: 14px;
       padding: 12px;
       max-height: 45vh;
       overflow:auto;
-      color: rgba(233,237,243,.92);
+      font-size: 13px;
     }
   </style>
 
@@ -188,22 +261,25 @@
   <div class="wrap">
     <header class="header">
       <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
+        <div class="logo"></div>
         <div>
           <h1 class="title">m4brew</h1>
           <p class="subtitle">Friendly audiobook housekeeping • jobs run in the background</p>
         </div>
       </div>
 
-      <nav class="nav" aria-label="Site">
+      <nav class="nav">
+        <a class="pill {% if active_page == 'about' %}active{% endif %}" href="/about">
+          <span class="dot"></span> About
+        </a>
         <a class="pill {% if active_page == 'tasks' %}active{% endif %}" href="/">
-          <span class="dot" aria-hidden="true"></span> Tasks
+          <span class="dot"></span> Tasks
         </a>
         <a class="pill {% if active_page == 'settings' %}active{% endif %}" href="/settings">
-          <span class="dot" aria-hidden="true"></span> Settings
+          <span class="dot"></span> Settings
         </a>
         <a class="pill {% if active_page == 'history' %}active{% endif %}" href="/history">
-          <span class="dot" aria-hidden="true"></span> History
+          <span class="dot"></span> History
         </a>
       </nav>
     </header>

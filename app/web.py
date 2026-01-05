@@ -7,18 +7,9 @@ import threading
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from flask import (
-    Flask,
-    Response,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    send_file,
-    url_for,
-)
+from flask import Flask, Response, jsonify, redirect, render_template, request, send_file, url_for
 
 APP_DIR = Path(__file__).resolve().parent
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config"))
@@ -158,7 +149,6 @@ def _save_job(job: Dict[str, Any]) -> None:
 def _pid_is_running(pid: Optional[int]) -> bool:
     if not pid or pid <= 0:
         return False
-    # Linux proc check
     return Path(f"/proc/{pid}").exists()
 
 
@@ -178,9 +168,6 @@ def _job_is_running(job: Dict[str, Any]) -> bool:
 # -------------------------
 # Scanning totals (best-effort)
 # -------------------------
-def _has_any(dir_path: Path, pattern: str) -> bool:
-    return any(dir_path.glob(pattern))
-
 def _scan_total(mode: str, root_folder: str) -> int:
     root = Path(root_folder)
     if not root.exists():
@@ -203,7 +190,6 @@ def _scan_total(mode: str, root_folder: str) -> int:
         return 0
 
     if mode == "cleanup":
-        # match the script: count any "_backup_files" directory anywhere under ROOT
         try:
             return sum(1 for p in root.rglob("_backup_files") if p.is_dir())
         except Exception:
@@ -215,11 +201,9 @@ def _scan_total(mode: str, root_folder: str) -> int:
         for book_dir in book_dirs:
             author = book_dir.parent.name
             book = book_dir.name
-
             m4bs = list(book_dir.glob("*.m4b"))
             if len(m4bs) != 1:
                 continue
-
             desired_name = f"{book} - {author}.m4b"
             if m4bs[0].name != desired_name:
                 n += 1
@@ -239,7 +223,6 @@ def _scan_total(mode: str, root_folder: str) -> int:
 # Background runner (stream output, update progress)
 # -------------------------
 def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
-    # Reset output log
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     JOB_OUT_PATH.write_text("", encoding="utf-8")
 
@@ -259,10 +242,6 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
             f.write(line)
 
     def strip_log_prefix(s: str) -> str:
-        # Convert:
-        #   "[2026-01-04 01:09:53] BOOK:   test book"
-        # into:
-        #   "BOOK:   test book"
         s = s.strip()
         if s.startswith("[") and "] " in s:
             return s.split("] ", 1)[1].strip()
@@ -293,7 +272,6 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
             s = strip_log_prefix(line)
 
-            # New book block begins
             if s.startswith("----------------------------------------"):
                 current += 1
                 bump(current=current, current_book=current_book, current_path=current_path)
@@ -315,7 +293,6 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         summary = parse_summary_from_output(full_output)
         runtime_s = int(time.time() - start)
 
-        # Ensure finished jobs display X/X
         if total > 0:
             current = total
 
@@ -344,6 +321,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         runtime_s = int(time.time() - start)
         bump(status="failed", exit_code=1, runtime_s=runtime_s)
         write_line(f"\n[worker-error] {e}\n")
+
 
 def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate: int) -> Dict[str, Any]:
     existing = _load_job()
@@ -396,13 +374,7 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
 def index_get():
     settings = load_settings()
     job = _load_job()
-    return render_template(
-        "index.html",
-        settings=settings,
-        last_output=None,
-        last_summary=None,
-        job=job,
-    )
+    return render_template("index.html", settings=settings, job=job, active_page="tasks")
 
 
 @app.post("/")
@@ -415,30 +387,36 @@ def index_post():
     audio_mode = request.form.get("audio_mode") or settings.get("audio_mode") or "match"
     bitrate = int(request.form.get("bitrate") or settings.get("bitrate") or 64)
 
-    # ✅ Persist last selections so the UI doesn't reset after redirect/refresh
-    save_settings({
-        "mode": mode,
-        "dry_run": "true" if dry_run else "false",
-        "root_folder": root_folder,
-        "audio_mode": audio_mode,
-        "bitrate": bitrate,
-    })
+    # Persist last selections
+    save_settings(
+        {
+            "mode": mode,
+            "dry_run": "true" if dry_run else "false",
+            "root_folder": root_folder,
+            "audio_mode": audio_mode,
+            "bitrate": bitrate,
+        }
+    )
 
-    # Start background job
-    job = start_job(mode, dry_run, root_folder, audio_mode, bitrate)
+    start_job(mode, dry_run, root_folder, audio_mode, bitrate)
     return redirect(url_for("index_get"))
+
 
 @app.get("/api/job")
 def api_job():
     job = _load_job()
     if not job:
         return jsonify({"status": "none"})
-    # If job claims running but PID is gone, mark it failed (defensive)
     if job.get("status") == "running" and not _job_is_running(job):
         job["status"] = "failed"
         job["updated"] = now_utc_iso()
         _save_job(job)
     return jsonify(job)
+
+
+@app.get("/about")
+def about_get():
+    return render_template("about.html", active_page="about")
 
 
 @app.get("/job/output")
@@ -467,24 +445,27 @@ def job_clear():
 @app.get("/settings")
 def settings_get():
     settings = load_settings()
-    return render_template("settings.html", settings=settings)
+    return render_template("settings.html", settings=settings, active_page="settings")
 
 
 @app.post("/settings")
 def settings_post():
-    settings = {
+    existing = load_settings()
+    updated = {
         "root_folder": request.form.get("root_folder") or "",
         "audio_mode": request.form.get("audio_mode") or "match",
         "bitrate": int(request.form.get("bitrate") or 64),
+        # keep these if they exist so Tasks page doesn't reset oddly
+        "mode": existing.get("mode", "convert"),
+        "dry_run": existing.get("dry_run", "true"),
     }
-    save_settings(settings)
+    save_settings(updated)
     return redirect(url_for("settings_get"))
 
 
 @app.get("/history")
 def history_get():
-    records = read_history()
-    records = list(reversed(records))  # newest first
+    records = list(reversed(read_history()))  # newest first
 
     enriched = []
     for i, r in enumerate(records):
@@ -514,7 +495,7 @@ def history_get():
             }
         )
 
-    return render_template("history.html", runs=enriched, count=len(enriched))
+    return render_template("history.html", runs=enriched, count=len(enriched), active_page="history")
 
 
 @app.get("/history/<int:idx>")
@@ -522,11 +503,10 @@ def history_detail(idx: int):
     records = list(reversed(read_history()))
     if idx < 0 or idx >= len(records):
         return "Not found", 404
-
     r = records[idx]
     ts = r.get("ts", "")
     r["ts_human"] = humanize_ts(ts) if ts else ""
-    return render_template("history_detail.html", detail=r)
+    return render_template("history_detail.html", detail=r, active_page="history")
 
 
 @app.get("/history/download")

@@ -1,41 +1,116 @@
 {% extends "base.html" %}
-{% set active_page = "settings" %}
-{% block title %}m4brew — Settings{% endblock %}
+
+{% block title %}m4brew • Settings{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Settings page layout: stacked rows like Tasks */
+  .stack {
+    display: grid;
+    gap: 14px;
+    padding: 6px;
+  }
+
+  .setting-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  }
+
+  @media (max-width: 720px) {
+    .setting-row { grid-template-columns: 1fr; }
+  }
+
+  .label-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-weight: 650;
+    letter-spacing: .2px;
+    background: rgba(124,92,255,.18);
+    border: 1px solid rgba(124,92,255,.32);
+    color: rgba(233,237,243,.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .field {
+    width: 100%;
+    border-radius: 999px;
+    padding: 11px 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.18);
+    color: var(--text);
+    outline: none;
+  }
+
+  .actions {
+    display:flex;
+    justify-content:flex-end;
+    padding: 6px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
   <div class="card">
-    <h2 style="margin:0 0 10px 0;">Settings</h2>
-    <p class="muted" style="margin:0 0 16px 0;">These are saved into <span class="mono">/config/settings.json</span>.</p>
+    <form method="post" action="/settings" id="settingsForm">
+      <div class="stack">
 
-    <form method="post" action="/settings">
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
-        <div style="grid-column: 1 / -1;">
-          <label for="root_folder">Root folder</label>
-          <input id="root_folder" type="text" name="root_folder"
+        <div class="setting-row">
+          <div class="label-pill">source folder</div>
+          <input class="field" id="root_folder" type="text" name="root_folder"
+                 placeholder="/mnt/remotes/.../Audiobooks"
                  value="{{ settings.get('root_folder','') if settings else '' }}">
         </div>
 
-        <div>
-          <label for="audio_mode">Audio mode</label>
-          {% set am = (settings.get("audio_mode") if settings else "match") %}
-          <select id="audio_mode" name="audio_mode">
-            <option value="match" {% if am == "match" %}selected{% endif %}>match (detect mono/stereo)</option>
+        <div class="setting-row">
+          <div class="label-pill">audio tracks</div>
+          <select class="field" id="audio_mode" name="audio_mode">
+            {% set am = (settings.get("audio_mode") if settings else "match") %}
+            <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
             <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
             <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
           </select>
         </div>
 
-        <div>
-          <label for="bitrate">Bitrate (kbps)</label>
-          <input id="bitrate" type="number" name="bitrate" min="32" max="320" step="1"
-                 value="{{ settings.get('bitrate', 64) if settings else 64 }}">
+        <div class="setting-row">
+          <div class="label-pill">bitrate (kbps)</div>
+          <!-- UI matches your design (dropdown), but "match" is blocked for now -->
+          {% set br = (settings.get("bitrate", 64) if settings else 64) %}
+          <select class="field" id="bitrate" name="bitrate">
+            <option value="match">match (coming soon)</option>
+            {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
+              <option value="{{v}}" {% if br == v %}selected{% endif %}>{{v}}</option>
+            {% endfor %}
+          </select>
         </div>
-      </div>
 
-      <div style="margin-top:14px;">
-        <button class="btn primary" type="submit">Save</button>
+        <div class="actions">
+          <button class="btn primary" type="submit">Save</button>
+        </div>
+
       </div>
     </form>
   </div>
 {% endblock %}
 
+{% block extra_js %}
+<script>
+  // Prevent selecting "match" for bitrate until the backend supports it.
+  document.getElementById("settingsForm").addEventListener("submit", (e) => {
+    const br = document.getElementById("bitrate").value;
+    if (br === "match") {
+      e.preventDefault();
+      alert('Bitrate "match" isn’t wired up yet — pick a number for now.');
+    }
+  });
+</script>
+{% endblock %}
