@@ -1,0 +1,19 @@
+/* History page */
+
+.history-top{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+/* Make Clear History look like Download */
+.history-top .btn.danger{
+  background: var(--pill-bg);
+  border: 1px solid var(--pill-br);
+  color: var(--pillText);
+}
+
+.history-top .btn.danger:hover{
+  background: var(--pill-bg-hover);
+}

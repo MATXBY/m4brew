@@ -1,21 +1,21 @@
 {% extends "base.html" %}
-
-{% block title %}m4brew · History{% endblock %}
+{% block title %}m4brew • History{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='history.css') }}">
 {% endblock %}
 
-
 {% block content %}
-  <div class="card">
-    <div style="display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; margin-bottom: 10px;">
-      <a class="btn" href="/history/download">Download</a>
-      <form method="post" action="/history/clear" style="margin:0;">
-        <button class="btn danger" type="submit">Clear history</button>
-      </form>
-    </div>
+<div class="card">
 
+  <div class="history-top">
+    <a class="btn" href="/history/download">Download all</a>
+    <form method="post" action="/history/clear" style="margin:0;">
+      <button class="btn danger" type="submit">Clear history</button>
+    </form>
+  </div>
+
+  {% if runs and runs|length %}
     <table>
       <thead>
         <tr>
@@ -30,36 +30,25 @@
           <th></th>
         </tr>
       </thead>
-
       <tbody>
-        {% if count == 0 %}
+        {% for r in runs %}
           <tr>
-            <td colspan="9" class="muted">No history yet — run a job and it will appear here.</td>
+            <td><span class="status">{% if r.success %}✓{% else %}!{% endif %}</span></td>
+            <td class="when mono-small">{{ r.ts_human }}</td>
+            <td class="mono-small">{{ r.mode }}</td>
+            <td class="mono-small">{{ r.dry_run }}</td>
+            <td class="mono-small">{{ r.runtime_s }}</td>
+            <td class="mono-small">{{ r.created }}</td>
+            <td class="mono-small">{{ r.skipped }}</td>
+            <td class="mono-small">{{ r.failed }}</td>
+            <td><a class="btn" href="/history/{{ r.idx }}">View</a></td>
           </tr>
-        {% else %}
-          {% for r in runs %}
-          <tr>
-            <td>
-              {% if r.success %}
-                ✅
-              {% else %}
-                ❌
-              {% endif %}
-            </td>
-            <td class="mono">{{ r.ts_human }}</td>
-            <td class="mono">{{ r.mode }}</td>
-            <td class="mono">{{ "true" if r.dry_run else "false" }}</td>
-            <td class="mono">{{ r.runtime_s if r.runtime_s is not none else "—" }}</td>
-            <td class="mono">{{ r.created if r.created is not none else "—" }}</td>
-            <td class="mono">{{ r.skipped if r.skipped is not none else "—" }}</td>
-            <td class="mono">{{ r.failed if r.failed is not none else "—" }}</td>
-            <td style="text-align:right;">
-              <a class="btn" href="/history/{{ r.idx }}">View</a>
-            </td>
-          </tr>
-          {% endfor %}
-        {% endif %}
+        {% endfor %}
       </tbody>
     </table>
-  </div>
+  {% else %}
+    <p class="muted">No history yet — run a job and it will appear here.</p>
+  {% endif %}
+
+</div>
 {% endblock %}

@@ -1,54 +1,24 @@
 {% extends "base.html" %}
-
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}">
 {% endblock %}
 
 {% block content %}
-  <div class="card">
-    <div class="about-wrap">
+<div class="card">
+  <div class="about-stack">
 
-      <div class="about-row">
-        <div class="section-pill">Intro</div>
-        <div class="about-text">
-          <strong>m4brew</strong> is a friendly, opinionated tool for audiobook housekeeping.
-          It turns messy folders into clean, chapterised <span class="mono">.m4b</span> files — consistent names, predictable results.
-        </div>
-      </div>
-
-      <div class="about-row">
-        <div class="section-pill">Contents</div>
-        <div class="about-text">
-          Keep your library in a simple structure so m4brew can work reliably:
-          <div class="mono-block mono">Audiobooks / Author / Book / files…</div>
-          (One book per folder.)
-        </div>
-      </div>
-
-      <div class="about-row">
-        <div class="section-pill">The Brewer</div>
-        <div class="about-text">
-          It’s a three-step process:
-          <ul class="about-list">
-            <li><strong>Step 1</strong> — convert folders into a single <span class="mono">.m4b</span></li>
-            <li><strong>Step 2</strong> — rename existing <span class="mono">.m4b</span> files to match the folder structure</li>
-            <li><strong>Step 3</strong> — remove <span class="mono">_backup_files</span> once you’re happy</li>
-          </ul>
-          <div style="height:10px;"></div>
-          Jobs run in the background — you can switch pages safely. Start with <strong>Test</strong>, then hit <strong>Start</strong>.
-        </div>
-      </div>
-
-      <div class="about-row">
-        <div class="section-pill">Epilogue</div>
-        <div class="about-text">
-          m4brew won’t guess wildly — it aims to be predictable and reversible.
-          If you’re ever unsure, run <strong>Test</strong> first.
-        </div>
-      </div>
-
+    <div class="about-section">
+      <div class="about-title"><div class="label-pill">What is m4brew</div></div>
+      <p>coming soon</p>
     </div>
+
+    <div class="about-section">
+      <div class="about-title"><div class="label-pill">Instructions</div></div>
+      <p>coming soon</p>
+    </div>
+
   </div>
+</div>
 {% endblock %}

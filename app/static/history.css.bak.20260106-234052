@@ -54,17 +54,3 @@ tbody td{
 .mono-small{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
-
-/* Purple buttons for History actions */
-.history-top .btn,
-table .btn{
-  background: rgba(124,92,255,.18);
-  border: 1px solid rgba(124,92,255,.32);
-  color: rgba(233,237,243,.92);
-}
-
-.history-top .btn:hover,
-table .btn:hover{
-  background: rgba(124,92,255,.28);
-  border-color: rgba(124,92,255,.45);
-}

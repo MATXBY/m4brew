@@ -1,54 +1,41 @@
-  .about-wrap{
-    display:grid;
-    gap:14px;
-    padding: 6px;
-  }
+/* About page layout */
 
-  .about-row{
-    padding: 16px;
-    border-radius: var(--radius);
-    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
-    border: 1px solid rgba(255,255,255,.10);
-    box-shadow: 0 10px 26px rgba(0,0,0,.22);
-  }
+.about-stack{
+  display:grid;
+  gap:16px;
+  padding:6px;
+}
 
-  .section-pill{
-    height: var(--pill-h);
-    width: var(--label-w);
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    padding: 0 var(--pill-pad-x);
-    border-radius: 999px;
-    font-weight: 650;
-    letter-spacing: .2px;
-    line-height: 1;
-    background: rgba(255,255,255,.05);
-    border: 1px solid var(--border);
-    color: var(--text);
-    margin-bottom: 10px;
-  }
+.about-section{
+  padding:18px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--card-bg-a), var(--card-bg-b));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
 
-  .about-text{
-    line-height: 1.6;
-    color: rgba(233,237,243,.82);
-  }
+  /* center everything */
+  text-align: center;
+}
 
-  .about-text strong{ color: rgba(233,237,243,.92); }
+.about-title{
+  display:flex;
+  justify-content:center;
+  margin-bottom:12px;
+}
 
-  .about-list{
-    margin: 10px 0 0 0;
-    padding-left: 18px;
-    color: rgba(233,237,243,.82);
-  }
+.about-section p{
+  margin:10px 0 0;
+  color: var(--muted);
+  line-height:1.45;
+}
 
-  .mono-block{
-    margin-top: 10px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.12);
-    background: rgba(0,0,0,.18);
-    color: rgba(233,237,243,.90);
-    overflow-x:auto;
-    white-space: nowrap;
-  }
+.about-section ul{
+  margin:10px auto 0;
+  padding:0;
+  list-style-position: inside;
+  color: var(--muted);
+}
+
+.about-section li{
+  margin:6px 0;
+}
