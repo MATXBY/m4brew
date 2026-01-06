@@ -1,64 +1,60 @@
 {% extends "base.html" %}
-{% set active_page = "history" %}
-{% block title %}m4brew — History{% endblock %}
+
+{% block title %}m4brew · History{% endblock %}
 
 {% block content %}
   <div class="card">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-      <div>
-        <h2 style="margin:0;">History</h2>
-        <div class="muted">Stored in <span class="mono">/config/history.jsonl</span> • {{ count }} run(s)</div>
-      </div>
-
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <a class="btn" href="/history/download">Download</a>
-        <form method="post" action="/history/clear" onsubmit="return confirm('Clear history? This cannot be undone.');" style="margin:0;">
-          <button class="btn danger" type="submit">Clear history</button>
-        </form>
-      </div>
+    <div style="display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; margin-bottom: 10px;">
+      <a class="btn" href="/history/download">Download</a>
+      <form method="post" action="/history/clear" style="margin:0;">
+        <button class="btn danger" type="submit">Clear history</button>
+      </form>
     </div>
 
-    <div style="margin-top:14px;">
-      <table>
-        <thead>
-          <tr>
-            <th>Status</th>
-            <th>When</th>
-            <th>Mode</th>
-            <th>Dry</th>
-            <th>Runtime</th>
-            <th>Created</th>
-            <th>Skipped</th>
-            <th>Failed</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for r in runs %}
-          <tr>
-            <td>{% if r.success %}✅{% else %}❌{% endif %}</td>
-            <td>
-              <div>{{ r.ts_human }}</div>
-              <div class="muted mono">{{ r.ts }}</div>
-            </td>
-            <td class="mono">{{ r.mode }}</td>
-            <td>{{ "yes" if r.dry_run else "no" }}</td>
-            <td>{{ (r.runtime_s|string) + "s" if r.runtime_s is not none else "—" }}</td>
-            <td>{{ r.created if r.created is not none else "—" }}</td>
-            <td>{{ r.skipped if r.skipped is not none else "—" }}</td>
-            <td>{{ r.failed if r.failed is not none else "—" }}</td>
-            <td><a class="btn" href="/history/{{ r.idx }}">View</a></td>
-          </tr>
-          {% endfor %}
+    <table>
+      <thead>
+        <tr>
+          <th>Status</th>
+          <th>When</th>
+          <th>Mode</th>
+          <th>Dry</th>
+          <th>Runtime</th>
+          <th>Created</th>
+          <th>Skipped</th>
+          <th>Failed</th>
+          <th></th>
+        </tr>
+      </thead>
 
-          {% if runs|length == 0 %}
+      <tbody>
+        {% if count == 0 %}
           <tr>
             <td colspan="9" class="muted">No history yet — run a job and it will appear here.</td>
           </tr>
-          {% endif %}
-        </tbody>
-      </table>
-    </div>
+        {% else %}
+          {% for r in runs %}
+          <tr>
+            <td>
+              {% if r.success %}
+                ✅
+              {% else %}
+                ❌
+              {% endif %}
+            </td>
+            <td class="mono">{{ r.ts_human }}</td>
+            <td class="mono">{{ r.mode }}</td>
+            <td class="mono">{{ "true" if r.dry_run else "false" }}</td>
+            <td class="mono">{{ r.runtime_s if r.runtime_s is not none else "—" }}</td>
+            <td class="mono">{{ r.created if r.created is not none else "—" }}</td>
+            <td class="mono">{{ r.skipped if r.skipped is not none else "—" }}</td>
+            <td class="mono">{{ r.failed if r.failed is not none else "—" }}</td>
+            <td style="text-align:right;">
+              <a class="btn" href="/history/{{ r.idx }}">View</a>
+            </td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+    </table>
   </div>
 {% endblock %}
-
