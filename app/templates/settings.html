@@ -4,7 +4,6 @@
 
 {% block extra_head %}
 <style>
-  /* Settings page layout: stacked rows like Tasks */
   .stack {
     display: grid;
     gap: 14px;
@@ -13,7 +12,7 @@
 
   .setting-row {
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: var(--label-w) 1fr; /* ✅ matches Tasks step pill width */
     gap: 14px;
     align-items: center;
     padding: 16px;
@@ -23,28 +22,16 @@
     box-shadow: 0 10px 26px rgba(0,0,0,.22);
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 820px) {
     .setting-row { grid-template-columns: 1fr; }
-  }
-
-  .label-pill {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-weight: 650;
-    letter-spacing: .2px;
-    background: rgba(124,92,255,.18);
-    border: 1px solid rgba(124,92,255,.32);
-    color: rgba(233,237,243,.92);
-    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    .label-pill { width: 100%; }
   }
 
   .field {
     width: 100%;
+    height: var(--pill-h);        /* ✅ same as pills/buttons */
+    padding: 0 var(--pill-pad-x);
     border-radius: 999px;
-    padding: 11px 14px;
     border: 1px solid rgba(255,255,255,.12);
     background: rgba(0,0,0,.18);
     color: var(--text);
@@ -65,14 +52,14 @@
       <div class="stack">
 
         <div class="setting-row">
-          <div class="label-pill">source folder</div>
+          <div class="label-pill">select source folder</div>
           <input class="field" id="root_folder" type="text" name="root_folder"
                  placeholder="/mnt/remotes/.../Audiobooks"
                  value="{{ settings.get('root_folder','') if settings else '' }}">
         </div>
 
         <div class="setting-row">
-          <div class="label-pill">audio tracks</div>
+          <div class="label-pill">select audio tracks</div>
           <select class="field" id="audio_mode" name="audio_mode">
             {% set am = (settings.get("audio_mode") if settings else "match") %}
             <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
@@ -82,8 +69,7 @@
         </div>
 
         <div class="setting-row">
-          <div class="label-pill">bitrate (kbps)</div>
-          <!-- UI matches your design (dropdown), but "match" is blocked for now -->
+          <div class="label-pill">select bitrate (kbps)</div>
           {% set br = (settings.get("bitrate", 64) if settings else 64) %}
           <select class="field" id="bitrate" name="bitrate">
             <option value="match">match (coming soon)</option>
@@ -104,7 +90,6 @@
 
 {% block extra_js %}
 <script>
-  // Prevent selecting "match" for bitrate until the backend supports it.
   document.getElementById("settingsForm").addEventListener("submit", (e) => {
     const br = document.getElementById("bitrate").value;
     if (br === "match") {
