@@ -1,0 +1,54 @@
+  .about-wrap{
+    display:grid;
+    gap:14px;
+    padding: 6px;
+  }
+
+  .about-row{
+    padding: 16px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  }
+
+  .section-pill{
+    height: var(--pill-h);
+    width: var(--label-w);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 var(--pill-pad-x);
+    border-radius: 999px;
+    font-weight: 650;
+    letter-spacing: .2px;
+    line-height: 1;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .about-text{
+    line-height: 1.6;
+    color: rgba(233,237,243,.82);
+  }
+
+  .about-text strong{ color: rgba(233,237,243,.92); }
+
+  .about-list{
+    margin: 10px 0 0 0;
+    padding-left: 18px;
+    color: rgba(233,237,243,.82);
+  }
+
+  .mono-block{
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.18);
+    color: rgba(233,237,243,.90);
+    overflow-x:auto;
+    white-space: nowrap;
+  }

@@ -16,6 +16,7 @@ services:
       - /mnt/cache/media:/mnt/cache/media:rw
       - /mnt/cache/appdata/m4brew/config:/config
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /mnt/cache/appdata/m4brew/app:/app
 
     environment:
       MODE: "convert"

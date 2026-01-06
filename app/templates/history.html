@@ -2,6 +2,11 @@
 
 {% block title %}m4brew · History{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='history.css') }}">
+{% endblock %}
+
+
 {% block content %}
   <div class="card">
     <div style="display:flex; justify-content:flex-end; gap:12px; flex-wrap:wrap; margin-bottom: 10px;">

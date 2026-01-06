@@ -1,1 +1,4 @@
 config/
+
+# Local safety backups
+app/templates/*.bak.*
