@@ -1,15 +1,109 @@
 {% extends "base.html" %}
 
-{% block title %}m4brew · About{% endblock %}
+{% block title %}m4brew • About{% endblock %}
+
+{% block extra_head %}
+<style>
+  .about-wrap{
+    display:grid;
+    gap:14px;
+    padding: 6px;
+  }
+
+  .about-row{
+    padding: 16px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  }
+
+  .section-pill{
+    height: var(--pill-h);
+    width: var(--label-w);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding: 0 var(--pill-pad-x);
+    border-radius: 999px;
+    font-weight: 650;
+    letter-spacing: .2px;
+    line-height: 1;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .about-text{
+    line-height: 1.6;
+    color: rgba(233,237,243,.82);
+  }
+
+  .about-text strong{ color: rgba(233,237,243,.92); }
+
+  .about-list{
+    margin: 10px 0 0 0;
+    padding-left: 18px;
+    color: rgba(233,237,243,.82);
+  }
+
+  .mono-block{
+    margin-top: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(0,0,0,.18);
+    color: rgba(233,237,243,.90);
+    overflow-x:auto;
+    white-space: nowrap;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
   <div class="card">
-    <p class="muted" style="font-size: 20px; line-height: 1.6; margin: 0;">
-      <strong style="color: var(--text);">m4brew</strong> is a friendly, opinionated tool for audiobook housekeeping:
-      convert folders into a single chapterised <span class="mono">.m4b</span>, keep naming consistent, and clean up backups when you’re happy.
-      <br><br>
-      Jobs run in the background, so you can refresh or bounce between pages safely. Start with <strong>Test</strong> runs first,
-      then hit <strong>Start</strong> when you’re confident.
-    </p>
+    <div class="about-wrap">
+
+      <div class="about-row">
+        <div class="section-pill">Intro</div>
+        <div class="about-text">
+          <strong>m4brew</strong> is a friendly, opinionated tool for audiobook housekeeping.
+          It turns messy folders into clean, chapterised <span class="mono">.m4b</span> files — consistent names, predictable results.
+        </div>
+      </div>
+
+      <div class="about-row">
+        <div class="section-pill">Contents</div>
+        <div class="about-text">
+          Keep your library in a simple structure so m4brew can work reliably:
+          <div class="mono-block mono">Audiobooks / Author / Book / files…</div>
+          (One book per folder.)
+        </div>
+      </div>
+
+      <div class="about-row">
+        <div class="section-pill">The Brewer</div>
+        <div class="about-text">
+          It’s a three-step process:
+          <ul class="about-list">
+            <li><strong>Step 1</strong> — convert folders into a single <span class="mono">.m4b</span></li>
+            <li><strong>Step 2</strong> — rename existing <span class="mono">.m4b</span> files to match the folder structure</li>
+            <li><strong>Step 3</strong> — remove <span class="mono">_backup_files</span> once you’re happy</li>
+          </ul>
+          <div style="height:10px;"></div>
+          Jobs run in the background — you can switch pages safely. Start with <strong>Test</strong>, then hit <strong>Start</strong>.
+        </div>
+      </div>
+
+      <div class="about-row">
+        <div class="section-pill">Epilogue</div>
+        <div class="about-text">
+          m4brew won’t guess wildly — it aims to be predictable and reversible.
+          If you’re ever unsure, run <strong>Test</strong> first.
+        </div>
+      </div>
+
+    </div>
   </div>
 {% endblock %}

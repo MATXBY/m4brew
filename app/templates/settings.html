@@ -4,6 +4,7 @@
 
 {% block extra_head %}
 <style>
+  /* Settings page: side-by-side rows (pill + field), matched to Tasks pill width */
   .stack {
     display: grid;
     gap: 14px;
@@ -12,7 +13,7 @@
 
   .setting-row {
     display: grid;
-    grid-template-columns: var(--label-w) 1fr; /* ✅ matches Tasks step pill width */
+    grid-template-columns: var(--label-w) 1fr; /* ✅ exact same width as step pills */
     gap: 14px;
     align-items: center;
     padding: 16px;
@@ -22,26 +23,45 @@
     box-shadow: 0 10px 26px rgba(0,0,0,.22);
   }
 
-  @media (max-width: 820px) {
+  @media (max-width: 720px) {
     .setting-row { grid-template-columns: 1fr; }
-    .label-pill { width: 100%; }
   }
 
-  .field {
+  /* Use global pill styling from base.html (same height/width/centering everywhere)
+     but keep it safe in case of template overrides */
+  .label-pill {
+    height: var(--pill-h);
     width: 100%;
-    height: var(--pill-h);        /* ✅ same as pills/buttons */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* ✅ centred like you want */
     padding: 0 var(--pill-pad-x);
     border-radius: 999px;
+    font-weight: 650;
+    letter-spacing: .2px;
+    line-height: 1;
+    background: rgba(124,92,255,.18);
+    border: 1px solid rgba(124,92,255,.32);
+    color: rgba(233,237,243,.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+  }
+
+  /* Inputs/selects match pill height + typography */
+  .field {
+    width: 100%;
+    height: var(--pill-h);
+    border-radius: 999px;
+    padding: 0 14px;
     border: 1px solid rgba(255,255,255,.12);
     background: rgba(0,0,0,.18);
     color: var(--text);
     outline: none;
+    line-height: 1;
   }
 
-  .actions {
-    display:flex;
-    justify-content:flex-end;
-    padding: 6px;
+  /* Some browsers ignore line-height on select; this helps vertical centring */
+  select.field {
+    padding-right: 42px;
   }
 </style>
 {% endblock %}
@@ -70,17 +90,12 @@
 
         <div class="setting-row">
           <div class="label-pill">select bitrate (kbps)</div>
-          {% set br = (settings.get("bitrate", 64) if settings else 64) %}
+          {% set br = (settings.get("bitrate", 96) if settings else 96) %}
           <select class="field" id="bitrate" name="bitrate">
-            <option value="match">match (coming soon)</option>
             {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
               <option value="{{v}}" {% if br == v %}selected{% endif %}>{{v}}</option>
             {% endfor %}
           </select>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" type="submit">Save</button>
         </div>
 
       </div>
@@ -90,12 +105,21 @@
 
 {% block extra_js %}
 <script>
-  document.getElementById("settingsForm").addEventListener("submit", (e) => {
-    const br = document.getElementById("bitrate").value;
-    if (br === "match") {
-      e.preventDefault();
-      alert('Bitrate "match" isn’t wired up yet — pick a number for now.');
-    }
-  });
+  // Auto-save (no save button / no "saved" pill)
+  const form = document.getElementById("settingsForm");
+  let t = null;
+
+  function autosave() {
+    if (t) clearTimeout(t);
+    t = setTimeout(async () => {
+      try {
+        const fd = new FormData(form);
+        await fetch("/settings", { method: "POST", body: fd });
+      } catch (e) {}
+    }, 250);
+  }
+
+  form.addEventListener("input", autosave);
+  form.addEventListener("change", autosave);
 </script>
 {% endblock %}

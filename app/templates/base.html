@@ -8,21 +8,25 @@
   <style>
     :root{
       --bg: #14161a;
+      --panel: #1c1f25;
+      --panel-2: #20242b;
       --text: #e9edf3;
       --muted: rgba(233,237,243,.68);
       --border: rgba(233,237,243,.10);
       --shadow: 0 18px 40px rgba(0,0,0,.38);
 
       --accent: #7c5cff;
+      --accent2: #2dd4bf;
       --danger: #ff5c7a;
 
       --radius: 18px;
       --radius2: 999px;
 
-      /* ✅ global layout locks */
-      --pill-h: 44px;       /* one height for ALL pills/buttons */
+      /* one size system */
+      --font: 12pt;
+      --pill-h: 44px;
       --pill-pad-x: 16px;
-      --label-w: 320px;     /* one width for Tasks step pill + Settings select pill */
+      --label-w: 320px;
     }
 
     * { box-sizing: border-box; }
@@ -31,8 +35,7 @@
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-      font-size: 12pt;                /* ✅ lock text to 12pt */
-      line-height: 1.35;
+      font-size: var(--font);
       background:
         radial-gradient(1200px 600px at 20% -10%, rgba(124,92,255,.35), transparent 60%),
         radial-gradient(1000px 500px at 100% 10%, rgba(45,212,191,.18), transparent 55%),
@@ -65,38 +68,37 @@
       gap: 10px;
     }
 
-    /* ✅ transparent logo area */
+    /* ✅ Logo is transparent (no grey panel) and bigger */
     .logo {
-      width: 72px;
-      height: 72px;
+      width: 92px;
+      height: 92px;
+      border-radius: 0;
       background: transparent;
-      border: 0;
+      border: none;
       box-shadow: none;
       display:flex;
       align-items:center;
       justify-content:center;
     }
-    .logo img {
-      width: 72px;
-      height: 72px;
+    .logo img{
+      width: 92px;
+      height: 92px;
       object-fit: contain;
       display:block;
-      filter: drop-shadow(0 14px 26px rgba(0,0,0,.45));
+      background: transparent;
     }
 
-    /* Only this is bigger */
     .title {
-      font-size: 28px;
+      font-size: 28px; /* only bigger text */
       letter-spacing: .2px;
       margin: 0;
       line-height: 1.1;
-      font-weight: 800;
     }
 
     .subtitle {
       margin: 0;
+      font-size: var(--font);
       color: var(--muted);
-      font-weight: 600;
     }
 
     /* Nav pills */
@@ -108,7 +110,6 @@
       margin-top: 6px;
     }
 
-    /* ✅ ONE pill geometry for nav pills */
     .pill {
       display:inline-flex;
       align-items:center;
@@ -121,7 +122,7 @@
       color: var(--text);
       transition: transform .06s ease, background .12s ease, border-color .12s ease;
       user-select: none;
-      font-weight: 650;
+      font-size: var(--font);
     }
     .pill:hover { transform: translateY(-1px); background: rgba(255,255,255,.07); }
     .pill.active {
@@ -137,10 +138,8 @@
     }
     .pill.active .dot { background: var(--accent); }
 
-    .content {
-      margin-top: 18px;
-      padding: 0 2px;
-    }
+    /* Page content container */
+    .content { margin-top: 18px; padding: 0 2px; }
 
     .card {
       background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.03));
@@ -150,72 +149,48 @@
       padding: 16px;
     }
 
-    /* ✅ lock form controls + buttons to 12pt + same height */
-    input, select, button, textarea {
-      font: inherit;
-      color: var(--text);
-    }
-
+    /* Shared controls */
+    label { display:block; font-size: var(--font); color: var(--muted); margin-bottom: 6px; }
     input[type="text"], input[type="number"], select {
       width:100%;
       height: var(--pill-h);
-      padding: 0 var(--pill-pad-x);
+      padding: 0 14px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.12);
       background: rgba(0,0,0,.18);
+      color: var(--text);
       outline: none;
+      font-size: var(--font);
+      line-height: 1;
     }
     input::placeholder { color: rgba(233,237,243,.35); }
 
-    /* ✅ ONE button geometry */
     .btn {
       display:inline-flex;
       align-items:center;
       justify-content:center;
+      gap: 8px;
       height: var(--pill-h);
       padding: 0 var(--pill-pad-x);
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,.14);
       background: rgba(255,255,255,.06);
-      color: #fff;
+      color: #fff; /* ✅ always white text */
       cursor: pointer;
       transition: transform .06s ease, background .12s ease, border-color .12s ease;
-      font-weight: 650;
-      user-select: none;
+      font-size: var(--font);
+      line-height: 1;
     }
     .btn:hover { transform: translateY(-1px); background: rgba(255,255,255,.08); }
-    .btn.primary { background: rgba(124,92,255,.22); border-color: rgba(124,92,255,.35); }
+    .btn.primary { background: rgba(124,92,255,.22); border-color: rgba(124,92,255,.35); font-weight: 650; }
     .btn.danger { background: rgba(255,92,122,.14); border-color: rgba(255,92,122,.25); }
     .btn:disabled { opacity: .55; cursor: not-allowed; transform:none; }
 
-    /* ✅ shared purple pill used on Settings + Tasks */
-    .label-pill,
-    .step-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      height: var(--pill-h);
-      padding: 0 var(--pill-pad-x);
-      border-radius: 999px;
-      font-weight: 650;
-      background: rgba(124,92,255,.18);
-      border: 1px solid rgba(124,92,255,.32);
-      color: rgba(233,237,243,.92);
-      box-shadow: 0 10px 22px rgba(0,0,0,.18);
-      width: var(--label-w);          /* ✅ exact same width everywhere */
-      max-width: 100%;
-    }
-
-    .muted { color: var(--muted); }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
-
-    table { width:100%; border-collapse:collapse; }
-    th, td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.08); text-align:left; vertical-align: middle; }
-    th { color: rgba(233,237,243,.75); font-weight: 650; }
-
     pre {
       white-space: pre-wrap;
-      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       background: rgba(0,0,0,.20);
       border: 1px solid rgba(255,255,255,.10);
       border-radius: 14px;
@@ -223,6 +198,7 @@
       max-height: 45vh;
       overflow:auto;
       color: rgba(233,237,243,.92);
+      font-size: var(--font);
     }
   </style>
 
@@ -236,7 +212,6 @@
         <div class="logo" aria-hidden="true">
           <img src="/static/m4brew%20logo.png" alt="m4brew logo">
         </div>
-
         <div>
           <h1 class="title">m4brew</h1>
           <p class="subtitle">audiobook housekeeping made easy.</p>

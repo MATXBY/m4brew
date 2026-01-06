@@ -1,20 +1,20 @@
-version: "3.8"
-
 services:
   m4brew:
     build: .
     container_name: m4brew
 
+    labels:
+      - "net.unraid.docker.name=m4brew"
+      - "net.unraid.docker.webui=http://[IP]:8585/"
+      - "net.unraid.docker.icon=http://192.168.4.10:8585/static/m4brew%20logo.png"
+
     ports:
-      - "8585:8080"  # host:container
+      - "8585:8080"
 
     volumes:
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/mnt/remotes/192.168.4.4_media/Audiobooks:rw
-
-      # Persistent config (settings.json + history.jsonl + job status)
+      - /mnt/cache/media:/mnt/cache/media:rw
       - /mnt/cache/appdata/m4brew/config:/config
-
-      # Docker socket so the script can run docker on the host
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
     environment:

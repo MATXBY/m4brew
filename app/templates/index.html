@@ -3,18 +3,13 @@
 
 {% block extra_head %}
 <style>
-  /* Tasks page layout: match Settings stacked rows */
-  .stack {
-    display: grid;
-    gap: 14px;
-    padding: 6px;
-  }
+  .task-stack{ display:grid; gap:14px; padding: 6px; }
 
-  .task-row {
-    display: grid;
-    grid-template-columns: 280px 1fr;
+  .task-row{
+    display:grid;
+    grid-template-columns: 1fr auto;
     gap: 14px;
-    align-items: center;
+    align-items:center;
     padding: 16px;
     border-radius: var(--radius);
     background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
@@ -22,250 +17,256 @@
     box-shadow: 0 10px 26px rgba(0,0,0,.22);
   }
 
-  @media (max-width: 720px) {
-    .task-row { grid-template-columns: 1fr; }
-  }
+  .task-actions{ display:flex; gap:10px; align-items:center; }
 
-  /* EXACT same look/feel as Settings left pills */
-  .label-pill {
+  /* Make the step pill a real clickable "Start" button WITHOUT browser default styling */
+  .step-btn{
+    width: var(--label-w);
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1px solid rgba(124,92,255,.32);
+    background: rgba(124,92,255,.18);
+    color: rgba(233,237,243,.92);
+    box-shadow: 0 10px 22px rgba(0,0,0,.18);
+    border-radius: 999px;
+
+    height: var(--pill-h);
+    padding: 0 var(--pill-pad-x);
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 14px;
+
+    font: inherit;
+    font-weight: 650;
+    letter-spacing: .2px;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+  }
+
+  .step-btn:hover{ transform: translateY(-1px); }
+  .step-btn:active{ transform: translateY(0px); }
+
+  .status-wrap{
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.10);
+    box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  }
+
+  .status-top{
+    display:flex;
+    justify-content:space-between;
+    gap: 14px;
+    align-items:center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .status-pill{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height: var(--pill-h);
+    padding: 0 var(--pill-pad-x);
     border-radius: 999px;
     font-weight: 650;
     letter-spacing: .2px;
-    background: rgba(124,92,255,.18);
-    border: 1px solid rgba(124,92,255,.32);
-    color: rgba(233,237,243,.92);
-    box-shadow: 0 10px 22px rgba(0,0,0,.18);
-    white-space: nowrap;
-  }
-
-  .actions {
-    display:flex;
-    justify-content:flex-end;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  /* Output block */
-  .output-head {
-    display:flex;
-    align-items:center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 10px;
-  }
-  .output-actions {
-    display:flex;
-    gap: 10px;
-    align-items:center;
-    flex-wrap: wrap;
-  }
-  .toggle {
-    display:inline-flex;
-    align-items:center;
-    gap: 8px;
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
     color: var(--text);
-    user-select:none;
+    gap: 10px;
   }
-  .toggle input { accent-color: var(--accent); }
 
-  /* Make sure button text stays white everywhere */
-  .btn { color: var(--text) !important; }
-  .btn.primary { color: var(--text) !important; }
-  .btn.danger { color: var(--text) !important; }
+  .status-dot{
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: rgba(233,237,243,.35);
+  }
+  .dot-idle { background: rgba(233,237,243,.35); }
+  .dot-running { background: #f59e0b; }
+  .dot-finished { background: #22c55e; }
+  .dot-failed { background: #ef4444; }
+
+  /* stop long lines stretching layout */
+  pre{
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: hidden;
+    max-height: 45vh;
+    overflow-y: auto;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
   <div class="card">
-    <div class="stack">
+    <div class="task-stack">
 
       <!-- Step 1 -->
       <div class="task-row">
-        <div class="label-pill">step 1: convert to m4b</div>
-        <div class="actions">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="convert">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-btn" type="submit">step 1: convert to m4b</button>
+        </form>
+
+        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="convert">
             <input type="hidden" name="dry_run" value="true">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
             <button class="btn" type="submit">Test</button>
-          </form>
-
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="convert">
-            <input type="hidden" name="dry_run" value="false">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
-            <button class="btn primary" type="submit">Start</button>
           </form>
         </div>
       </div>
 
       <!-- Step 2 -->
       <div class="task-row">
-        <div class="label-pill">step 2: rename books</div>
-        <div class="actions">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="correct">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-btn" type="submit">step 2: rename books</button>
+        </form>
+
+        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="correct">
             <input type="hidden" name="dry_run" value="true">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
             <button class="btn" type="submit">Test</button>
-          </form>
-
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="correct">
-            <input type="hidden" name="dry_run" value="false">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
-            <button class="btn primary" type="submit">Start</button>
           </form>
         </div>
       </div>
 
       <!-- Step 3 -->
       <div class="task-row">
-        <div class="label-pill">step 3: remove backups</div>
-        <div class="actions">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="cleanup">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-btn" type="submit">step 3: remove backups</button>
+        </form>
+
+        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="cleanup">
             <input type="hidden" name="dry_run" value="true">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
             <button class="btn" type="submit">Test</button>
           </form>
+        </div>
+      </div>
 
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="cleanup">
-            <input type="hidden" name="dry_run" value="false">
-            <input type="hidden" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
-            <input type="hidden" name="audio_mode" value="{{ settings.get('audio_mode','match') if settings else 'match' }}">
-            <input type="hidden" name="bitrate" value="{{ settings.get('bitrate', 64) if settings else 64 }}">
-            <button class="btn primary" type="submit">Start</button>
-          </form>
+      <!-- Status / Output -->
+      <div class="status-wrap">
+        <div class="status-top">
+          <div id="statusPill" class="status-pill">
+            <span id="statusDot" class="status-dot dot-idle"></span>
+            <span id="statusText">idle</span>
+          </div>
+
+          <div class="task-actions">
+            <button id="liveBtn" class="btn" type="button">Live output</button>
+
+            <form method="post" action="/job/clear" style="margin:0;">
+              <button class="btn" type="submit">Clear</button>
+            </form>
+          </div>
+        </div>
+
+        <div id="logWrap" style="display:none;">
+          <pre id="logBox" class="mono"></pre>
         </div>
       </div>
 
     </div>
   </div>
-
-  <!-- Output -->
-  <div class="card" style="margin-top: 16px;">
-    <div class="output-head">
-      <div class="label-pill" style="background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.12); box-shadow:none;">
-        output
-      </div>
-
-      <div class="output-actions">
-        <label class="toggle">
-          <input type="checkbox" id="liveToggle">
-          Live output
-        </label>
-
-        <button class="btn danger" id="cancelBtn" type="button" disabled>Cancel</button>
-
-        <form method="post" action="/job/clear" style="margin:0;">
-          <button class="btn" id="clearBtn" type="submit" disabled>Clear</button>
-        </form>
-      </div>
-    </div>
-
-    <div class="muted mono" id="jobMeta" style="margin-bottom: 8px;">—</div>
-    <div style="font-weight:650; margin-bottom: 10px;" id="jobProgressLine">Progress —</div>
-
-    <pre id="jobOutput" style="display:none;"></pre>
-    <div class="muted" id="jobStatusLine">—</div>
-  </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  const liveToggle = document.getElementById("liveToggle");
-  const jobMeta = document.getElementById("jobMeta");
-  const jobProgressLine = document.getElementById("jobProgressLine");
-  const jobOutput = document.getElementById("jobOutput");
-  const jobStatusLine = document.getElementById("jobStatusLine");
-  const clearBtn = document.getElementById("clearBtn");
-  const cancelBtn = document.getElementById("cancelBtn");
+  const statusDot = document.getElementById("statusDot");
+  const statusText = document.getElementById("statusText");
+  const logWrap = document.getElementById("logWrap");
+  const logBox = document.getElementById("logBox");
+  const liveBtn = document.getElementById("liveBtn");
 
-  async function fetchJob() {
-    try {
-      const r = await fetch("/api/job", { cache: "no-store" });
-      return await r.json();
-    } catch {
-      return null;
-    }
+  const LIVE_KEY = "m4brew_live_output";
+  let liveOn = (localStorage.getItem(LIVE_KEY) || "off") === "on";
+
+  function setDot(state) {
+    statusDot.classList.remove("dot-idle","dot-running","dot-finished","dot-failed");
+    statusDot.classList.add(state);
   }
 
-  async function fetchOutput() {
-    try {
-      const r = await fetch("/job/output", { cache: "no-store" });
-      return await r.text();
-    } catch {
-      return "";
-    }
+  function setStatus(label, state) {
+    statusText.textContent = label;
+    setDot(state);
   }
 
-  function progressText(j) {
-    const cur = (typeof j.current === "number") ? j.current : 0;
-    const tot = (typeof j.total === "number") ? j.total : 0;
-
-    if (!tot) {
-      if (j.mode === "cleanup") return "Nothing to delete";
-      if (j.mode === "correct") return "All names correct";
-      return "Nothing to convert";
-    }
-    return `${cur}/${tot}`;
-  }
-
-  async function tick() {
-    const j = await fetchJob();
-    if (!j || j.status === "none") {
-      jobMeta.textContent = "—";
-      jobProgressLine.textContent = "Progress —";
-      jobStatusLine.textContent = "—";
-      clearBtn.disabled = true;
-      cancelBtn.disabled = true;
-      if (liveToggle.checked) jobOutput.style.display = "block";
-      if (liveToggle.checked) jobOutput.textContent = "";
+  function renderJob(job) {
+    if (!job || job.status === "none") {
+      setStatus("idle", "dot-idle");
       return;
     }
 
-    const mode = j.mode || "—";
-    const dry = (j.dry_run === true) ? "true" : (j.dry_run === false ? "false" : "—");
-    const started = j.started || "—";
-    jobMeta.textContent = `mode: ${mode} · dry_run: ${dry} · started: ${started}`;
+    const cur = Number(job.current || 0);
+    const tot = Number(job.total || 0);
+    const frac = tot > 0 ? `${cur}/${tot}` : "0/0";
 
-    jobProgressLine.textContent = `Progress ${progressText(j)}`;
+    if (job.status === "running") {
+      setStatus(`running ${frac}`, "dot-running");
+      return;
+    }
 
-    const status = j.status || "—";
-    jobStatusLine.textContent = (status === "running") ? "Running…" : "Finished.";
+    if (job.status === "finished") {
+      const done = tot > 0 ? `${Math.max(cur, tot)}/${tot}` : frac;
+      setStatus(`finished ${done}`, "dot-finished");
+      return;
+    }
 
-    // Cancel not wired yet (keep disabled)
-    cancelBtn.disabled = true;
+    setStatus(`failed ${frac}`, "dot-failed");
+  }
 
-    // Clear only when not running
-    clearBtn.disabled = (status === "running");
+  async function fetchJob() {
+    const r = await fetch("/api/job", { cache: "no-store" });
+    return await r.json();
+  }
 
-    if (liveToggle.checked) {
-      jobOutput.style.display = "block";
-      jobOutput.textContent = await fetchOutput();
+  async function fetchLog() {
+    const r = await fetch("/job/output", { cache: "no-store" });
+    return await r.text();
+  }
+
+  function applyLiveBtn() {
+    if (liveOn) {
+      liveBtn.classList.add("primary");
+      logWrap.style.display = "";
     } else {
-      jobOutput.style.display = "none";
+      liveBtn.classList.remove("primary");
+      logWrap.style.display = "none";
     }
   }
 
+  liveBtn.addEventListener("click", () => {
+    liveOn = !liveOn;
+    localStorage.setItem(LIVE_KEY, liveOn ? "on" : "off");
+    applyLiveBtn();
+  });
+
+  async function tick() {
+    try {
+      const job = await fetchJob();
+      renderJob(job);
+      if (liveOn) logBox.textContent = await fetchLog();
+    } catch (e) {}
+  }
+
+  applyLiveBtn();
   tick();
-  setInterval(tick, 2000);
+  setInterval(tick, 1000);
 </script>
 {% endblock %}
