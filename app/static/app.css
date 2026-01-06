@@ -192,3 +192,19 @@
       color: rgba(233,237,243,.92);
       font-size: var(--font);
     }
+
+/* label pills (About page section titles etc) */
+.label-pill{
+  display:inline-flex; align-items:center; justify-content:center;
+  height: 44px; padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(124,92,255,.18);
+  border: 1px solid rgba(124,92,255,.32);
+  color: rgba(233,237,243,.92);
+  font-weight: 750;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
