@@ -262,9 +262,3 @@ table, th, td, pre, code, h1, h2, h3, h4{
 /* optional: opt-in fixed width if you ever want it */
 .w-fixed{
 }
-
-/* FORCE status dot colours */
-.status-dot.dot-idle{ background: rgba(170,180,195,.55) !important; }
-.status-dot.dot-running{ background: rgba(255,170,70,.95) !important; } /* orange */
-.status-dot.dot-ok{ background: rgba(80,220,140,.95) !important; }      /* green */
-.status-dot.dot-bad{ background: rgba(255,90,90,.95) !important; }      /* red */

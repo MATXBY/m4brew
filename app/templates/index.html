@@ -118,7 +118,39 @@
     try {
       const r = await fetch("/api/job", { cache: "no-store" });
       const job = await r.json();
-      statusText.textContent = job.status || "idle";
+      const mode = String(job.mode || "").toLowerCase();
+      const total = Number(job.total || 0);
+      const current = Math.min(Number(job.current || 0), (total || 0));
+
+      const noun = (mode === "convert") ? "convert" : (mode === "correct") ? "rename" : (mode === "cleanup") ? "delete" : "run";
+      const verb = (mode === "convert") ? "Converting" : (mode === "correct") ? "Renaming" : (mode === "cleanup") ? "Deleting" : "Running";
+
+      let text = "idle";
+      let dot = "dot-idle";
+
+      if (job.status === "running") {
+        if (total > 0) {
+          text = verb + " " + current + "/" + total;
+          dot = "dot-running";
+        } else {
+          text = "Nothing to " + noun;
+          dot = "dot-ok";
+        }
+      } else if (job.status === "finished") {
+        if (total > 0) {
+          text = "Complete " + total + "/" + total;
+        } else {
+          text = "Nothing to " + noun;
+        }
+        dot = "dot-ok";
+      } else if (job.status === "failed") {
+        text = "Failed";
+        dot = "dot-bad";
+      }
+
+      statusText.textContent = text;
+      statusDot.classList.remove("dot-idle","dot-running","dot-ok","dot-bad");
+      statusDot.classList.add(dot);
       if (liveOn) {
         const t = await fetch("/job/output", { cache: "no-store" });
         logBox.textContent = await t.text();
