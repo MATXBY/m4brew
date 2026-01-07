@@ -50,41 +50,34 @@ def now_utc_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def parse_ts(ts: str) -> Optional[datetime]:
+def humanize_ts(ts: str) -> str:
+    """Return short age like 11s/4m/2h/3d."""
+    if not ts:
+        return ""
     try:
         if ts.endswith("Z"):
             ts = ts[:-1] + "+00:00"
         dt = datetime.fromisoformat(ts)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc)
+        dt = dt.astimezone(timezone.utc)
+
+        sec = int((datetime.now(timezone.utc) - dt).total_seconds())
+        if sec < 0:
+            sec = 0
+
+        if sec < 60:
+            return f"{sec}s"
+        m = sec // 60
+        if m < 60:
+            return f"{m}m"
+        h = m // 60
+        if h < 24:
+            return f"{h}h"
+        d = h // 24
+        return f"{d}d"
     except Exception:
-        return None
-
-
-def humanize_ts(ts: str) -> str:
-    """Return short age like 11s/4m/2h/3d."""
-    dt = parse_ts(ts)
-    if not dt:
         return ""
-
-    sec = int((datetime.now(timezone.utc) - dt).total_seconds())
-    if sec < 0:
-        sec = 0
-
-    if sec < 60:
-        return f"{sec}s"
-
-    m = sec // 60
-    if m < 60:
-        return f"{m}m"
-
-    h = m // 60
-    if h < 24:
-        return f"{h}h"
-
-    d = h // 24
-    return f"{d}d"
 
 
 # -------------------------
@@ -232,17 +225,25 @@ def _scan_total(mode: str, root_folder: str) -> int:
 # Background runner (stream output, update progress)
 # -------------------------
 def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
+    """
+    Run the bash script, stream output to JOB_OUT_PATH, and keep job.json updated.
+
+    Lean goals:
+      - runtime_s always >= 1
+      - pid cleared when finished/failed
+      - summary["runtime_s"] aligned to job runtime_s
+      - avoid over-complicated "reload job every bump" logic
+    """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     JOB_OUT_PATH.write_text("", encoding="utf-8")
 
-    job_id = job.get("id", "")
+    job_id = str(job.get("id") or "")
     start = time.time()
 
-    def bump(**kwargs: Any) -> None:
-        j = _load_job() or job
-        if j.get("id") != job_id:
+    def _save(j: Dict[str, Any]) -> None:
+        # Only persist updates for the same job id
+        if str(j.get("id") or "") != job_id:
             return
-        j.update(kwargs)
         j["updated"] = now_utc_iso()
         _save_job(j)
 
@@ -266,12 +267,19 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         bufsize=1,
     )
 
-    bump(pid=proc.pid, status="running", current=0, current_book="", current_path="")
-
+    # local state
     current_book = ""
     current_path = ""
     current = 0
     total = int(job.get("total") or 0)
+
+    # initial job persist
+    job["pid"] = proc.pid
+    job["status"] = "running"
+    job["current"] = 0
+    job["current_book"] = ""
+    job["current_path"] = ""
+    _save(job)
 
     try:
         assert proc.stdout is not None
@@ -281,52 +289,48 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
             s = strip_log_prefix(line)
 
+            # your script prints a divider per-book
             if s.startswith("----------------------------------------"):
                 current += 1
-                bump(current=current, current_book=current_book, current_path=current_path)
+                job["current"] = current
+                job["current_book"] = current_book
+                job["current_path"] = current_path
+                _save(job)
                 continue
 
             if s.startswith("BOOK:"):
                 current_book = s.split("BOOK:", 1)[1].strip()
-                bump(current=current, current_book=current_book, current_path=current_path)
+                job["current_book"] = current_book
+                _save(job)
                 continue
 
             if s.startswith("PATH:"):
                 current_path = s.split("PATH:", 1)[1].strip()
-                bump(current=current, current_book=current_book, current_path=current_path)
+                job["current_path"] = current_path
+                _save(job)
                 continue
 
         rc = proc.wait()
 
         full_output = JOB_OUT_PATH.read_text(encoding="utf-8", errors="replace")
         summary = parse_summary_from_output(full_output)
-        if isinstance(summary, dict) and "runtime_s" in summary:
-            try:
-                summary["runtime_s"] = max(1, int(summary.get("runtime_s") or 0))
-            except Exception:
-                pass
+
         runtime_s = max(1, int(time.time() - start))
-
-        # --- summary runtime clamp ---
-        # Keep summary runtime consistent with job runtime
         if isinstance(summary, dict):
-            summary['runtime_s'] = runtime_s
-        # --- end summary runtime clamp ---
-
+            summary["runtime_s"] = runtime_s
 
         if total > 0:
             current = total
 
-        bump(
-            pid=None,
-            status=("finished" if rc == 0 else "failed"),
-            exit_code=rc,
-            runtime_s=runtime_s,
-            summary=summary,
-            current=current,
-            current_book=current_book,
-            current_path=current_path,
-        )
+        job["status"] = "finished" if rc == 0 else "failed"
+        job["exit_code"] = rc
+        job["runtime_s"] = runtime_s
+        job["summary"] = summary
+        job["current"] = current
+        job["current_book"] = current_book
+        job["current_path"] = current_path
+        job["pid"] = None
+        _save(job)
 
         record = {
             "ts": now_utc_iso(),
@@ -341,11 +345,18 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
     except Exception as e:
         runtime_s = max(1, int(time.time() - start))
-        bump(pid=None, status="failed", exit_code=1, runtime_s=runtime_s)
+        job["status"] = "failed"
+        job["exit_code"] = 1
+        job["runtime_s"] = runtime_s
+        job["pid"] = None
+        _save(job)
         write_line(f"\n[worker-error] {e}\n")
 
 
 def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate: int) -> Dict[str, Any]:
+    root_folder = (root_folder or '').strip()
+    if not root_folder:
+        return {"status": "error", "error": "root_folder_not_set"}
     existing = _load_job()
     if _job_is_running(existing):
         return existing
@@ -401,28 +412,30 @@ def index_get():
 
 @app.post("/")
 def index_post():
-    settings = load_settings()
+    settings = load_settings() or {}
 
-    mode = request.form.get("mode") or settings.get("mode") or "convert"
-    dry_run = (request.form.get("dry_run") or settings.get("dry_run") or "true").lower() == "true"
-    root_folder = request.form.get("root_folder") or settings.get("root_folder") or ""
-    audio_mode = request.form.get("audio_mode") or settings.get("audio_mode") or "match"
-    bitrate = int(request.form.get("bitrate") or settings.get("bitrate") or 64)
+    # Tasks page only chooses mode + dry_run
+    mode = (request.form.get("mode") or settings.get("mode") or "convert").strip().lower()
+    dry_run = str(request.form.get("dry_run") or settings.get("dry_run") or "true").lower() == "true"
 
-    # Persist last selections
-    save_settings(
-        {
-            "mode": mode,
-            "dry_run": "true" if dry_run else "false",
-            "root_folder": root_folder,
-            "audio_mode": audio_mode,
-            "bitrate": bitrate,
-        }
-    )
+    # Everything else comes from saved Settings
+    root_folder = str(settings.get("root_folder") or "").strip()
+    audio_mode = str(settings.get("audio_mode") or "match").strip().lower()
+    try:
+        bitrate = int(settings.get("bitrate") or 96)
+    except Exception:
+        bitrate = 96
+
+    # If user hasn't configured Settings yet, send them there
+    if not root_folder:
+        save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
+        return redirect(url_for("settings_get"))
+
+    # Persist last selections (mode + dry_run only)
+    save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
 
     start_job(mode, dry_run, root_folder, audio_mode, bitrate)
     return redirect(url_for("index_get"))
-
 
 @app.get("/api/job")
 def api_job():
@@ -430,49 +443,61 @@ def api_job():
     if not job:
         return jsonify({"status": "none"})
 
-    # If job claims running but PID is gone, mark failed (worker died / container restarted)
-    if job.get("status") == "running" and not _job_is_running(job):
-        job["status"] = "failed"
+    changed = False
+    status = job.get("status")
+
+    # If it claims running but PID is gone -> mark finished/failed based on exit_code
+    if status == "running" and not _job_is_running(job):
+        rc = job.get("exit_code")
+        try:
+            rc = int(rc) if rc is not None else None
+        except Exception:
+            rc = None
+
+        job["status"] = "finished" if rc == 0 else "failed"
         if job.get("exit_code") is None:
-            job["exit_code"] = 1
+            job["exit_code"] = 0 if rc == 0 else 1
+
+        job["pid"] = None
         job["updated"] = now_utc_iso()
+        changed = True
+        status = job["status"]
 
-    # For non-running jobs, pid is always stale
-    if job.get("status") in ("finished", "failed"):
-        if job.get("pid"):
+    # Finished/failed: pid should always be null
+    if status in ("finished", "failed"):
+        if job.get("pid") is not None:
             job["pid"] = None
+            changed = True
 
-        # Backfill runtime if missing/0 using started->updated (best-effort)
+        # runtime_s: only fix if missing/0 (do NOT recompute every request)
         try:
             rs = int(job.get("runtime_s") or 0)
         except Exception:
             rs = 0
 
         if rs <= 0:
-            dt_start = parse_ts(str(job.get("started") or ""))
-            dt_end = parse_ts(str(job.get("updated") or ""))
-            if dt_start and dt_end:
-                rs = max(1, int((dt_end - dt_start).total_seconds()))
-                job["runtime_s"] = rs
+            summary = job.get("summary")
+            srs = 0
+            if isinstance(summary, dict):
+                try:
+                    srs = int(summary.get("runtime_s") or 0)
+                except Exception:
+                    srs = 0
 
-        # Keep summary runtime aligned if present
+            rs = srs if srs > 0 else 1
+            job["runtime_s"] = rs
+            changed = True
+
+        # Always align summary runtime to job runtime (but don't create summary if None)
         summary = job.get("summary")
-        if isinstance(summary, dict):
-            try:
-                srs = int(summary.get("runtime_s") or 0)
-            except Exception:
-                srs = 0
-            if rs > 0 and srs <= 0:
-                summary["runtime_s"] = rs
-                job["summary"] = summary
-        # Always keep summary runtime aligned with job runtime
-        summary = job.get("summary")
-        if isinstance(summary, dict) and rs > 0:
+        if isinstance(summary, dict) and summary.get("runtime_s") != rs:
             summary["runtime_s"] = rs
             job["summary"] = summary
+            changed = True
 
+    if changed:
+        _save_job(job)
 
-    _save_job(job)
     return jsonify(job)
 
 
@@ -512,21 +537,43 @@ def settings_get():
 
 @app.post("/settings")
 def settings_post():
-    existing = load_settings()
+    existing = load_settings() or {}
+
+    autosave = request.headers.get("X-M4Brew-Autosave") == "1"
+    root_dirty = request.headers.get("X-M4Brew-Root-Dirty") == "1"
+
+    incoming_root = (request.form.get("root_folder") or "").strip()
+
+    # Root folder rule:
+    # - Normal (non-autosave): accept changes from the Settings page submit.
+    # - Autosave: only accept root_folder changes if the UI marked it as "dirty".
+    root_folder = (existing.get("root_folder") or "").strip()
+    if autosave:
+        if root_dirty and incoming_root:
+            root_folder = incoming_root
+        # else: keep existing root_folder
+    else:
+        if incoming_root:
+            root_folder = incoming_root
+
     updated = {
-        "root_folder": request.form.get("root_folder") or "",
-        "audio_mode": request.form.get("audio_mode") or "match",
-        "bitrate": int(request.form.get("bitrate") or 64),
-        # keep these if they exist so Tasks page doesn't reset oddly
+        "root_folder": root_folder,
+        "audio_mode": request.form.get("audio_mode") or existing.get("audio_mode", "match"),
+        "bitrate": int(request.form.get("bitrate") or existing.get("bitrate", 96)),
         "mode": existing.get("mode", "convert"),
         "dry_run": existing.get("dry_run", "true"),
     }
+
     save_settings(updated)
-    if request.headers.get("X-M4Brew-Autosave") == "1":
+
+    if autosave:
         return ("", 204)
+
     return redirect(url_for("settings_get"))
 
+
 @app.get("/history")
+
 def history_get():
     records = list(reversed(read_history()))  # newest first
 
