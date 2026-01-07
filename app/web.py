@@ -307,6 +307,13 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
                 pass
         runtime_s = max(1, int(time.time() - start))
 
+        # --- summary runtime clamp ---
+        # Keep summary runtime consistent with job runtime
+        if isinstance(summary, dict):
+            summary['runtime_s'] = runtime_s
+        # --- end summary runtime clamp ---
+
+
         if total > 0:
             current = total
 
@@ -458,6 +465,12 @@ def api_job():
             if rs > 0 and srs <= 0:
                 summary["runtime_s"] = rs
                 job["summary"] = summary
+        # Always keep summary runtime aligned with job runtime
+        summary = job.get("summary")
+        if isinstance(summary, dict) and rs > 0:
+            summary["runtime_s"] = rs
+            job["summary"] = summary
+
 
     _save_job(job)
     return jsonify(job)
