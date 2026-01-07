@@ -423,19 +423,50 @@ def api_job():
     if not job:
         return jsonify({"status": "none"})
 
-    # If job claims running but PID is gone, mark failed (worker died / container restarted)
+    # If the worker PID has disappeared but job still says "running",
+    # resolve to finished/failed based on exit_code (or default to failed).
     if job.get("status") == "running" and not _job_is_running(job):
-        job["status"] = "failed"
-        if job.get("exit_code") is None:
-            job["exit_code"] = 1
-        job["updated"] = now_utc_iso()
+        rc = job.get("exit_code")
+        try:
+            rc = int(rc) if rc is not None else None
+        except Exception:
+            rc = None
 
-    # For non-running jobs, pid is always stale
+        # best-effort runtime from started timestamp
+        if not job.get("runtime_s"):
+            try:
+                started = job.get("started") or ""
+                if started.endswith("Z"):
+                    started = started[:-1] + "+00:00"
+                dt = datetime.fromisoformat(started)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                job["runtime_s"] = int((datetime.now(timezone.utc) - dt).total_seconds())
+            except Exception:
+                pass
+
+        if rc == 0:
+            job["status"] = "finished"
+        else:
+            job["status"] = "failed"
+            if job.get("exit_code") is None:
+                job["exit_code"] = 1
+
+        job["updated"] = now_utc_iso()
+        _save_job(job)
+
+    # If job is not running, pid is stale; clear it for cleaner UI/state
+    if job.get("status") in ("finished","failed") and job.get("pid"):
+        job["pid"] = None
+        _save_job(job)
+
+    # ---- repair stale runtime/pid for finished jobs (older persisted job.json) ----
     if job.get("status") in ("finished", "failed"):
+        # pid is stale once finished
         if job.get("pid"):
             job["pid"] = None
 
-        # Backfill runtime if missing/0 using started->updated (best-effort)
+        # runtime_s: if missing/0, compute from started/updated timestamps
         try:
             rs = int(job.get("runtime_s") or 0)
         except Exception:
@@ -448,7 +479,7 @@ def api_job():
                 rs = max(1, int((dt_end - dt_start).total_seconds()))
                 job["runtime_s"] = rs
 
-        # Keep summary runtime aligned if present
+        # If summary exists and has runtime_s 0/missing, align it too
         summary = job.get("summary")
         if isinstance(summary, dict):
             try:
@@ -459,7 +490,9 @@ def api_job():
                 summary["runtime_s"] = rs
                 job["summary"] = summary
 
-    _save_job(job)
+        _save_job(job)
+    # ---------------------------------------------------------------------------
+
     return jsonify(job)
 
 
