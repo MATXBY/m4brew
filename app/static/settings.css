@@ -57,3 +57,42 @@
   select.field {
     padding-right: 42px;
   }
+
+/* Settings: standardise select pill width */
+.setting-row select,
+.setting-row .pill{
+  width: 300px !important;
+  max-width: 300px !important;
+}
+
+/* Settings: standardise control widths (inputs + selects) */
+.setting-row input[type="text"],
+.setting-row input[type="number"],
+.setting-row select{
+  width: 300px !important;
+  max-width: 300px !important;
+}
+
+/* Settings: centre label pill + control together */
+.setting-row{
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+/* Settings: standardise select/input pill width */
+.setting-row select,
+.setting-row input[type="number"],
+.setting-row input[type="text"]{
+  width: 300px;
+  max-width: 300px;
+}
+
+/* Settings: make the LEFT label pills 300px too */
+.setting-row .label-pill{
+  width: 300px !important;
+  max-width: 300px !important;
+  flex: 0 0 300px !important;
+  justify-content: center;
+  text-align: center;
+}
