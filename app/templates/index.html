@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -11,51 +12,51 @@
 
       <!-- Step 1 -->
       <div class="task-row">
-        <form method="post" action="/" style="margin:0;">
-          <input type="hidden" name="mode" value="convert">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="step-btn" type="submit">step 1: convert to m4b</button>
-        </form>
+        <div class="task-group">
+          <form method="post" action="/" style="margin:0;">
+            <input type="hidden" name="mode" value="convert">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="step-pill step-btn" type="submit">step 1: convert to m4b</button>
+          </form>
 
-        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="convert">
             <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test</button>
+            <button class="btn" type="submit">Test run</button>
           </form>
         </div>
       </div>
 
       <!-- Step 2 -->
       <div class="task-row">
-        <form method="post" action="/" style="margin:0;">
-          <input type="hidden" name="mode" value="correct">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="step-btn" type="submit">step 2: rename books</button>
-        </form>
+        <div class="task-group">
+          <form method="post" action="/" style="margin:0;">
+            <input type="hidden" name="mode" value="correct">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="step-pill step-btn" type="submit">step 2: rename books</button>
+          </form>
 
-        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="correct">
             <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test</button>
+            <button class="btn" type="submit">Test run</button>
           </form>
         </div>
       </div>
 
       <!-- Step 3 -->
       <div class="task-row">
-        <form method="post" action="/" style="margin:0;">
-          <input type="hidden" name="mode" value="cleanup">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="step-btn" type="submit">step 3: remove backups</button>
-        </form>
+        <div class="task-group">
+          <form method="post" action="/" style="margin:0;">
+            <input type="hidden" name="mode" value="cleanup">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="step-pill step-btn" type="submit">step 3: remove backups</button>
+          </form>
 
-        <div class="task-actions">
           <form method="post" action="/" style="margin:0;">
             <input type="hidden" name="mode" value="cleanup">
             <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test</button>
+            <button class="btn" type="submit">Test run</button>
           </form>
         </div>
       </div>
@@ -68,9 +69,8 @@
             <span id="statusText">idle</span>
           </div>
 
-          <div class="task-actions">
+          <div class="status-actions">
             <button id="liveBtn" class="btn" type="button">Live output</button>
-
             <form method="post" action="/job/clear" style="margin:0;">
               <button class="btn" type="submit">Clear</button>
             </form>
@@ -108,26 +108,18 @@
   }
 
   function renderJob(job) {
-    if (!job || job.status === "none") {
-      setStatus("idle", "dot-idle");
-      return;
-    }
+    if (!job || job.status === "none") { setStatus("idle", "dot-idle"); return; }
 
     const cur = Number(job.current || 0);
     const tot = Number(job.total || 0);
     const frac = tot > 0 ? `${cur}/${tot}` : "0/0";
 
-    if (job.status === "running") {
-      setStatus(`running ${frac}`, "dot-running");
-      return;
-    }
-
+    if (job.status === "running") { setStatus(`running ${frac}`, "dot-running"); return; }
     if (job.status === "finished") {
-      const done = tot > 0 ? `${Math.max(cur, tot)}/${tot}` : frac;
-      setStatus(`finished ${done}`, "dot-finished");
+      const doneFrac = tot > 0 ? `${Math.max(cur, tot)}/${tot}` : frac;
+      setStatus(`finished ${doneFrac}`, "dot-finished");
       return;
     }
-
     setStatus(`failed ${frac}`, "dot-failed");
   }
 
@@ -163,10 +155,10 @@
       renderJob(job);
       if (liveOn) logBox.textContent = await fetchLog();
     } catch (e) {}
+    setTimeout(tick, 1000);
   }
 
   applyLiveBtn();
   tick();
-  setInterval(tick, 1000);
 </script>
 {% endblock %}

@@ -221,23 +221,3 @@ pre {
   max-width:110px !important;
   justify-content:center !important;
 }
-
-/* Tasks: swap button order inside each step row (Test left, Step right) */
-.task-group{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:16px;
-  flex-wrap:wrap;
-}
-
-/* DOM order is: (1) step form, (2) test form — flip visually */
-.task-group form:nth-child(1){ order: 2; }
-.task-group form:nth-child(2){ order: 1; }
-
-/* Tasks: fixed width for the Test run button only (don’t affect other .btns) */
-.task-row .task-group form:nth-child(2) .btn{
-  width:110px !important;
-  max-width:110px !important;
-  justify-content:center;
-}

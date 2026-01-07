@@ -1,0 +1,102 @@
+/* Tasks page layout */
+
+.task-stack{
+  display:grid;
+  gap:14px;
+  padding:6px;
+}
+
+.task-row{
+  padding:16px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--card-bg-a), var(--card-bg-b));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+
+/* centre Step + Test together */
+.task-group{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap: wrap;
+}
+
+/* ✅ Purple step pill (explicit, so it can't "go grey") */
+.step-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(124,92,255,.18);
+  border: 1px solid rgba(124,92,255,.32);
+  color: rgba(233,237,243,.92);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  white-space: nowrap;
+}
+
+/* make Step pill a real button, but keep the pill look */
+.step-btn{
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.step-btn:disabled{ opacity:.55; cursor:not-allowed; }
+
+.status-wrap{
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, var(--card-bg-a), var(--card-bg-b));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+
+.status-top{
+  display:flex;
+  justify-content:space-between;
+  gap: 14px;
+  align-items:center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 10px;
+  height: var(--pill-h);
+  padding: 0 16px 0 14px;
+  border-radius: 999px;
+  background: var(--nav-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: .2px;
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+}
+
+.status-dot{ width: 9px; height: 9px; border-radius: 999px; background: rgba(160,160,160,.55); }
+.dot-idle { background: rgba(160,160,160,.55); }
+.dot-running { background: #f59e0b; }
+.dot-finished { background: #22c55e; }
+.dot-failed { background: #ef4444; }
+
+.status-actions{ display:flex; gap:10px; align-items:center; }
+
+pre {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+  max-height: 45vh;
+  overflow-y: auto;
+}

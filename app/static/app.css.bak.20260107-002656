@@ -261,4 +261,5 @@ table, th, td, pre, code, h1, h2, h3, h4{
 
 /* optional: opt-in fixed width if you ever want it */
 .w-fixed{
+  width: var(--label-w) !important;
 }

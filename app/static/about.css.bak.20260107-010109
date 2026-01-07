@@ -34,11 +34,3 @@
   color: var(--muted);
   line-height: var(--lh);
 }
-
-/* About: force section title pills to 300px */
-.about-section .label-pill{
-  width: 300px !important;
-  max-width: 300px !important;
-  justify-content: center;
-  text-align: center;
-}

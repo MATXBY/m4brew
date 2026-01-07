@@ -12,7 +12,9 @@
   background: linear-gradient(180deg, var(--card-bg-a), var(--card-bg-b));
   border: 1px solid var(--border);
   box-shadow: 0 10px 26px rgba(0,0,0,.12);
-  text-align:center;
+
+  /* center everything */
+  text-align: center;
 }
 
 .about-title{
@@ -21,24 +23,19 @@
   margin-bottom:12px;
 }
 
-/* FIXED WIDTH FOR ABOUT PAGE TITLE PILLS */
-.about-section .label-pill{
-  width:300px;
-  max-width:300px;
-  justify-content:center;
-  text-align:center;
-}
-
 .about-section p{
   margin:10px 0 0;
   color: var(--muted);
-  line-height: var(--lh);
+  line-height:1.45;
 }
 
-/* About: force section title pills to 300px */
-.about-section .label-pill{
-  width: 300px !important;
-  max-width: 300px !important;
-  justify-content: center;
-  text-align: center;
+.about-section ul{
+  margin:10px auto 0;
+  padding:0;
+  list-style-position: inside;
+  color: var(--muted);
+}
+
+.about-section li{
+  margin:6px 0;
 }
