@@ -149,19 +149,3 @@ pre{
   overflow-wrap: anywhere;
   word-break: break-word;
 }
-
-/* =========================
-   Tasks emphasis (intentional)
-========================= */
-.step-pill{
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-
-.status-pill{
-  font-weight: 650;
-}
-
-#liveBtn{
-  font-weight: 600;
-}

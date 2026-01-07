@@ -13,16 +13,18 @@
     <!-- Step 1 -->
     <div class="task-row">
       <div class="task-group">
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="convert">
           <input type="hidden" name="dry_run" value="true">
-          <button class="btn w-test" type="submit">Test run</button>
+          <button class="btn" type="submit">Test run</button>
         </form>
 
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="convert">
           <input type="hidden" name="dry_run" value="false">
-          <button class="step-pill step-btn w-step" type="submit">step 1: convert to m4b</button>
+          <button class="step-pill step-btn" type="submit">
+            step 1: convert to m4b
+          </button>
         </form>
       </div>
     </div>
@@ -30,16 +32,18 @@
     <!-- Step 2 -->
     <div class="task-row">
       <div class="task-group">
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="correct">
           <input type="hidden" name="dry_run" value="true">
-          <button class="btn w-test" type="submit">Test run</button>
+          <button class="btn" type="submit">Test run</button>
         </form>
 
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="correct">
           <input type="hidden" name="dry_run" value="false">
-          <button class="step-pill step-btn w-step" type="submit">step 2: rename books</button>
+          <button class="step-pill step-btn" type="submit">
+            step 2: rename books
+          </button>
         </form>
       </div>
     </div>
@@ -47,30 +51,34 @@
     <!-- Step 3 -->
     <div class="task-row">
       <div class="task-group">
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="cleanup">
           <input type="hidden" name="dry_run" value="true">
-          <button class="btn w-test" type="submit">Test run</button>
+          <button class="btn" type="submit">Test run</button>
         </form>
 
-        <form method="post" action="/" style="margin:0;">
+        <form method="post" action="/">
           <input type="hidden" name="mode" value="cleanup">
           <input type="hidden" name="dry_run" value="false">
-          <button class="step-pill step-btn w-step" type="submit">step 3: remove backups</button>
+          <button class="step-pill step-btn" type="submit">
+            step 3: remove backups
+          </button>
         </form>
       </div>
     </div>
 
     <!-- Status -->
     <div class="status-wrap">
-      <div class="status-top center">
+      <div class="status-top">
 
         <div id="statusPill" class="status-pill">
           <span id="statusDot" class="status-dot dot-idle"></span>
           <span id="statusText">idle</span>
         </div>
 
-        <button id="liveBtn" class="btn purple" type="button">Live output: OFF</button>
+        <button id="liveBtn" class="btn" type="button">
+          Live output: OFF
+        </button>
       </div>
 
       <div id="logWrap" style="display:none;">
@@ -122,8 +130,15 @@
       const total = Number(job.total || 0);
       const current = Math.min(Number(job.current || 0), (total || 0));
 
-      const noun = (mode === "convert") ? "convert" : (mode === "correct") ? "rename" : (mode === "cleanup") ? "delete" : "run";
-      const verb = (mode === "convert") ? "Converting" : (mode === "correct") ? "Renaming" : (mode === "cleanup") ? "Deleting" : "Running";
+      const noun = (mode === "convert") ? "convert"
+                 : (mode === "correct") ? "rename"
+                 : (mode === "cleanup") ? "delete"
+                 : "run";
+
+      const verb = (mode === "convert") ? "Converting"
+                 : (mode === "correct") ? "Renaming"
+                 : (mode === "cleanup") ? "Deleting"
+                 : "Running";
 
       let text = "idle";
       let dot = "dot-idle";
@@ -137,11 +152,7 @@
           dot = "dot-ok";
         }
       } else if (job.status === "finished") {
-        if (total > 0) {
-          text = "Complete " + total + "/" + total;
-        } else {
-          text = "Nothing to " + noun;
-        }
+        text = total > 0 ? "Complete " + total + "/" + total : "Nothing to " + noun;
         dot = "dot-ok";
       } else if (job.status === "failed") {
         text = "Failed";
@@ -151,6 +162,7 @@
       statusText.textContent = text;
       statusDot.classList.remove("dot-idle","dot-running","dot-ok","dot-bad");
       statusDot.classList.add(dot);
+
       if (liveOn) {
         const t = await fetch("/job/output", { cache: "no-store" });
         logBox.textContent = await t.text();

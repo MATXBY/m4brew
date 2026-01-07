@@ -241,3 +241,52 @@ pre {
   max-width:110px !important;
   justify-content:center;
 }
+
+/* Status row: 3 equal pills (idle / Live output / Clear) */
+.status-top{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.status-actions{
+  display:flex;
+  gap:12px;
+  margin:0;
+}
+
+#statusPill,
+#liveBtn,
+.status-actions .btn{
+  width:135px;
+  max-width:135px;
+  justify-content:center;
+}
+
+/* Status + Live output: fixed widths */
+.status-pill{
+  width: 210px;
+  justify-content: center;
+}
+
+#liveBtn{
+  width: 210px;
+  justify-content: center;
+  text-align: center;
+}
+
+/* FORCE: Status + Live output fixed widths */
+#statusPill{
+  width: 210px !important;
+  min-width: 210px !important;
+  justify-content: center !important;
+}
+
+#liveBtn{
+  width: 210px !important;
+  min-width: 210px !important;
+  justify-content: center !important;
+  text-align: center !important;
+}

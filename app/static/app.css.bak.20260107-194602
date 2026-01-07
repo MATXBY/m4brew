@@ -7,6 +7,11 @@
       --border: rgba(233,237,243,.10);
       --shadow: 0 18px 40px rgba(0,0,0,.38);
 
+      /* vars used by page CSS (tasks/about) */
+      --card-bg-a: rgba(255,255,255,.04);
+      --card-bg-b: rgba(255,255,255,.03);
+      --nav-bg: rgba(255,255,255,.05);
+
       --accent: #7c5cff;
       --accent2: #2dd4bf;
       --danger: #ff5c7a;
@@ -268,3 +273,52 @@ table, th, td, pre, code, h1, h2, h3, h4{
 .status-dot.dot-running{ background: rgba(255,170,70,.95) !important; } /* orange */
 .status-dot.dot-ok{ background: rgba(80,220,140,.95) !important; }      /* green */
 .status-dot.dot-bad{ background: rgba(255,90,90,.95) !important; }      /* red */
+
+/* =========================================================
+   BACKGROUND: stop tiling seams on long pages
+   - Solid infinite background
+   - Keep the pretty top gradients via a fixed overlay
+========================================================= */
+html, body{
+  background: #111318 !important;   /* infinite dark grey */
+  background-image: none !important; /* prevent any repeating image/gradient */
+  min-height: 100%;
+}
+
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0 0 auto 0;    /* top only */
+  height: 520px;        /* gradient zone at top */
+  pointer-events: none;
+  z-index: -1;
+
+  /* top glow/gradient (keeps the vibe, no tiling) */
+  background:
+    radial-gradient(900px 520px at 20% 0%, rgba(124,92,255,.35), rgba(124,92,255,0) 60%),
+    radial-gradient(900px 520px at 80% 0%, rgba(30,210,255,.18), rgba(30,210,255,0) 60%),
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
+}
+
+/* =========================================================
+   BACKGROUND FIX v2: ensure top gradients are visible immediately
+========================================================= */
+html{
+  background: #111318 !important;          /* infinite base */
+}
+
+body{
+  background: transparent !important;      /* let overlay show */
+  position: relative;
+}
+
+/* put the top glow ABOVE the base background */
+body::before{
+  z-index: 0 !important;
+}
+
+/* keep all real content above the overlay */
+.wrap{
+  position: relative;
+  z-index: 1;
+}

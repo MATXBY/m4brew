@@ -1,44 +1,48 @@
-/* About page layout */
+/* =========================
+   About page (LEAN)
+   - Simple stacked sections
+   - Fixed-width title pills (300px)
+   - No duplication
+========================= */
 
 .about-stack{
-  display:grid;
-  gap:16px;
-  padding:6px;
+  display: grid;
+  gap: 16px;
+  padding: 6px;
 }
 
+/* Section card */
 .about-section{
-  padding:18px;
+  padding: 18px;
   border-radius: var(--radius);
-  background: linear-gradient(180deg, var(--card-bg-a), var(--card-bg-b));
+  background: linear-gradient(
+    180deg,
+    var(--card-bg-a),
+    var(--card-bg-b)
+  );
   border: 1px solid var(--border);
   box-shadow: 0 10px 26px rgba(0,0,0,.12);
-  text-align:center;
+  text-align: center;
 }
 
+/* Section title wrapper */
 .about-title{
-  display:flex;
-  justify-content:center;
-  margin-bottom:12px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
-/* FIXED WIDTH FOR ABOUT PAGE TITLE PILLS */
+/* Title pill (fixed width) */
 .about-section .label-pill{
-  width:300px;
-  max-width:300px;
-  justify-content:center;
-  text-align:center;
-}
-
-.about-section p{
-  margin:10px 0 0;
-  color: var(--muted);
-  line-height: var(--lh);
-}
-
-/* About: force section title pills to 300px */
-.about-section .label-pill{
-  width: 300px !important;
-  max-width: 300px !important;
+  width: 300px;
+  max-width: 300px;
   justify-content: center;
   text-align: center;
+}
+
+/* Body text */
+.about-section p{
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: var(--lh);
 }

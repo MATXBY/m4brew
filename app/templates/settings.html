@@ -3,44 +3,49 @@
 {% block title %}m4brew • Settings{% endblock %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
 {% endblock %}
 
 {% block content %}
-  <div class="card">
-    <form method="post" action="/settings" id="settingsForm">
-      <div class="stack">
+<div class="card">
+  <form method="post" action="/settings" id="settingsForm">
+    <div class="stack">
 
-        <div class="setting-row">
-          <div class="label-pill">select source folder</div>
-          <input class="field" id="root_folder" type="text" name="root_folder"
-                 placeholder="/mnt/remotes/.../Audiobooks"
-                 value="{{ settings.get('root_folder','') if settings else '' }}">
-        </div>
-
-        <div class="setting-row">
-          <div class="label-pill">select audio tracks</div>
-          <select class="field" id="audio_mode" name="audio_mode">
-            {% set am = (settings.get("audio_mode") if settings else "match") %}
-            <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
-            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
-            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
-          </select>
-        </div>
-
-        <div class="setting-row">
-          <div class="label-pill">select bitrate (kbps)</div>
-          {% set br = (settings.get("bitrate", 96) if settings else 96) %}
-          <select class="field" id="bitrate" name="bitrate">
-            {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
-              <option value="{{v}}" {% if br == v %}selected{% endif %}>{{v}}</option>
-            {% endfor %}
-          </select>
-        </div>
-
+      <div class="setting-row">
+        <span class="label-pill">select source folder</span>
+        <input
+          class="field"
+          id="root_folder"
+          type="text"
+          name="root_folder"
+          placeholder="/mnt/remotes/.../Audiobooks"
+          value="{{ settings.get('root_folder','') if settings else '' }}"
+        >
       </div>
-    </form>
-  </div>
+
+      <div class="setting-row">
+        <span class="label-pill">select audio tracks</span>
+        <select class="field" id="audio_mode" name="audio_mode">
+          {% set am = (settings.get("audio_mode") if settings else "match") %}
+          <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
+          <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
+          <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
+        </select>
+      </div>
+
+      <div class="setting-row">
+        <span class="label-pill">select bitrate (kbps)</span>
+        {% set br = (settings.get("bitrate", 96) if settings else 96) %}
+        <select class="field" id="bitrate" name="bitrate">
+          {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
+            <option value="{{ v }}" {% if br == v %}selected{% endif %}>{{ v }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+    </div>
+  </form>
+</div>
 {% endblock %}
 
 {% block extra_js %}

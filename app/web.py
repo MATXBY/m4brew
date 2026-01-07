@@ -50,7 +50,6 @@ def parse_ts(ts: str) -> Optional[datetime]:
 def humanize_ts(ts: str) -> str:
     """Return short age like 11s/4m/2h/3d."""
     try:
-        from datetime import datetime, timezone
         if not ts:
             return ""
         if ts.endswith("Z"):
@@ -74,21 +73,6 @@ def humanize_ts(ts: str) -> str:
         return f"{d}d"
     except Exception:
         return ""
-
-
-    delta_s = int((datetime.now(timezone.utc) - dt).total_seconds())
-    if delta_s < 10:
-        return "just now"
-    if delta_s < 60:
-        return f"{delta_s}s ago"
-    mins = delta_s // 60
-    if mins < 60:
-        return f"{mins} minute{'s' if mins != 1 else ''} ago"
-    hours = mins // 60
-    if hours < 48:
-        return f"{hours} hour{'s' if hours != 1 else ''} ago"
-    days = hours // 24
-    return f"{days} day{'s' if days != 1 else ''} ago"
 
 
 # -------------------------
@@ -504,7 +488,6 @@ def history_get():
         h = m // 60
         return f"{h}h"
 
-
     enriched = []
     for i, r in enumerate(records):
         ts = r.get("ts", "")
@@ -530,8 +513,9 @@ def history_get():
                 "ts": ts,
                 "ts_human": humanize_ts(ts) if ts else "",
                 "mode": r.get("mode", ""),
-                  "mode_label": {"convert":"Convert","correct":"Rename","cleanup":"Delete"}.get(r.get("mode",""), r.get("mode","")),
-
+                "mode_label": {"convert": "Convert", "correct": "Rename", "cleanup": "Delete"}.get(
+                    r.get("mode", ""), r.get("mode", "")
+                ),
                 "dry_run": r.get("dry_run", False),
                 "success": success,
                 "exit_code": exit_code,

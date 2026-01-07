@@ -87,3 +87,12 @@
   width: 300px;
   max-width: 300px;
 }
+
+/* Settings: make the LEFT label pills 300px too */
+.setting-row .label-pill{
+  width: 300px !important;
+  max-width: 300px !important;
+  flex: 0 0 300px !important;
+  justify-content: center;
+  text-align: center;
+}

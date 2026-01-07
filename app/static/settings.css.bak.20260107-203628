@@ -1,10 +1,4 @@
-/* =========================
-   Settings page (LEAN)
-   - Label pill: 300px
-   - Control: 300px
-   - Centered rows on desktop
-   - Clean stack on mobile
-========================= */
+/* Settings page layout */
 
 .stack{
   display: grid;
@@ -12,7 +6,7 @@
   padding: 6px;
 }
 
-/* One setting row */
+/* Row: label pill + control (centred) */
 .setting-row{
   display: flex;
   justify-content: center;
@@ -21,11 +15,7 @@
 
   padding: 16px;
   border-radius: var(--radius);
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,.03),
-    rgba(255,255,255,.02)
-  );
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.02));
   border: 1px solid rgba(255,255,255,.10);
   box-shadow: 0 10px 26px rgba(0,0,0,.22);
 }
@@ -35,9 +25,6 @@
   width: 300px;
   max-width: 300px;
   flex: 0 0 300px;
-
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
   text-align: center;
 }
@@ -50,8 +37,8 @@
   max-width: 300px;
 }
 
-/* Improve select vertical centering */
-.setting-row select{
+/* Keep select text centred nicely */
+select.field{
   padding-right: 42px;
 }
 
@@ -62,12 +49,12 @@
     align-items: stretch;
     gap: 12px;
   }
-
   .setting-row .label-pill,
   .setting-row input[type="text"],
   .setting-row input[type="number"],
   .setting-row select{
     width: 100%;
     max-width: 100%;
+    flex: 0 0 auto;
   }
 }

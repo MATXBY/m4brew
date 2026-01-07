@@ -3,20 +3,21 @@
 ========================= */
 
 .history-top{
-  display:flex;
-  justify-content:center;
-  gap:16px;
-  margin-bottom:16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
 }
 
 /* Top action buttons sizing */
 .history-top .btn{
-  width:210px;
-  justify-content:center;
+  width: 210px;
+  justify-content: center;
 }
 
-/* Download all = purple */
-.history-top a.btn{
+/* Purple buttons (Download all + View) */
+.history-top a.btn,
+table .btn.purple{
   background: rgba(124,92,255,.18);
   border: 1px solid rgba(124,92,255,.32);
   color: rgba(233,237,243,.92);
@@ -29,17 +30,10 @@
   color: rgba(233,237,243,.85);
 }
 
-/* View buttons = purple */
-table .btn.purple{
-  background: rgba(124,92,255,.18);
-  border: 1px solid rgba(124,92,255,.32);
-  color: rgba(233,237,243,.92);
-}
-
-/* table layout */
+/* Table layout */
 table{
-  width:100%;
-  border-collapse:collapse;
+  width: 100%;
+  border-collapse: collapse;
 }
 
 /* header divider */
@@ -54,13 +48,11 @@ tbody tr{
 
 /* spacing */
 th, td{
-  padding:10px 8px;
-  text-align:left;
+  padding: 10px 8px;
+  text-align: left;
 }
 
-th{
-  font-weight:700;
-}
+th{ font-weight: 700; }
 
 .mono-small{
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
