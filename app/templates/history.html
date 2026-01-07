@@ -9,9 +9,9 @@
 <div class="card">
 
   <div class="history-top">
-    <a class="btn" href="/history/download">Download all</a>
+    <a class="btn purple" href="/history/download">Download all</a>
     <form method="post" action="/history/clear" style="margin:0;">
-      <button class="btn danger" type="submit">Clear history</button>
+      <button class="btn purple" type="submit">Clear history</button>
     </form>
   </div>
 
@@ -22,9 +22,9 @@
           <th>Status</th>
           <th>When</th>
           <th>Mode</th>
-          <th>Dry</th>
+          <th>Run type</th>
           <th>Runtime</th>
-          <th>Created</th>
+          <th>Completed</th>
           <th>Skipped</th>
           <th>Failed</th>
           <th></th>
@@ -33,15 +33,23 @@
       <tbody>
         {% for r in runs %}
           <tr>
-            <td><span class="status">{% if r.success %}✓{% else %}!{% endif %}</span></td>
-            <td class="when mono-small">{{ r.ts_human }}</td>
-            <td class="mono-small">{{ r.mode }}</td>
-            <td class="mono-small">{{ r.dry_run }}</td>
-            <td class="mono-small">{{ r.runtime_s }}</td>
-            <td class="mono-small">{{ r.created }}</td>
-            <td class="mono-small">{{ r.skipped }}</td>
-            <td class="mono-small">{{ r.failed }}</td>
-            <td><a class="btn" href="/history/{{ r.idx }}">View</a></td>
+            <td>
+              {% if r.get('success') %}
+                <span class="status ok">✓</span>
+              {% else %}
+                <span class="status bad">×</span>
+              {% endif %}
+            </td>
+            <td class="mono-small">{{ r.get('ts_human','') }}</td>
+            <td class="mono-small">{{ r.get('mode_label', r.get('mode','')) }}</td>
+            <td class="mono-small">{{ 'Test' if r.get('dry_run') else 'Active' }}</td>
+            <td class="mono-small">{{ r.get('runtime_h','') }}</td>
+            <td class="mono-small">{{ r.get('completed','') }}</td>
+            <td class="mono-small">{{ r.get('skipped','') }}</td>
+            <td class="mono-small">{{ r.get('failed','') }}</td>
+            <td>
+              <a class="btn purple" href="/history/{{ r.get('idx','') }}">View</a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

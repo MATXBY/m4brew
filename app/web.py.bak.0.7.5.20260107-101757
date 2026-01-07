@@ -48,33 +48,9 @@ def parse_ts(ts: str) -> Optional[datetime]:
 
 
 def humanize_ts(ts: str) -> str:
-    """Return short age like 11s/4m/2h/3d."""
-    try:
-        from datetime import datetime, timezone
-        if not ts:
-            return ""
-        if ts.endswith("Z"):
-            ts = ts[:-1] + "+00:00"
-        dt = datetime.fromisoformat(ts)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        sec = int((now - dt).total_seconds())
-        if sec < 0:
-            sec = 0
-        if sec < 60:
-            return f"{sec}s"
-        m = sec // 60
-        if m < 60:
-            return f"{m}m"
-        h = m // 60
-        if h < 24:
-            return f"{h}h"
-        d = h // 24
-        return f"{d}d"
-    except Exception:
-        return ""
-
+    dt = parse_ts(ts)
+    if not dt:
+        return ts
 
     delta_s = int((datetime.now(timezone.utc) - dt).total_seconds())
     if delta_s < 10:
@@ -491,20 +467,6 @@ def settings_post():
 def history_get():
     records = list(reversed(read_history()))  # newest first
 
-    def fmt_dur(v):
-        try:
-            s = int(v or 0)
-        except Exception:
-            s = 0
-        if s < 60:
-            return f"{s}s"
-        m = s // 60
-        if m < 60:
-            return f"{m}m"
-        h = m // 60
-        return f"{h}h"
-
-
     enriched = []
     for i, r in enumerate(records):
         ts = r.get("ts", "")
@@ -513,16 +475,9 @@ def history_get():
 
         success = bool(summary.get("success", exit_code == 0))
         runtime_s = summary.get("runtime_s")
-        runtime_h = fmt_dur(runtime_s)
         created = summary.get("created")
-        renamed = summary.get("renamed")
-        deleted = summary.get("deleted")
         skipped = summary.get("skipped")
         failed = summary.get("failed")
-
-        # Completed means: created (convert), renamed (correct), deleted (cleanup)
-        mode = r.get("mode", "")
-        completed = created if mode == "convert" else (renamed if mode == "correct" else (deleted if mode == "cleanup" else created))
 
         enriched.append(
             {
@@ -530,14 +485,10 @@ def history_get():
                 "ts": ts,
                 "ts_human": humanize_ts(ts) if ts else "",
                 "mode": r.get("mode", ""),
-                  "mode_label": {"convert":"Convert","correct":"Rename","cleanup":"Delete"}.get(r.get("mode",""), r.get("mode","")),
-
                 "dry_run": r.get("dry_run", False),
                 "success": success,
                 "exit_code": exit_code,
                 "runtime_s": runtime_s,
-                "runtime_h": runtime_h,
-                "completed": completed,
                 "created": created,
                 "skipped": skipped,
                 "failed": failed,
