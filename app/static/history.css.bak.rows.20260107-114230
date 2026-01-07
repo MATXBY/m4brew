@@ -36,23 +36,12 @@ table .btn.purple{
   color: rgba(233,237,243,.92);
 }
 
-/* table layout */
+/* table */
 table{
   width:100%;
   border-collapse:collapse;
 }
 
-/* header divider */
-thead th{
-  border-bottom: 1px solid rgba(255,255,255,.14);
-}
-
-/* row dividers */
-tbody tr{
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-/* spacing */
 th, td{
   padding:10px 8px;
   text-align:left;

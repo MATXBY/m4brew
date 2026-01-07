@@ -11,48 +11,31 @@
 
 /* Top action buttons sizing */
 .history-top .btn{
-  width:210px;
+  width:200px;
   justify-content:center;
 }
 
-/* Download all = purple */
-.history-top a.btn{
-  background: rgba(124,92,255,.18);
-  border: 1px solid rgba(124,92,255,.32);
-  color: rgba(233,237,243,.92);
-}
-
-/* Clear history = neutral grey */
-.history-top form .btn{
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(233,237,243,.85);
-}
-
-/* View buttons = purple */
+/* Purple buttons: Download all + View */
+.history-top .btn.purple,
 table .btn.purple{
   background: rgba(124,92,255,.18);
   border: 1px solid rgba(124,92,255,.32);
   color: rgba(233,237,243,.92);
 }
 
-/* table layout */
+/* Clear history stays neutral */
+.history-top .btn:not(.purple){
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(233,237,243,.85);
+}
+
+/* table */
 table{
   width:100%;
   border-collapse:collapse;
 }
 
-/* header divider */
-thead th{
-  border-bottom: 1px solid rgba(255,255,255,.14);
-}
-
-/* row dividers */
-tbody tr{
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-
-/* spacing */
 th, td{
   padding:10px 8px;
   text-align:left;

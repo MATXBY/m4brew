@@ -1,0 +1,39 @@
+/* =========================
+   History page styling
+========================= */
+
+.history-top{
+  display:flex;
+  justify-content:center;
+  gap:16px;
+  margin-bottom:16px;
+}
+
+/* Download all + Clear history buttons */
+.history-top .btn{
+  width:200px;
+  justify-content:center;
+}
+
+/* table */
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th, td{
+  padding:10px 8px;
+  text-align:left;
+}
+
+th{
+  font-weight:700;
+}
+
+.mono-small{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* status */
+.status.ok{ color:#6ee7b7; }
+.status.bad{ color:#f87171; }

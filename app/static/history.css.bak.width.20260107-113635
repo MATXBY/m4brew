@@ -1,0 +1,70 @@
+/* History page */
+
+.history-top{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+/* Make "Clear history" look like a normal button on THIS page */
+.history-top .btn.danger{
+  background: var(--nav-bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* Table styling (this is what we accidentally wiped) */
+table{
+  width:100%;
+  border-collapse: collapse;
+  color: var(--text);
+}
+
+thead th{
+  text-align:left;
+  color: var(--muted);
+  font-weight: 800;
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+tbody td{
+  padding: 14px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.status{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(34,197,94,.18);
+  border: 1px solid rgba(34,197,94,.30);
+  color: var(--text);
+  font-weight: 900;
+}
+
+.when{ white-space: nowrap; }
+.mono-small{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Purple buttons for History actions */
+.history-top .btn,
+table .btn{
+  background: rgba(124,92,255,.18);
+  border: 1px solid rgba(124,92,255,.32);
+  color: rgba(233,237,243,.92);
+}
+
+.history-top .btn:hover,
+table .btn:hover{
+  background: rgba(124,92,255,.28);
+  border-color: rgba(124,92,255,.45);
+}

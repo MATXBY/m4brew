@@ -7,83 +7,79 @@
 {% endblock %}
 
 {% block content %}
-  <div class="card">
-    <div class="task-stack">
+<div class="card">
+  <div class="task-stack">
 
-      <!-- Step 1 -->
-      <div class="task-row">
-        <div class="task-group">
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="convert">
-            <input type="hidden" name="dry_run" value="false">
-            <button class="step-pill step-btn" type="submit">step 1: convert to m4b</button>
-          </form>
+    <!-- Step 1 -->
+    <div class="task-row">
+      <div class="task-group">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="convert">
+          <input type="hidden" name="dry_run" value="true">
+          <button class="btn w-test" type="submit">Test run</button>
+        </form>
 
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="convert">
-            <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test run</button>
-          </form>
-        </div>
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="convert">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-pill step-btn w-step" type="submit">step 1: convert to m4b</button>
+        </form>
       </div>
-
-      <!-- Step 2 -->
-      <div class="task-row">
-        <div class="task-group">
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="correct">
-            <input type="hidden" name="dry_run" value="false">
-            <button class="step-pill step-btn" type="submit">step 2: rename books</button>
-          </form>
-
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="correct">
-            <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test run</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="task-row">
-        <div class="task-group">
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="cleanup">
-            <input type="hidden" name="dry_run" value="false">
-            <button class="step-pill step-btn" type="submit">step 3: remove backups</button>
-          </form>
-
-          <form method="post" action="/" style="margin:0;">
-            <input type="hidden" name="mode" value="cleanup">
-            <input type="hidden" name="dry_run" value="true">
-            <button class="btn" type="submit">Test run</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- Status / Output -->
-      <div class="status-wrap">
-        <div class="status-top">
-          <div id="statusPill" class="status-pill">
-            <span id="statusDot" class="status-dot dot-idle"></span>
-            <span id="statusText">idle</span>
-          </div>
-
-          <div class="status-actions">
-            <button id="liveBtn" class="btn" type="button">Live output</button>
-            <form method="post" action="/job/clear" style="margin:0;">
-              <button class="btn" type="submit">Clear</button>
-            </form>
-          </div>
-        </div>
-
-        <div id="logWrap" style="display:none;">
-          <pre id="logBox" class="mono"></pre>
-        </div>
-      </div>
-
     </div>
+
+    <!-- Step 2 -->
+    <div class="task-row">
+      <div class="task-group">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="correct">
+          <input type="hidden" name="dry_run" value="true">
+          <button class="btn w-test" type="submit">Test run</button>
+        </form>
+
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="correct">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-pill step-btn w-step" type="submit">step 2: rename books</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="task-row">
+      <div class="task-group">
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="cleanup">
+          <input type="hidden" name="dry_run" value="true">
+          <button class="btn w-test" type="submit">Test run</button>
+        </form>
+
+        <form method="post" action="/" style="margin:0;">
+          <input type="hidden" name="mode" value="cleanup">
+          <input type="hidden" name="dry_run" value="false">
+          <button class="step-pill step-btn w-step" type="submit">step 3: remove backups</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-wrap">
+      <div class="status-top center">
+
+        <div id="statusPill" class="status-pill">
+          <span id="statusDot" class="status-dot dot-idle"></span>
+          <span id="statusText">idle</span>
+        </div>
+
+        <button id="liveBtn" class="btn purple" type="button">Live output: OFF</button>
+      </div>
+
+      <div id="logWrap" style="display:none;">
+        <pre id="logBox" class="mono"></pre>
+      </div>
+    </div>
+
   </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -97,68 +93,41 @@
   const LIVE_KEY = "m4brew_live_output";
   let liveOn = (localStorage.getItem(LIVE_KEY) || "off") === "on";
 
-  function setDot(state) {
-    statusDot.classList.remove("dot-idle","dot-running","dot-finished","dot-failed");
-    statusDot.classList.add(state);
+  function setLiveLabel(){
+    liveBtn.textContent = liveOn ? "Live output: ON" : "Live output: OFF";
   }
 
-  function setStatus(label, state) {
-    statusText.textContent = label;
-    setDot(state);
-  }
-
-  function renderJob(job) {
-    if (!job || job.status === "none") { setStatus("idle", "dot-idle"); return; }
-
-    const cur = Number(job.current || 0);
-    const tot = Number(job.total || 0);
-    const frac = tot > 0 ? `${cur}/${tot}` : "0/0";
-
-    if (job.status === "running") { setStatus(`running ${frac}`, "dot-running"); return; }
-    if (job.status === "finished") {
-      const doneFrac = tot > 0 ? `${Math.max(cur, tot)}/${tot}` : frac;
-      setStatus(`finished ${doneFrac}`, "dot-finished");
-      return;
-    }
-    setStatus(`failed ${frac}`, "dot-failed");
-  }
-
-  async function fetchJob() {
-    const r = await fetch("/api/job", { cache: "no-store" });
-    return await r.json();
-  }
-
-  async function fetchLog() {
-    const r = await fetch("/job/output", { cache: "no-store" });
-    return await r.text();
-  }
-
-  function applyLiveBtn() {
+  function applyLive(){
     if (liveOn) {
-      liveBtn.classList.add("primary");
       logWrap.style.display = "";
+      liveBtn.classList.add("primary");
     } else {
-      liveBtn.classList.remove("primary");
       logWrap.style.display = "none";
+      liveBtn.classList.remove("primary");
     }
+    setLiveLabel();
   }
 
   liveBtn.addEventListener("click", () => {
     liveOn = !liveOn;
     localStorage.setItem(LIVE_KEY, liveOn ? "on" : "off");
-    applyLiveBtn();
+    applyLive();
   });
 
-  async function tick() {
+  async function tick(){
     try {
-      const job = await fetchJob();
-      renderJob(job);
-      if (liveOn) logBox.textContent = await fetchLog();
-    } catch (e) {}
+      const r = await fetch("/api/job", { cache: "no-store" });
+      const job = await r.json();
+      statusText.textContent = job.status || "idle";
+      if (liveOn) {
+        const t = await fetch("/job/output", { cache: "no-store" });
+        logBox.textContent = await t.text();
+      }
+    } catch {}
     setTimeout(tick, 1000);
   }
 
-  applyLiveBtn();
+  applyLive();
   tick();
 </script>
 {% endblock %}

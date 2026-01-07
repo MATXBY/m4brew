@@ -276,17 +276,3 @@ pre {
   justify-content: center;
   text-align: center;
 }
-
-/* FORCE: Status + Live output fixed widths */
-#statusPill{
-  width: 210px !important;
-  min-width: 210px !important;
-  justify-content: center !important;
-}
-
-#liveBtn{
-  width: 210px !important;
-  min-width: 210px !important;
-  justify-content: center !important;
-  text-align: center !important;
-}
