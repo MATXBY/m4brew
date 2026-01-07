@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import json
 import os
@@ -11,7 +10,6 @@ from typing import Any, Dict, List, Optional
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, send_file, url_for
 
-APP_DIR = Path(__file__).resolve().parent
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config"))
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -49,34 +47,32 @@ def parse_ts(ts: str) -> Optional[datetime]:
 
 def humanize_ts(ts: str) -> str:
     """Return short age like 11s/4m/2h/3d."""
-    try:
-        if not ts:
-            return ""
-        if ts.endswith("Z"):
-            ts = ts[:-1] + "+00:00"
-        dt = datetime.fromisoformat(ts)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        sec = int((now - dt).total_seconds())
-        if sec < 0:
-            sec = 0
-        if sec < 60:
-            return f"{sec}s"
-        m = sec // 60
-        if m < 60:
-            return f"{m}m"
-        h = m // 60
-        if h < 24:
-            return f"{h}h"
-        d = h // 24
-        return f"{d}d"
-    except Exception:
+    dt = parse_ts(ts)
+    if not dt:
         return ""
+
+    sec = int((datetime.now(timezone.utc) - dt).total_seconds())
+    if sec < 0:
+        sec = 0
+
+    if sec < 60:
+        return f"{sec}s"
+
+    m = sec // 60
+    if m < 60:
+        return f"{m}m"
+
+    h = m // 60
+    if h < 24:
+        return f"{h}h"
+
+    d = h // 24
+    return f"{d}d"
 
 
 # -------------------------
 # Settings
+
 # -------------------------
 def load_settings() -> Dict[str, Any]:
     if SETTINGS_PATH.exists():
@@ -468,55 +464,56 @@ def settings_post():
         "dry_run": existing.get("dry_run", "true"),
     }
     save_settings(updated)
+    if request.headers.get("X-M4Brew-Autosave") == "1":
+        return ("", 204)
     return redirect(url_for("settings_get"))
-
 
 @app.get("/history")
 def history_get():
     records = list(reversed(read_history()))  # newest first
 
-    def fmt_dur(v):
+    def fmt_dur(v) -> str:
         try:
-            s = int(v or 0)
+            sec = int(v or 0)
         except Exception:
-            s = 0
-        if s < 60:
-            return f"{s}s"
-        m = s // 60
+            sec = 0
+        if sec < 60:
+            return f"{sec}s"
+        m = sec // 60
         if m < 60:
             return f"{m}m"
         h = m // 60
         return f"{h}h"
 
+    mode_labels = {"convert": "Convert", "correct": "Rename", "cleanup": "Delete"}
+
     enriched = []
     for i, r in enumerate(records):
-        ts = r.get("ts", "")
+        ts = r.get("ts", "") or ""
         summary = r.get("summary") or {}
-        exit_code = int(r.get("exit_code", 0))
+        exit_code = int(r.get("exit_code") or 0)
 
         success = bool(summary.get("success", exit_code == 0))
         runtime_s = summary.get("runtime_s")
         runtime_h = fmt_dur(runtime_s)
+
+        mode = (r.get("mode") or "").lower()
         created = summary.get("created")
         renamed = summary.get("renamed")
         deleted = summary.get("deleted")
         skipped = summary.get("skipped")
         failed = summary.get("failed")
 
-        # Completed means: created (convert), renamed (correct), deleted (cleanup)
-        mode = r.get("mode", "")
-        completed = created if mode == "convert" else (renamed if mode == "correct" else (deleted if mode == "cleanup" else created))
+        completed = created if mode == "convert" else (renamed if mode == "correct" else (deleted if mode == "cleanup" else 0))
 
         enriched.append(
             {
                 "idx": i,
                 "ts": ts,
                 "ts_human": humanize_ts(ts) if ts else "",
-                "mode": r.get("mode", ""),
-                "mode_label": {"convert": "Convert", "correct": "Rename", "cleanup": "Delete"}.get(
-                    r.get("mode", ""), r.get("mode", "")
-                ),
-                "dry_run": r.get("dry_run", False),
+                "mode": mode,
+                "mode_label": mode_labels.get(mode, mode),
+                "dry_run": bool(r.get("dry_run", False)),
                 "success": success,
                 "exit_code": exit_code,
                 "runtime_s": runtime_s,

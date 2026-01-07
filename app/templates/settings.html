@@ -59,7 +59,7 @@
     t = setTimeout(async () => {
       try {
         const fd = new FormData(form);
-        await fetch("/settings", { method: "POST", body: fd });
+        await fetch("/settings", { method: "POST", body: fd, headers: { "X-M4Brew-Autosave": "1" } });
       } catch (e) {}
     }, 250);
   }
