@@ -294,26 +294,3 @@ body::before{
     radial-gradient(900px 520px at 80% 0%, rgba(30,210,255,.18), rgba(30,210,255,0) 60%),
     linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
 }
-
-/* =========================================================
-   BACKGROUND FIX v2: ensure top gradients are visible immediately
-========================================================= */
-html{
-  background: #111318 !important;          /* infinite base */
-}
-
-body{
-  background: transparent !important;      /* let overlay show */
-  position: relative;
-}
-
-/* put the top glow ABOVE the base background */
-body::before{
-  z-index: 0 !important;
-}
-
-/* keep all real content above the overlay */
-.wrap{
-  position: relative;
-  z-index: 1;
-}
