@@ -240,12 +240,32 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     job_id = str(job.get("id") or "")
     start = time.time()
 
-    def _save(j: Dict[str, Any]) -> None:
+    last_fp = None
+    last_fp = None
+    last_write = 0.0
+
+    last_fp = None
+
+    def _save(j: dict) -> None:
+        nonlocal last_fp
         # Only persist updates for the same job id
-        if str(j.get("id") or "") != job_id:
+        if str(j.get('id') or '') != job_id:
             return
-        j["updated"] = now_utc_iso()
+
+        # Fingerprint everything except 'updated' so we don't rewrite job.json unnecessarily
+        try:
+            snap = dict(j)
+            snap.pop('updated', None)
+            fp = json.dumps(snap, sort_keys=True, default=str)
+        except Exception:
+            fp = None
+
+        if fp is not None and fp == last_fp:
+            return
+
+        j['updated'] = now_utc_iso()
         _save_job(j)
+        last_fp = fp
 
     def write_line(line: str) -> None:
         with JOB_OUT_PATH.open("a", encoding="utf-8", errors="replace") as f:
@@ -256,6 +276,12 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if s.startswith("[") and "] " in s:
             return s.split("] ", 1)[1].strip()
         return s
+
+    def set_if_changed(j: Dict[str, Any], key: str, val: Any) -> bool:
+        if j.get(key) == val:
+            return False
+        j[key] = val
+        return True
 
     cmd = ["/bin/bash", str(SCRIPT_PATH)]
     proc = subprocess.Popen(
@@ -273,13 +299,15 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     current = 0
     total = int(job.get("total") or 0)
 
-    # initial job persist
-    job["pid"] = proc.pid
-    job["status"] = "running"
-    job["current"] = 0
-    job["current_book"] = ""
-    job["current_path"] = ""
-    _save(job)
+    # initial job persist (only write if something actually changed)
+    changed = False
+    changed |= set_if_changed(job, "pid", proc.pid)
+    changed |= set_if_changed(job, "status", "running")
+    changed |= set_if_changed(job, "current", 0)
+    changed |= set_if_changed(job, "current_book", "")
+    changed |= set_if_changed(job, "current_path", "")
+    if changed:
+        _save(job)
 
     try:
         assert proc.stdout is not None
@@ -292,22 +320,24 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
             # your script prints a divider per-book
             if s.startswith("----------------------------------------"):
                 current += 1
-                job["current"] = current
-                job["current_book"] = current_book
-                job["current_path"] = current_path
-                _save(job)
+                changed = False
+                changed |= set_if_changed(job, "current", current)
+                changed |= set_if_changed(job, "current_book", current_book)
+                changed |= set_if_changed(job, "current_path", current_path)
+                if changed:
+                    _save(job)
                 continue
 
             if s.startswith("BOOK:"):
                 current_book = s.split("BOOK:", 1)[1].strip()
-                job["current_book"] = current_book
-                _save(job)
+                if set_if_changed(job, "current_book", current_book):
+                    _save(job)
                 continue
 
             if s.startswith("PATH:"):
                 current_path = s.split("PATH:", 1)[1].strip()
-                job["current_path"] = current_path
-                _save(job)
+                if set_if_changed(job, "current_path", current_path):
+                    _save(job)
                 continue
 
         rc = proc.wait()
@@ -322,15 +352,17 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if total > 0:
             current = total
 
-        job["status"] = "finished" if rc == 0 else "failed"
-        job["exit_code"] = rc
-        job["runtime_s"] = runtime_s
-        job["summary"] = summary
-        job["current"] = current
-        job["current_book"] = current_book
-        job["current_path"] = current_path
-        job["pid"] = None
-        _save(job)
+        changed = False
+        changed |= set_if_changed(job, "status", "finished" if rc == 0 else "failed")
+        changed |= set_if_changed(job, "exit_code", rc)
+        changed |= set_if_changed(job, "runtime_s", runtime_s)
+        changed |= set_if_changed(job, "summary", summary)
+        changed |= set_if_changed(job, "current", current)
+        changed |= set_if_changed(job, "current_book", current_book)
+        changed |= set_if_changed(job, "current_path", current_path)
+        changed |= set_if_changed(job, "pid", None)
+        if changed:
+            _save(job)
 
         record = {
             "ts": now_utc_iso(),
@@ -443,40 +475,44 @@ def api_job():
     if not job:
         return jsonify({"status": "none"})
 
-    changed = False
-    status = job.get("status")
+    # IMPORTANT: api_job() is READ-ONLY.
+    # It must not call _save_job() or mutate persisted state.
+    resp = dict(job)
 
-    # If it claims running but PID is gone -> mark finished/failed based on exit_code
-    if status == "running" and not _job_is_running(job):
-        rc = job.get("exit_code")
+    status = resp.get("status")
+
+    # If it claims running but PID is gone, present derived state (do NOT persist)
+    if status == "running" and not _job_is_running(resp):
+        rc = resp.get("exit_code")
         try:
             rc = int(rc) if rc is not None else None
         except Exception:
             rc = None
 
-        job["status"] = "finished" if rc == 0 else "failed"
-        if job.get("exit_code") is None:
-            job["exit_code"] = 0 if rc == 0 else 1
+        resp["status"] = "finished" if rc == 0 else "failed"
+        resp["pid"] = None
 
-        job["pid"] = None
-        job["updated"] = now_utc_iso()
-        changed = True
-        status = job["status"]
+        if resp.get("exit_code") is None:
+            resp["exit_code"] = 0 if rc == 0 else 1
 
-    # Finished/failed: pid should always be null
+        # Derive updated timestamp for display only
+        resp["updated"] = resp.get("updated") or now_utc_iso()
+
+        status = resp["status"]
+
+    # For finished/failed: pid is always stale in UI; hide it.
     if status in ("finished", "failed"):
-        if job.get("pid") is not None:
-            job["pid"] = None
-            changed = True
+        resp["pid"] = None
 
-        # runtime_s: only fix if missing/0 (do NOT recompute every request)
+        # runtime_s: derive for display if missing/0, but do not write back.
+        rs = 0
         try:
-            rs = int(job.get("runtime_s") or 0)
+            rs = int(resp.get("runtime_s") or 0)
         except Exception:
             rs = 0
 
         if rs <= 0:
-            summary = job.get("summary")
+            summary = resp.get("summary")
             srs = 0
             if isinstance(summary, dict):
                 try:
@@ -484,21 +520,26 @@ def api_job():
                 except Exception:
                     srs = 0
 
-            rs = srs if srs > 0 else 1
-            job["runtime_s"] = rs
-            changed = True
+            if srs > 0:
+                rs = srs
+            else:
+                dt_start = parse_ts(str(resp.get("started") or ""))
+                dt_end = parse_ts(str(resp.get("updated") or "")) or datetime.now(timezone.utc)
+                if dt_start and dt_end:
+                    rs = max(1, int((dt_end - dt_start).total_seconds()))
+                else:
+                    rs = 1
 
-        # Always align summary runtime to job runtime (but don't create summary if None)
-        summary = job.get("summary")
-        if isinstance(summary, dict) and summary.get("runtime_s") != rs:
+            resp["runtime_s"] = rs
+
+        # Always align summary runtime for DISPLAY (do not persist)
+        summary = resp.get("summary")
+        if isinstance(summary, dict):
+            summary = dict(summary)
             summary["runtime_s"] = rs
-            job["summary"] = summary
-            changed = True
+            resp["summary"] = summary
 
-    if changed:
-        _save_job(job)
-
-    return jsonify(job)
+    return jsonify(resp)
 
 
 @app.get("/about")
