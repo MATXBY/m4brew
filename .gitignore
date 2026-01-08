@@ -2,3 +2,7 @@ config/
 
 # Local safety backups
 app/templates/*.bak.*
+__pycache__/
+*.pyc
+__pycache__/
+*.pyc
