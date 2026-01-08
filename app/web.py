@@ -37,6 +37,7 @@ HISTORY_PATH = CONFIG_DIR / "history.jsonl"
 JOB_PATH = CONFIG_DIR / "job.json"
 JOB_OUT_PATH = CONFIG_DIR / "job_output.log"
 
+CANCEL_PATH = CONFIG_DIR / "cancel.flag"
 SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
@@ -252,6 +253,14 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if str(j.get('id') or '') != job_id:
             return
 
+        # Preserve cancel_requested if UI wrote it into job.json
+        try:
+            persisted = _load_job()
+            if persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"):
+                j["cancel_requested"] = True
+        except Exception:
+            pass
+
         # Fingerprint everything except 'updated' so we don't rewrite job.json unnecessarily
         try:
             snap = dict(j)
@@ -352,9 +361,26 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if total > 0:
             current = total
 
+        # If user requested cancel, honor it at finalization
+        cancel_requested = False
+        try:
+            persisted = _load_job()
+            if persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"):
+                cancel_requested = True
+        except Exception:
+            cancel_requested = bool(job.get("cancel_requested"))
+
+        final_status = "canceled" if cancel_requested else ("finished" if rc == 0 else "failed")
+        final_exit = 130 if cancel_requested else rc
+
+        if cancel_requested and isinstance(summary, dict):
+            summary["success"] = False
+            summary["reason"] = "canceled"
+            summary["runtime_s"] = runtime_s
+
         changed = False
-        changed |= set_if_changed(job, "status", "finished" if rc == 0 else "failed")
-        changed |= set_if_changed(job, "exit_code", rc)
+        changed |= set_if_changed(job, "status", final_status)
+        changed |= set_if_changed(job, "exit_code", final_exit)
         changed |= set_if_changed(job, "runtime_s", runtime_s)
         changed |= set_if_changed(job, "summary", summary)
         changed |= set_if_changed(job, "current", current)
@@ -377,8 +403,22 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
     except Exception as e:
         runtime_s = max(1, int(time.time() - start))
-        job["status"] = "failed"
-        job["exit_code"] = 1
+
+        cancel_requested = False
+        try:
+            persisted = _load_job()
+            if persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"):
+                cancel_requested = True
+        except Exception:
+            cancel_requested = bool(job.get("cancel_requested"))
+
+        if cancel_requested:
+            job["status"] = "canceled"
+            job["exit_code"] = 130
+        else:
+            job["status"] = "failed"
+            job["exit_code"] = 1
+
         job["runtime_s"] = runtime_s
         job["pid"] = None
         _save(job)
@@ -398,6 +438,7 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
 
     job = {
         "id": job_id,
+        "cancel_requested": False,
         "status": "running",
         "started": now_utc_iso(),
         "updated": now_utc_iso(),
@@ -501,7 +542,7 @@ def api_job():
         status = resp["status"]
 
     # For finished/failed: pid is always stale in UI; hide it.
-    if status in ("finished", "failed"):
+    if status in ("finished", "failed", "canceled"):
         resp["pid"] = None
 
         # runtime_s: derive for display if missing/0, but do not write back.
@@ -567,6 +608,45 @@ def job_clear():
         JOB_OUT_PATH.unlink(missing_ok=True)  # type: ignore[arg-type]
     except Exception:
         pass
+    return redirect(url_for("index_get"))
+
+
+@app.post("/job/cancel")
+def job_cancel():
+    job = _load_job()
+    if not job or job.get("status") != "running":
+        return redirect(url_for("index_get"))
+
+    pid = job.get("pid")
+
+    # Mark intent (worker may still write final state, but we want logs + UI clarity)
+    job["cancel_requested"] = True
+    _save_job(job)
+
+    # Best-effort: ask the subprocess to stop nicely first
+    try:
+        if pid:
+            import os, signal, time
+            try:
+                os.kill(int(pid), signal.SIGINT)
+                time.sleep(0.8)
+            except Exception:
+                pass
+            try:
+                # If still running, escalate
+                os.kill(int(pid), signal.SIGTERM)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    # Write a note into the output log so it’s visible in UI
+    try:
+        with JOB_OUT_PATH.open("a", encoding="utf-8", errors="replace") as f:
+            f.write("\n[cancel] Cancel requested by user.\n")
+    except Exception:
+        pass
+
     return redirect(url_for("index_get"))
 
 
