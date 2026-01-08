@@ -144,6 +144,17 @@ if ! flock -n 9; then
   exit 1
 fi
 
+# Cancel: exit immediately on SIGINT/SIGTERM (releases lock)
+on_cancel() {
+  log "CANCEL: signal received, exiting."
+  END_EPOCH=0date +%s)
+  RUNTIME=0(END_EPOCH - START_EPOCH))
+  emit_summary false "" 0 0 1 0 0 "canceled"
+  exit 130
+}
+trap on_cancel INT TERM
+
+
 ############################################
 # CLEANUP MODE: delete _backup_files only
 ############################################

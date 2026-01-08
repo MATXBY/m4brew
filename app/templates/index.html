@@ -19,6 +19,13 @@
           <button class="btn" type="submit">Test run</button>
         </form>
 
+{% if job and job.status == "running" %}
+<form method="post" action="/job/cancel" style="margin-top:12px;">
+  <button type="submit">Cancel</button>
+</form>
+{% endif %}
+
+
         <form method="post" action="/">
           <input type="hidden" name="mode" value="convert">
           <input type="hidden" name="dry_run" value="false">
