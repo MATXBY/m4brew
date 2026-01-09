@@ -12,6 +12,7 @@ services:
       - "8585:8080"
 
     volumes:
+      - /mnt/cache/appdata/m4brew/scripts/m4brew.sh:/scripts/m4brew.sh:ro
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/mnt/remotes/192.168.4.4_media/Audiobooks:rw
       - /mnt/cache/media:/mnt/cache/media:rw
       - /mnt/cache/appdata/m4brew/config:/config

@@ -147,9 +147,9 @@ fi
 # Cancel: exit immediately on SIGINT/SIGTERM (releases lock)
 on_cancel() {
   log "CANCEL: signal received, exiting."
-  END_EPOCH=0date +%s)
-  RUNTIME=0(END_EPOCH - START_EPOCH))
-  emit_summary false "" 0 0 1 0 0 "canceled"
+    END_EPOCH=$(date +%s)
+    RUNTIME=$((END_EPOCH - START_EPOCH))
+    emit_summary false "${RUNTIME}" 0 0 1 0 0 "canceled"
   exit 130
 }
 trap on_cancel INT TERM
@@ -295,7 +295,7 @@ while IFS= read -r -d '' book_dir; do
 
   [[ "$author" == "#recycle" ]] && continue
 
-  if find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" -print -quit | grep -q .; then
+  if find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print -quit | grep -q .; then
     log "SKIP (already has m4b): ${book_dir}"
     skipped_count=$((skipped_count + 1))
     continue
@@ -319,6 +319,8 @@ while IFS= read -r -d '' book_dir; do
   out_path="${book_dir}/${out_name}"
   tmp_stem="$(safe_name "$book")"
   tmp_path="${book_dir}/.tmp_${tmp_stem}.m4b"
+    # If a previous run was canceled/crashed, remove stale temp so we always re-encode
+    rm -f "${tmp_path}" >/dev/null 2>&1 || true
 
   if [[ -f "${out_path}" ]]; then
     log "WARN: Unexpected existing .m4b without earlier detection, skipping: ${out_path}"

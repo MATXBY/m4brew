@@ -19,11 +19,14 @@
           <button class="btn" type="submit">Test run</button>
         </form>
 
-{% if job and job.status == "running" %}
-<form method="post" action="/job/cancel" style="margin-top:12px;">
-  <button type="submit">Cancel</button>
-</form>
-{% endif %}
+
+  <!-- Cancel (always visible; enabled only while running) -->
+  <div id="cancelWrap" style="margin-top:12px;">
+    <form method="post" action="/job/cancel" id="cancelForm" style="display:inline;">
+      <button class="btn" type="submit" id="cancelBtn" disabled>Cancel</button>
+    </form>
+  </div>
+
 
 
         <form method="post" action="/">
@@ -170,6 +173,23 @@
       statusDot.classList.remove("dot-idle","dot-running","dot-ok","dot-bad");
       statusDot.classList.add(dot);
 
+        // Cancel button: enabled only while running
+        const cancelBtn = document.getElementById("cancelBtn");
+        if (cancelBtn) {
+          const st = (job && job.status) ? job.status : "";
+          if (st === "running") {
+            cancelBtn.disabled = false;
+            cancelBtn.textContent = "Cancel";
+          } else if (st === "canceling") {
+            cancelBtn.disabled = true;
+            cancelBtn.textContent = "Canceling...";
+          } else {
+            cancelBtn.disabled = true;
+            cancelBtn.textContent = "Cancel";
+          }
+        }
+
+
       if (liveOn) {
         const t = await fetch("/job/output", { cache: "no-store" });
         logBox.textContent = await t.text();
@@ -182,3 +202,6 @@
   tick();
 </script>
 {% endblock %}
+
+<script>
+(function () {
