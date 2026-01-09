@@ -159,7 +159,7 @@
           dot = "dot-ok";
         }
       } else if (job.status === "finished") {
-        text = total > 0 ? "Complete " + total + "/" + total : "Nothing to " + noun;
+        text = total > 0 ? ((job && job.dry_run) ? (total + " to " + noun) : ("Complete " + total + "/" + total)) : ("Nothing to " + noun);
         dot = "dot-ok";
       } else if (job.status === "failed") {
         text = "Failed";

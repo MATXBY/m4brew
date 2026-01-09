@@ -215,7 +215,8 @@ def _scan_total(mode: str, root_folder: str) -> int:
     # convert
     n = 0
     for book_dir in book_dirs:
-        if list(book_dir.glob("*.m4b")):
+        m4bs = [p for p in book_dir.glob("*.m4b") if not (p.name.startswith(".tmp_") or p.name.startswith("tmp_"))]
+        if m4bs:
             continue
         if list(book_dir.glob("*.mp3")) or list(book_dir.glob("*.m4a")):
             n += 1
