@@ -158,7 +158,7 @@ def _pid_is_running(pid: Optional[int]) -> bool:
 def _job_is_running(job: Dict[str, Any]) -> bool:
     if not job:
         return False
-    if job.get("status") != "running":
+    if job.get("status") not in ("running","canceling"):
         return False
     pid = job.get("pid")
     try:
@@ -301,7 +301,6 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         text=True,
         env=env,
         bufsize=1,
-        start_new_session=True,
     )
 
     # local state
@@ -313,7 +312,8 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     # initial job persist (only write if something actually changed)
     changed = False
     changed |= set_if_changed(job, "pid", proc.pid)
-    changed |= set_if_changed(job, "status", "running")
+    if (job.get("status") not in ("canceling","canceled")):
+          changed |= set_if_changed(job, "status", "running")
     changed |= set_if_changed(job, "current", 0)
     changed |= set_if_changed(job, "current_book", "")
     changed |= set_if_changed(job, "current_path", "")
@@ -616,68 +616,35 @@ def job_clear():
 @app.post("/job/cancel")
 def job_cancel():
     job = _load_job()
-    if not job:
-        return redirect(url_for("index_get"))
-
-    # allow cancel while running or already canceling
-    if job.get("status") not in ("running", "canceling"):
+    if not job or job.get("status") != "running":
         return redirect(url_for("index_get"))
 
     pid = job.get("pid")
 
-    import time
-    import os, signal
-
-    # Mark intent + update UI ASAP
+    # Mark intent (worker may still write final state, but we want logs + UI clarity)
     job["cancel_requested"] = True
     job["status"] = "canceling"
-    job["cancel_requested_at"] = time.time()
+
     _save_job(job)
 
-    # Kill the whole process group (this stops docker + ffmpeg)
+    # Best-effort: ask the subprocess to stop nicely first
     try:
         if pid:
-            pid_i = int(pid)
+            import os, signal, time
             try:
-                pgid = os.getpgid(pid_i)
-            except Exception:
-                pgid = pid_i
-
-            # Try SIGINT, then SIGTERM, then SIGKILL
-            try:
-                os.killpg(pgid, signal.SIGINT)
+                os.killpg(int(pid), signal.SIGINT)
+                time.sleep(0.8)
             except Exception:
                 pass
-
-            t_end = time.time() + 3.0
-            while time.time() < t_end:
-                try:
-                    os.killpg(pgid, 0)
-                    time.sleep(0.1)
-                except Exception:
-                    break
-
             try:
-                os.killpg(pgid, signal.SIGTERM)
-            except Exception:
-                pass
-
-            t_end = time.time() + 2.0
-            while time.time() < t_end:
-                try:
-                    os.killpg(pgid, 0)
-                    time.sleep(0.1)
-                except Exception:
-                    break
-
-            try:
-                os.killpg(pgid, signal.SIGKILL)
+                # If still running, escalate
+                os.killpg(int(pid), signal.SIGTERM)
             except Exception:
                 pass
     except Exception:
         pass
 
-    # Log marker
+    # Write a note into the output log so it’s visible in UI
     try:
         with JOB_OUT_PATH.open("a", encoding="utf-8", errors="replace") as f:
             f.write("\n[cancel] Cancel requested by user.\n")
@@ -685,6 +652,8 @@ def job_cancel():
         pass
 
     return redirect(url_for("index_get"))
+
+
 @app.get("/settings")
 def settings_get():
     settings = load_settings()
