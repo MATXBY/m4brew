@@ -1,4 +1,3 @@
-
 import json
 import os
 import subprocess
@@ -51,18 +50,28 @@ def now_utc_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def humanize_ts(ts: str) -> str:
-    """Return short age like 11s/4m/2h/3d."""
+def parse_ts(ts: str) -> Optional[datetime]:
     if not ts:
-        return ""
+        return None
     try:
         if ts.endswith("Z"):
             ts = ts[:-1] + "+00:00"
         dt = datetime.fromisoformat(ts)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=timezone.utc)
-        dt = dt.astimezone(timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:
+        return None
 
+
+def humanize_ts(ts: str) -> str:
+    """Return short age like 11s/4m/2h/3d."""
+    if not ts:
+        return ""
+    try:
+        dt = parse_ts(ts)
+        if not dt:
+            return ""
         sec = int((datetime.now(timezone.utc) - dt).total_seconds())
         if sec < 0:
             sec = 0
@@ -83,7 +92,6 @@ def humanize_ts(ts: str) -> str:
 
 # -------------------------
 # Settings
-
 # -------------------------
 def load_settings() -> Dict[str, Any]:
     return read_json(SETTINGS_PATH, {})
@@ -158,7 +166,7 @@ def _pid_is_running(pid: Optional[int]) -> bool:
 def _job_is_running(job: Dict[str, Any]) -> bool:
     if not job:
         return False
-    if job.get("status") not in ("running","canceling"):
+    if job.get("status") not in ("running", "canceling"):
         return False
     pid = job.get("pid")
     try:
@@ -224,17 +232,64 @@ def _scan_total(mode: str, root_folder: str) -> int:
 
 
 # -------------------------
+# Cancel helpers
+# -------------------------
+def _kill_job_labeled_containers(job_id: str) -> None:
+    job_id = (job_id or "").strip()
+    if not job_id:
+        return
+    # kill anything spawned with label m4brew_job=<job_id>
+    cmd = (
+        f'ids=$(docker ps -aq --filter "label=m4brew_job={job_id}"); '
+        f'[ -n "$ids" ] && docker rm -f $ids >/dev/null 2>&1 || true'
+    )
+    subprocess.run(["sh", "-lc", cmd], check=False)
+
+
+def _signal_proc_group(pid: Optional[int]) -> None:
+    if not pid:
+        return
+    try:
+        import os, signal
+
+        try:
+            os.killpg(int(pid), signal.SIGINT)
+            time.sleep(0.5)
+        except Exception:
+            pass
+        try:
+            os.killpg(int(pid), signal.SIGTERM)
+            time.sleep(0.5)
+        except Exception:
+            pass
+        try:
+            os.killpg(int(pid), signal.SIGKILL)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+
+def _is_cancel_requested(job_id: str) -> bool:
+    try:
+        persisted = _load_job()
+        return bool(persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"))
+    except Exception:
+        return False
+
+
+# -------------------------
 # Background runner (stream output, update progress)
 # -------------------------
 def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     """
     Run the bash script, stream output to JOB_OUT_PATH, and keep job.json updated.
 
-    Lean goals:
-      - runtime_s always >= 1
-      - pid cleared when finished/failed
-      - summary["runtime_s"] aligned to job runtime_s
-      - avoid over-complicated "reload job every bump" logic
+    Cancel behaviour (REAL cancel):
+      - When cancel_requested flips true, we:
+        1) immediately kill any spawned m4b-tool containers by job label
+        2) kill the bash script process group
+      - Then we finalize as canceled (exit_code 130), regardless of script summary
     """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     JOB_OUT_PATH.write_text("", encoding="utf-8")
@@ -242,16 +297,12 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     job_id = str(job.get("id") or "")
     start = time.time()
 
-    last_fp = None
-    last_fp = None
-    last_write = 0.0
-
-    last_fp = None
+    last_fp: Optional[str] = None
 
     def _save(j: dict) -> None:
         nonlocal last_fp
         # Only persist updates for the same job id
-        if str(j.get('id') or '') != job_id:
+        if str(j.get("id") or "") != job_id:
             return
 
         # Preserve cancel_requested if UI wrote it into job.json
@@ -265,7 +316,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         # Fingerprint everything except 'updated' so we don't rewrite job.json unnecessarily
         try:
             snap = dict(j)
-            snap.pop('updated', None)
+            snap.pop("updated", None)
             fp = json.dumps(snap, sort_keys=True, default=str)
         except Exception:
             fp = None
@@ -273,7 +324,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if fp is not None and fp == last_fp:
             return
 
-        j['updated'] = now_utc_iso()
+        j["updated"] = now_utc_iso()
         _save_job(j)
         last_fp = fp
 
@@ -301,6 +352,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         text=True,
         env=env,
         bufsize=1,
+        start_new_session=True,  # critical: makes proc.pid the PGID for killpg()
     )
 
     # local state
@@ -312,17 +364,39 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
     # initial job persist (only write if something actually changed)
     changed = False
     changed |= set_if_changed(job, "pid", proc.pid)
-    if (job.get("status") not in ("canceling","canceled")):
-          changed |= set_if_changed(job, "status", "running")
+    if job.get("status") not in ("canceling", "canceled"):
+        changed |= set_if_changed(job, "status", "running")
     changed |= set_if_changed(job, "current", 0)
     changed |= set_if_changed(job, "current_book", "")
     changed |= set_if_changed(job, "current_path", "")
     if changed:
         _save(job)
 
+    canceled_early = False
+    rc: Optional[int] = None
+
     try:
         assert proc.stdout is not None
         for raw in proc.stdout:
+            # Cancel check *during* streaming (this is what you were missing)
+            if _is_cancel_requested(job_id):
+                canceled_early = True
+                if job.get("status") != "canceling":
+                    job["status"] = "canceling"
+                    _save(job)
+
+                try:
+                    _kill_job_labeled_containers(job_id)
+                except Exception:
+                    pass
+                try:
+                    _signal_proc_group(proc.pid)
+                except Exception:
+                    pass
+
+                write_line("\n[cancel] Forced stop initiated.\n")
+                break
+
             line = raw if raw.endswith("\n") else raw + "\n"
             write_line(line)
 
@@ -351,7 +425,19 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
                     _save(job)
                 continue
 
-        rc = proc.wait()
+        # Wait for process to end (if we broke out due to cancel, it may still be dying)
+        try:
+            rc = proc.wait(timeout=10 if canceled_early else None)  # type: ignore[arg-type]
+        except Exception:
+            # if it's still hanging, kill harder and mark canceled
+            try:
+                _signal_proc_group(proc.pid)
+            except Exception:
+                pass
+            try:
+                rc = proc.wait(timeout=5)
+            except Exception:
+                rc = 130 if canceled_early else 1
 
         full_output = JOB_OUT_PATH.read_text(encoding="utf-8", errors="replace")
         summary = parse_summary_from_output(full_output)
@@ -363,19 +449,15 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         if total > 0:
             current = total
 
-        # If user requested cancel, honor it at finalization
-        cancel_requested = False
-        try:
-            persisted = _load_job()
-            if persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"):
-                cancel_requested = True
-        except Exception:
-            cancel_requested = bool(job.get("cancel_requested"))
+        cancel_requested = canceled_early or _is_cancel_requested(job_id)
 
-        final_status = "canceled" if cancel_requested else ("finished" if rc == 0 else "failed")
-        final_exit = 130 if cancel_requested else rc
+        final_status = "canceled" if cancel_requested else ("finished" if (rc == 0) else "failed")
+        final_exit = 130 if cancel_requested else (rc if rc is not None else 1)
 
-        if cancel_requested and isinstance(summary, dict):
+        if cancel_requested:
+            # If the underlying script claims success but we canceled, we override.
+            if not isinstance(summary, dict):
+                summary = {}
             summary["success"] = False
             summary["reason"] = "canceled"
             summary["runtime_s"] = runtime_s
@@ -397,7 +479,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
             "mode": job.get("mode"),
             "dry_run": job.get("dry_run"),
             "settings": job.get("settings"),
-            "exit_code": rc,
+            "exit_code": final_exit,
             "summary": summary,
             "output": full_output,
         }
@@ -405,14 +487,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
     except Exception as e:
         runtime_s = max(1, int(time.time() - start))
-
-        cancel_requested = False
-        try:
-            persisted = _load_job()
-            if persisted and persisted.get("id") == job_id and persisted.get("cancel_requested"):
-                cancel_requested = True
-        except Exception:
-            cancel_requested = bool(job.get("cancel_requested"))
+        cancel_requested = _is_cancel_requested(job_id)
 
         if cancel_requested:
             job["status"] = "canceled"
@@ -428,7 +503,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
 
 def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate: int) -> Dict[str, Any]:
-    root_folder = (root_folder or '').strip()
+    root_folder = (root_folder or "").strip()
     if not root_folder:
         return {"status": "error", "error": "root_folder_not_set"}
     existing = _load_job()
@@ -466,6 +541,7 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
             "ROOT_FOLDER": root_folder,
             "AUDIO_MODE": audio_mode,
             "BITRATE": str(bitrate),
+            "JOB_ID": job_id,  # <-- used by scripts/m4brew.sh to label spawned containers
         }
     )
 
@@ -511,6 +587,7 @@ def index_post():
 
     start_job(mode, dry_run, root_folder, audio_mode, bitrate)
     return redirect(url_for("index_get"))
+
 
 @app.get("/api/job")
 def api_job():
@@ -600,7 +677,7 @@ def job_output():
 @app.post("/job/clear")
 def job_clear():
     job = _load_job()
-    if job and job.get("status") == "running":
+    if job and job.get("status") in ("running", "canceling"):
         return redirect(url_for("index_get"))
     try:
         JOB_PATH.unlink(missing_ok=True)  # type: ignore[arg-type]
@@ -616,31 +693,24 @@ def job_clear():
 @app.post("/job/cancel")
 def job_cancel():
     job = _load_job()
-    if not job or job.get("status") != "running":
+    if not job or job.get("status") not in ("running", "canceling"):
         return redirect(url_for("index_get"))
 
     pid = job.get("pid")
+    job_id = str(job.get("id") or "").strip()
 
-    # Mark intent (worker may still write final state, but we want logs + UI clarity)
+    # Mark intent (worker will also react mid-stream)
     job["cancel_requested"] = True
     job["status"] = "canceling"
-
     _save_job(job)
 
-    # Best-effort: ask the subprocess to stop nicely first
+    # Immediate: kill spawned containers + kill process group
     try:
-        if pid:
-            import os, signal, time
-            try:
-                os.killpg(int(pid), signal.SIGINT)
-                time.sleep(0.8)
-            except Exception:
-                pass
-            try:
-                # If still running, escalate
-                os.killpg(int(pid), signal.SIGTERM)
-            except Exception:
-                pass
+        _kill_job_labeled_containers(job_id)
+    except Exception:
+        pass
+    try:
+        _signal_proc_group(int(pid) if pid is not None else None)
     except Exception:
         pass
 
@@ -698,7 +768,6 @@ def settings_post():
 
 
 @app.get("/history")
-
 def history_get():
     records = list(reversed(read_history()))  # newest first
 

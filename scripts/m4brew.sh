@@ -86,7 +86,7 @@ detect_channels() {
   fi
 
   local ch
-  ch=$(docker run --rm --network "${DOCKER_NETWORK}" \
+  ch=$(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
       -v "$(dirname "$first_file"):/data" \
       "$M4B_IMAGE" \
       ffprobe -v error -select_streams a:0 -show_entries stream=channels \
@@ -349,7 +349,7 @@ while IFS= read -r -d '' book_dir; do
 
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
-    cmd=(docker run --rm --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
+    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "${book_dir}:/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
@@ -414,7 +414,7 @@ while IFS= read -r -d '' book_dir; do
     log "INPUT:  ${in_file}"
     log "OUTPUT: ${out_path}"
 
-    cmd=(docker run --rm --network "${DOCKER_NETWORK}"
+    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}"
       -e "PUID=${DOCKER_UID_GID%%:*}"
       -e "PGID=${DOCKER_UID_GID##*:}"
       -v "${book_dir}:/data"
@@ -450,7 +450,7 @@ while IFS= read -r -d '' book_dir; do
 
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
-    cmd=(docker run --rm --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
+    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "${book_dir}:/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
