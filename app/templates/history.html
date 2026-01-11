@@ -6,57 +6,62 @@
 {% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card card--history">
+  <div class="history-stack">
 
-  <div class="history-top">
-    <a class="btn purple" href="/history/download">Download all</a>
-    <form method="post" action="/history/clear" style="margin:0;">
-      <button class="btn purple" type="submit">Clear history</button>
-    </form>
+    <div class="history-top">
+      <a class="btn primary" href="/history/download">Download all</a>
+
+      <form method="post" action="/history/clear" onsubmit="return confirm('Clear history?');">
+        <button class="btn danger" type="submit">Clear history</button>
+      </form>
+    </div>
+
+    {% if not runs or runs|length == 0 %}
+      <div class="history-empty">No history entries found (yet).</div>
+    {% else %}
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>When</th>
+              <th>Mode</th>
+              <th>Run type</th>
+              <th>Runtime</th>
+              <th>Completed</th>
+              <th>Skipped</th>
+              <th>Failed</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+          {% for r in runs %}
+            <tr>
+              <td class="status {{ 'ok' if r.success else 'bad' }}">
+                {{ '✓' if r.success else '×' }}
+              </td>
+
+              <td>{{ r.ts_human }}</td>
+              <td>{{ r.mode_label }}</td>
+              <td>{{ 'Test' if r.dry_run else 'Active' }}</td>
+              <td class="mono-small">{{ r.runtime_h }}</td>
+
+              <td class="mono-small">{{ r.completed }}</td>
+              <td class="mono-small">{{ r.skipped }}</td>
+              <td class="mono-small">{{ r.failed }}</td>
+
+              <td class="history-view">
+                <a class="btn primary" href="/history/{{ r.idx }}">View</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
   </div>
-
-  {% if runs and runs|length %}
-    <table>
-      <thead>
-        <tr>
-          <th>Status</th>
-          <th>When</th>
-          <th>Mode</th>
-          <th>Run type</th>
-          <th>Runtime</th>
-          <th>Completed</th>
-          <th>Skipped</th>
-          <th>Failed</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in runs %}
-          <tr>
-            <td>
-              {% if r.get('success') %}
-                <span class="status ok">✓</span>
-              {% else %}
-                <span class="status bad">×</span>
-              {% endif %}
-            </td>
-            <td class="mono-small">{{ r.get('ts_human','') }}</td>
-            <td class="mono-small">{{ r.get('mode_label', r.get('mode','')) }}</td>
-            <td class="mono-small">{{ 'Test' if r.get('dry_run') else 'Active' }}</td>
-            <td class="mono-small">{{ r.get('runtime_h','') }}</td>
-            <td class="mono-small">{{ r.get('completed','') }}</td>
-            <td class="mono-small">{{ r.get('skipped','') }}</td>
-            <td class="mono-small">{{ r.get('failed','') }}</td>
-            <td>
-              <a class="btn purple" href="/history/{{ r.get('idx','') }}">View</a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p class="muted">No history yet — run a job and it will appear here.</p>
-  {% endif %}
-
 </div>
 {% endblock %}
