@@ -108,8 +108,35 @@
     setLiveUI();
   });
 
-  function statusTextForFinished(job){
-    const s = job.summary || {};
+function statusTextForFinished(job){
+  const s = job.summary || {};
+  const mode = String(job.mode || "").toLowerCase();
+
+  const isDry = Boolean(job.dry_run);
+
+  let noun = "run";
+  let past = "done";
+  let count = 0;
+
+  if(mode === "convert"){
+    noun = "convert";
+    past = "converted";
+    count = Number(s.created || 0);
+  }else if(mode === "correct"){
+    noun = "rename";
+    past = "renamed";
+    count = Number(s.renamed || 0);
+  }else if(mode === "cleanup"){
+    noun = "delete";
+    past = "deleted";
+    count = Number(s.deleted || 0);
+  }
+
+  if(count > 0){
+    return isDry ? `${count} to ${noun}` : `${count} ${past}`;
+  }
+  return `Nothing to ${noun}`;
+}
         const isDry = (job.dry_run === true || job.dry_run === "true");
     const mode = (job.mode || "").toLowerCase();
 

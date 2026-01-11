@@ -2,7 +2,7 @@
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=0.9.8">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=0.9.9">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +16,7 @@
       </div>
 
       <p>m4brew converts audiobooks into a single <span class="mono">.m4b</span>, correctly named and chapterised based on your folder structure.</p>
-      <p>This makes imports and metadata management easier when importing audiobooks into your preferred library/management software.</p>
+      <p>This makes imports and metadata management easier when importing audiobooks into your preferred library or management software.</p>
     </section>
 
     <div class="about-divider"></div>
@@ -31,12 +31,16 @@
       <ul class="about-list">
         <li><strong>Test:</strong> a practice run — shows what would be actioned</li>
         <li><strong>Run:</strong> actual conversion of the files</li>
-        <li>Toggle live output on/off for detailed view</li>
+        <li><strong>Live Output:</strong> toggle for detailed view</li>
       </ul>
 
       <div class="about-subtitle">Task 2 — Renaming</div>
       <p>Renames books based on the folder structure:</p>
-      <p><span class="mono">root/author name/book name</span> → <span class="mono">author name - book name.m4b</span></p>
+      <p>
+        <span class="mono">root_folder/author_name/book_name</span>
+        →
+        <span class="mono">book name - author name.m4b</span>
+      </p>
 
       <div class="about-subtitle">Task 3 — Delete</div>
       <p>When you’re happy with all of the new m4b files you can delete the backed up original files.</p>
@@ -50,7 +54,7 @@
         <span class="label-pill">Setup</span>
       </div>
 
-      <div class="about-subtitle">Conversion Overview</div>
+      <div class="about-subtitle">Conversion overview</div>
       <ul class="about-list">
         <li>Single mp3 books into a single m4b</li>
         <li>Multiple mp3 books into a single m4b</li>
@@ -60,13 +64,13 @@
       </ul>
 
       <div class="about-subtitle">Folder structure</div>
-      <p><strong>ESSENTIAL:</strong> <span class="mono">root/author name/book name/files</span></p>
+      <p><strong>ESSENTIAL:</strong> <span class="mono">root_folder / author_name / book_name / files</span></p>
 
       <div class="about-subtitle">Settings</div>
       <ul class="about-list">
         <li>Select your audiobook root folder</li>
         <li>Select audio channels — mono / stereo / match existing</li>
-        <li>Select bitrate — specific bitrate / match existing</li>
+        <li>Select bitrate — specific bitrate / match ‘coming soon’</li>
       </ul>
 
       <div class="about-subtitle">Chapters</div>

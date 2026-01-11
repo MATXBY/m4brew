@@ -1,29 +1,31 @@
 /* =========================
-   Tasks page (LEAN)
-   - No per-row grey cards
-   - Divider lines between rows
-   - One spacing knob: --task-pad
+   Tasks page (LEAN) — 3-button rows
+   Layout: [STEP label] [Test] [Run]
 ========================= */
 
 :root{
-  --task-pad: 22px;                 /* vertical space above/below buttons */
-  --task-inset: 24px;               /* left/right inset from card edge */
+  --task-pad: 22px;
+  --task-inset: 24px;
   --task-line: rgba(255,255,255,.14);
+
+  /* Run button brand colours (from your image) */
+  --run-1: #AD5DA3;
+  --run-2: #5250A1;
+  --run-3: #26A9E0;
 }
 
-/* Only Tasks card: remove the default 16px padding from .card */
+/* Tasks card matches other pages (no inner padding) */
 .card--tasks{
   padding: 0;
 }
 
-/* Stack = list */
 .task-stack{
   display: grid;
   gap: 0;
-  padding: 0 var(--task-inset);     /* NO vertical padding */
+  padding: var(--task-pad) var(--task-inset);
 }
 
-/* Divider line (1px) drawn at the top of every item except the first */
+/* Full-width divider line between items */
 .task-stack > * + *{
   position: relative;
 }
@@ -37,74 +39,75 @@
   background: var(--task-line);
 }
 
-/* Step rows */
+/* Row */
 .task-row{
+  width: 100%;
+  padding: var(--task-pad) 0;
+}
+
+.task-group{
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 16px;
-  padding: var(--task-pad) 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-}
-
-/* Status row: same vertical padding as step rows */
-.status-wrap{
-  padding: var(--task-pad) 0;
-  margin: 0;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-/* Group buttons */
-.task-group{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
+  gap: 18px;
   flex-wrap: wrap;
 }
 
-/* Step pill (same as before, but no drop shadow in rows) */
-.step-pill{
+/* STEP label (visual only) */
+.step-label{
+  height: var(--pill-h);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: var(--pill-h);
-  min-width: 300px;
-  padding: 0 var(--pill-pad-x);
+  justify-content: flex-start;
+  padding: 0 18px;
   border-radius: 999px;
-  background: rgba(124,92,255,.18);
-  border: 1px solid rgba(124,92,255,.32);
-  color: rgba(233,237,243,.92);
-  font-weight: 700;
-  letter-spacing: .2px;
-  white-space: nowrap;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+
+  flex: 1 1 420px;
+  max-width: 560px;
+  min-width: 320px;
+
+  letter-spacing: .1px;
 }
+.step-strong{ font-weight: 850; }
 
-.step-btn{ appearance:none; -webkit-appearance:none; cursor:pointer; }
-.step-btn:disabled{ opacity:.55; cursor:not-allowed; }
-
-/* Fixed width for Test run */
-.task-group .btn{
-  width: 110px;
-  max-width: 110px;
+/* Test / Run buttons: consistent width */
+.task-btn{
+  width: 170px;
   justify-content: center;
+  box-shadow: none;
+  font-weight: 650;
 }
 
-/* Remove drop shadows on buttons in rows */
-.task-row .btn,
-.task-row .step-pill,
-.status-wrap .btn{
-  box-shadow: none !important;
+/* Test button: purple */
+.task-test{
+  background: rgba(124,92,255,.22);
+  border-color: rgba(124,92,255,.35);
 }
 
-/* Status pills */
+/* Run buttons: exact colours */
+.task-run{
+  color: #fff;
+  border-color: rgba(255,255,255,.14);
+}
+.run-1{ background: var(--run-1); }
+.run-2{ background: var(--run-2); }
+.run-3{ background: var(--run-3); }
+
+/* remove hover lift on these (optional, but feels cleaner) */
+.task-row .btn:hover{
+  transform: none;
+}
+
+/* Status row */
+.status-wrap{
+  padding: var(--task-pad) 0;
+}
+
 .status-top{
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -115,7 +118,7 @@
 .status-pill{
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   height: var(--pill-h);
   width: 210px;
   padding: 0 var(--pill-pad-x);
@@ -124,7 +127,6 @@
   border: 1px solid var(--border);
   font-weight: 650;
   letter-spacing: .2px;
-  justify-content: center;
 }
 
 #liveBtn{
@@ -134,13 +136,13 @@
   font-weight: 600;
 }
 
-/* Mobile: full width buttons */
-@media (max-width: 720px){
-  .task-group{ width: 100%; }
-  .task-group .btn,
-  .step-pill{
-    width: 100%;
-    max-width: 100%;
-    min-width: 0;
-  }
+#logWrap{ margin-top: 12px; }
+
+pre{
+  max-width: 100%;
+  max-height: 45vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
