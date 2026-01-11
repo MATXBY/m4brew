@@ -12,3 +12,8 @@ __pycache__/
 
 # Local safety backups
 *.bak.*
+
+# local snapshots
+app/templates/*.BROKEN.*
+app/templates/*.bak.*
+app/static/*.bak.*
