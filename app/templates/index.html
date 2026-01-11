@@ -19,12 +19,6 @@
           <button class="btn" type="submit">Test run</button>
         </form>
 
-          <form method="post" action="/job/cancel" id="cancelForm">
-            <button class="btn" type="submit" id="cancelBtn" disabled>Cancel</button>
-          </form>
-
-
-
         <form method="post" action="/">
           <input type="hidden" name="mode" value="convert">
           <input type="hidden" name="dry_run" value="false">
@@ -82,6 +76,11 @@
           <span id="statusText">idle</span>
         </div>
 
+        <!-- Cancel lives here, but is HIDDEN unless convert is running/canceling -->
+        <form method="post" action="/job/cancel" id="cancelForm" style="display:none;">
+          <button class="btn danger" type="submit" id="cancelBtn">Cancel</button>
+        </form>
+
         <button id="liveBtn" class="btn" type="button">
           Live output: OFF
         </button>
@@ -103,6 +102,9 @@
   const logWrap = document.getElementById("logWrap");
   const logBox = document.getElementById("logBox");
   const liveBtn = document.getElementById("liveBtn");
+
+  const cancelForm = document.getElementById("cancelForm");
+  const cancelBtn = document.getElementById("cancelBtn");
 
   const LIVE_KEY = "m4brew_live_output";
   let liveOn = (localStorage.getItem(LIVE_KEY) || "off") === "on";
@@ -128,76 +130,81 @@
     applyLive();
   });
 
+  function setDot(cls){
+    statusDot.className = "status-dot " + cls;
+  }
+
+  function modeWord(mode){
+    mode = String(mode || "").toLowerCase();
+    if (mode === "convert") return "convert";
+    if (mode === "correct") return "rename";
+    if (mode === "cleanup") return "delete";
+    return "run";
+  }
+
+  function friendlyStatus(job){
+    const status = String(job.status || "idle").toLowerCase();
+    const mode = modeWord(job.mode);
+    const total = Number(job.total || 0);
+    const current = Number(job.current || 0);
+
+    if (status === "running" || status === "canceling") {
+      if (total > 0) return `${current}/${total} ${mode}`;
+      return `${mode}…`;
+    }
+
+    if ((job.mode || "").length) {
+      if (total <= 0) return `nothing to ${mode}`;
+      return `${total} to ${mode}`;
+    }
+
+    return status;
+  }
+
+  function updateCancelVisibility(job){
+    const status = String(job.status || "").toLowerCase();
+    const mode = String(job.mode || "").toLowerCase();
+
+    const isConvert = (mode === "convert");
+    const isRunning = (status === "running" || status === "canceling");
+
+    // Only show Cancel when CONVERT is running/canceling
+    if (isConvert && isRunning) {
+      cancelForm.style.display = "inline";
+      cancelBtn.disabled = false;
+    } else {
+      cancelForm.style.display = "none";
+      cancelBtn.disabled = true;
+    }
+  }
+
   async function tick(){
     try {
       const r = await fetch("/api/job", { cache: "no-store" });
       const job = await r.json();
-      const mode = String(job.mode || "").toLowerCase();
-      const total = Number(job.total || 0);
-      const current = Math.min(Number(job.current || 0), (total || 0));
 
-      const noun = (mode === "convert") ? "convert"
-                 : (mode === "correct") ? "rename"
-                 : (mode === "cleanup") ? "delete"
-                 : "run";
+      const status = String(job.status || "idle").toLowerCase();
+      statusText.textContent = friendlyStatus(job);
 
-      const verb = (mode === "convert") ? "Converting"
-                 : (mode === "correct") ? "Renaming"
-                 : (mode === "cleanup") ? "Deleting"
-                 : "Running";
+      updateCancelVisibility(job);
 
-      let text = "idle";
-      let dot = "dot-idle";
-
-      if (job.status === "running") {
-        if (total > 0) {
-          text = verb + " " + current + "/" + total;
-          dot = "dot-running";
-        } else {
-          text = "Nothing to " + noun;
-          dot = "dot-ok";
-        }
-      } else if (job.status === "finished") {
-        text = total > 0 ? ((job && job.dry_run) ? (total + " to " + noun) : ("Complete " + total + "/" + total)) : ("Nothing to " + noun);
-        dot = "dot-ok";
-      } else if (job.status === "failed") {
-        text = "Failed";
-        dot = "dot-bad";
-      }
-
-      statusText.textContent = text;
-      statusDot.classList.remove("dot-idle","dot-running","dot-ok","dot-bad");
-      statusDot.classList.add(dot);
-
-        // Cancel button: enabled only while running
-        const cancelBtn = document.getElementById("cancelBtn");
-        if (cancelBtn) {
-          const st = (job && job.status) ? job.status : "";
-          if (st === "running") {
-            cancelBtn.disabled = false;
-            cancelBtn.textContent = "Cancel";
-          } else if (st === "canceling") {
-            cancelBtn.disabled = true;
-            cancelBtn.textContent = "Canceling...";
-          } else {
-            cancelBtn.disabled = true;
-            cancelBtn.textContent = "Cancel";
-          }
-        }
-
+      if (status === "running") setDot("dot-run");
+      else if (status === "canceling") setDot("dot-warn");
+      else if (status === "finished") setDot("dot-ok");
+      else if (status === "failed") setDot("dot-bad");
+      else if (status === "canceled") setDot("dot-warn");
+      else setDot("dot-idle");
 
       if (liveOn) {
         const t = await fetch("/job/output", { cache: "no-store" });
-        logBox.textContent = await t.text();
+        const text = await t.text();
+        logBox.textContent = text || "";
       }
-    } catch {}
-    setTimeout(tick, 1000);
+    } catch (e) {}
   }
 
   applyLive();
   tick();
+  setInterval(tick, 1000);
 </script>
 {% endblock %}
-
-<script>
-(function () {
