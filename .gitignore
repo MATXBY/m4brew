@@ -17,3 +17,8 @@ __pycache__/
 app/templates/*.BROKEN.*
 app/templates/*.bak.*
 app/static/*.bak.*
+
+# local snapshots
+app/templates/*.BROKEN.*
+app/templates/*.bak.*
+app/static/*.bak.*
