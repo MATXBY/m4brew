@@ -22,7 +22,11 @@
 .task-stack{
   display: grid;
   gap: 0;
-  padding: var(--task-pad) var(--task-inset);
+
+  /* IMPORTANT:
+     Horizontal inset stays.
+     Vertical padding removed so top/bottom aren't double-sized. */
+  padding: 0 var(--task-inset);
 }
 
 /* Full-width divider line between items */
