@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card card--settings">
   <form method="post" action="/settings" id="settingsForm">
     <div class="stack">
 
@@ -54,16 +54,23 @@
   const form = document.getElementById("settingsForm");
   let t = null;
 
-
   const rootInput = document.getElementById("root_folder");
   const initialRoot = rootInput ? (rootInput.value || "") : "";
   let rootDirty = false;
+
   function autosave() {
     if (t) clearTimeout(t);
     t = setTimeout(async () => {
       try {
         const fd = new FormData(form);
-        await fetch("/settings", { method: "POST", body: fd, headers: { "X-M4Brew-Autosave": "1", "X-M4Brew-Root-Dirty": rootDirty ? "1" : "0" } });
+        await fetch("/settings", {
+          method: "POST",
+          body: fd,
+          headers: {
+            "X-M4Brew-Autosave": "1",
+            "X-M4Brew-Root-Dirty": rootDirty ? "1" : "0"
+          }
+        });
       } catch (e) {}
     }, 250);
   }

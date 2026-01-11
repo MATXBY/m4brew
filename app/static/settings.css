@@ -1,33 +1,50 @@
 /* =========================
-   Settings page (LEAN)
-   - Label pill: 300px
-   - Control: 300px
-   - Centered rows on desktop
-   - Clean stack on mobile
+   Settings page — match Tasks styling
+   - No per-row grey cards
+   - Rows separated by a clean line
+   - ONE source of vertical spacing: --settings-pad
 ========================= */
 
-.stack{
-  display: grid;
-  gap: 14px;
-  padding: 6px;
+:root{
+  --settings-pad: 22px;
+  --settings-inset: 24px;
+  --settings-line: rgba(255,255,255,.14);
 }
 
-/* One setting row */
+/* Stack: NO vertical padding (prevents extra top/bottom space) */
+.stack{
+  display: grid;
+  gap: 0;
+  padding: 0 var(--settings-inset);
+}
+
+/* Full-width divider line between rows */
+.stack > * + *{
+  position: relative;
+}
+.stack > * + *::before{
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--settings-inset));
+  right: calc(-1 * var(--settings-inset));
+  top: 0;
+  height: 1px;
+  background: var(--settings-line);
+}
+
+/* Row: this is the ONLY vertical spacing */
 .setting-row{
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 18px;
 
-  padding: 16px;
-  border-radius: var(--radius);
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,.03),
-    rgba(255,255,255,.02)
-  );
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow: 0 10px 26px rgba(0,0,0,.22);
+  padding: var(--settings-pad) 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 /* Label pill (fixed width) */
@@ -50,13 +67,17 @@
   max-width: 300px;
 }
 
-/* Improve select vertical centering */
+/* Improve select arrow spacing */
 .setting-row select{
   padding-right: 42px;
 }
 
-/* Mobile: stack vertically, full width */
+/* Mobile */
 @media (max-width: 720px){
+  .stack{
+    padding: 0 18px;
+  }
+
   .setting-row{
     flex-direction: column;
     align-items: stretch;
@@ -69,5 +90,6 @@
   .setting-row select{
     width: 100%;
     max-width: 100%;
+    flex: 1 1 auto;
   }
 }

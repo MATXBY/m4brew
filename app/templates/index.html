@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="card">
+<div class="card card--tasks">
   <div class="task-stack">
 
     <!-- Step 1 -->
@@ -19,13 +19,9 @@
           <button class="btn" type="submit">Test run</button>
         </form>
 
-
-  <!-- Cancel (always visible; enabled only while running) -->
-  <div id="cancelWrap" style="margin-top:12px;">
-    <form method="post" action="/job/cancel" id="cancelForm" style="display:inline;">
-      <button class="btn" type="submit" id="cancelBtn" disabled>Cancel</button>
-    </form>
-  </div>
+          <form method="post" action="/job/cancel" id="cancelForm">
+            <button class="btn" type="submit" id="cancelBtn" disabled>Cancel</button>
+          </form>
 
 
 

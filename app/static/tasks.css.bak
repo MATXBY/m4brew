@@ -6,7 +6,7 @@
 ========================= */
 
 :root{
-  --task-pad: 22px;                 /* vertical space above/below buttons */
+  --task-pad: 24px;                 /* vertical space above/below buttons */
   --task-inset: 24px;               /* left/right inset from card edge */
   --task-line: rgba(255,255,255,.14);
 }

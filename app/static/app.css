@@ -31,6 +31,10 @@
   /* card gradients */
   --card-bg-a: rgba(255,255,255,.04);
   --card-bg-b: rgba(255,255,255,.03);
+
+  /* content stack defaults (History-style rows) */
+  --stack-pad: 22px; /* ✅ your preferred vertical spacing */
+  --stack-line: rgba(255,255,255,.14);
 }
 
 *{ box-sizing: border-box; }
@@ -178,6 +182,23 @@ h1.title{
   padding: 16px;
 }
 
+/* =========================
+   Content stack helper
+   Use inside a .card to get:
+   row, divider, row, divider... (like History)
+========================= */
+.content-stack{
+  display: grid;
+  gap: 0;
+  padding: 0;
+}
+.content-stack > *{
+  padding: var(--stack-pad) 0;
+}
+.content-stack > * + *{
+  border-top: 1px solid var(--stack-line);
+}
+
 /* Inputs */
 input[type="text"], input[type="number"], select{
   width:100%;
@@ -242,4 +263,20 @@ pre{
   max-height: 45vh;
   overflow:auto;
   color: rgba(233,237,243,.92);
+}
+
+/* =========================
+   About page card alignment
+   - Match Tasks layout
+========================= */
+.card--about{
+  padding: 0;
+}
+
+/* =========================
+   Settings page card alignment
+   - Match Tasks/About layout
+========================= */
+.card--settings{
+  padding: 0;
 }
