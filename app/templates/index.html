@@ -109,20 +109,36 @@
   });
 
   function statusTextForFinished(job){
-    const s = job.summary || {};
-        const isDry = (job.dry_run === true || job.dry_run === "true");
-    const mode = (job.mode || "").toLowerCase();
+    const s = (job && job.summary) ? job.summary : {};
+    const mode = String(job && job.mode ? job.mode : "").toLowerCase();
 
-    let n = 0;
-    let word = "do";
+    const noun = (mode === "convert") ? "convert"
+               : (mode === "correct") ? "rename"
+               : (mode === "cleanup") ? "delete"
+               : "run";
 
-    if(mode === "convert"){ n = Number(s.created ?? 0); word = "convert"; }
-    else if(mode === "correct"){ n = Number(s.renamed ?? 0); word = "rename"; }
-    else if(mode === "cleanup"){ n = Number(s.deleted ?? 0); word = "delete"; }
+    const past = (mode === "convert") ? "converted"
+               : (mode === "correct") ? "renamed"
+               : (mode === "cleanup") ? "deleted"
+               : "done";
 
-    if(n > 0) return `${n} to ${word}`;
-    return `Nothing to ${word}`;
+    const count = (mode === "convert") ? Number(s.created ?? 0)
+                 : (mode === "correct") ? Number(s.renamed ?? 0)
+                 : (mode === "cleanup") ? Number(s.deleted ?? 0)
+                 : 0;
+
+    const isDry =
+      (s.dry_run === true) || (s.dry_run === "true") ||
+      (job && (job.dry_run === true || job.dry_run === "true"));
+
+    if(count > 0){
+      if(isDry) return "Test: " + count + " to " + noun;
+      return '<span style="color:#6ee7b7;font-weight:800;">✓&nbsp;</span>Done: ' + count + " " + past;
+    }
+
+    return "Nothing to " + noun;
   }
+
 
   async function tick(){
     try{
@@ -147,7 +163,7 @@
             mode === "cleanup" ? "Deleting…" : "Running…";
         }
       }else if(job.status === "finished"){
-        statusPill.textContent = statusTextForFinished(job);
+        statusPill.innerHTML = statusTextForFinished(job);
       }else{
         statusPill.textContent = job.status;
       }
