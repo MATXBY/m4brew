@@ -99,6 +99,7 @@
 
   function setLiveUI(){
     liveBtn.textContent = "Live output: " + (liveOn ? "ON" : "OFF");
+    liveBtn.classList.toggle("primary", liveOn);
     logWrap.style.display = liveOn ? "block" : "none";
   }
 
