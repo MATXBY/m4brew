@@ -22,10 +22,6 @@
 .task-stack{
   display: grid;
   gap: 0;
-
-  /* IMPORTANT:
-     Horizontal inset stays.
-     Vertical padding removed so top/bottom aren't double-sized. */
   padding: 0 var(--task-inset);
 }
 
@@ -49,18 +45,24 @@
   padding: var(--task-pad) 0;
 }
 
+/* 3 equal columns */
 .task-group{
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;  /* equal widths */
   gap: 18px;
-  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Make the forms fill their grid cells */
+.task-group form{
+  width: 100%;
 }
 
 /* STEP label (visual only) */
 .step-label{
   height: var(--pill-h);
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: flex-start;
@@ -68,18 +70,13 @@
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
-
-  flex: 1 1 420px;
-  max-width: 560px;
-  min-width: 320px;
-
   letter-spacing: .1px;
 }
 .step-strong{ font-weight: 850; }
 
-/* Test / Run buttons: consistent width */
+/* Buttons fill their columns */
 .task-btn{
-  width: 170px;
+  width: 100%;
   justify-content: center;
   box-shadow: none;
   font-weight: 650;
@@ -100,14 +97,10 @@
 .run-2{ background: var(--run-2); }
 .run-3{ background: var(--run-3); }
 
-/* ---- FIX: make Tasks buttons behave like the rest of the app ----
-   app.css sets .btn:hover to a grey background. We override that here
-   so Test/Run keep their colours and still do the 1px lift. */
+/* Hover: keep colours + keep lift */
 .task-row .btn:hover{
   transform: translateY(-1px);
 }
-
-/* Keep colours on hover (prevent grey hover overlay) */
 .task-row .task-test:hover{
   background: rgba(124,92,255,.22);
   border-color: rgba(124,92,255,.35);
@@ -160,4 +153,11 @@ pre{
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+/* Responsive: stack nicely on narrow screens */
+@media (max-width: 900px){
+  .task-group{
+    grid-template-columns: 1fr;
+  }
 }
