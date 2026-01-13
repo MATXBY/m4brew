@@ -100,10 +100,21 @@
 .run-2{ background: var(--run-2); }
 .run-3{ background: var(--run-3); }
 
-/* remove hover lift on these (optional, but feels cleaner) */
+/* ---- FIX: make Tasks buttons behave like the rest of the app ----
+   app.css sets .btn:hover to a grey background. We override that here
+   so Test/Run keep their colours and still do the 1px lift. */
 .task-row .btn:hover{
-  transform: none;
+  transform: translateY(-1px);
 }
+
+/* Keep colours on hover (prevent grey hover overlay) */
+.task-row .task-test:hover{
+  background: rgba(124,92,255,.22);
+  border-color: rgba(124,92,255,.35);
+}
+.task-row .run-1:hover{ background: var(--run-1); }
+.task-row .run-2:hover{ background: var(--run-2); }
+.task-row .run-3:hover{ background: var(--run-3); }
 
 /* Status row */
 .status-wrap{
