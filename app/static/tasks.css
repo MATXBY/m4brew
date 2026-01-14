@@ -15,24 +15,16 @@
 }
 
 /* Tasks card matches other pages (no inner padding) */
-.card--tasks{
-  padding: 0;
-}
+.card--tasks{ padding: 0; }
 
 .task-stack{
   display: grid;
   gap: 0;
-
-  /* IMPORTANT:
-     Horizontal inset stays.
-     Vertical padding removed so top/bottom aren't double-sized. */
   padding: 0 var(--task-inset);
 }
 
 /* Full-width divider line between items */
-.task-stack > * + *{
-  position: relative;
-}
+.task-stack > * + *{ position: relative; }
 .task-stack > * + *::before{
   content: "";
   position: absolute;
@@ -49,35 +41,37 @@
   padding: var(--task-pad) 0;
 }
 
-/* 50/25/25 grid so the row always fills width and never floats */
+/* ✅ KEY CHANGE: grid row so nothing wraps */
 .task-group{
   width: 100%;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr; /* STEP / Test / Run */
+  grid-template-columns: minmax(0, 1fr) 170px 170px;
   gap: 18px;
   align-items: center;
 }
+
+/* make forms not affect layout sizing */
+.task-group form{ margin: 0; }
+.task-group form, .task-group button{ width: 100%; }
 
 /* STEP label (visual only) */
 .step-label{
   height: var(--pill-h);
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: center; /* centred text */
   padding: 0 18px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
   letter-spacing: .1px;
 
-  /* stop wrapping into 2 lines */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* allow it to shrink within the grid */
+  min-width: 0;
 }
 .step-strong{ font-weight: 850; }
 
-/* Test / Run buttons: fill their grid columns */
+/* Test / Run buttons */
 .task-btn{
   width: 100%;
   justify-content: center;
@@ -100,14 +94,10 @@
 .run-2{ background: var(--run-2); }
 .run-3{ background: var(--run-3); }
 
-/* ---- FIX: make Tasks buttons behave like the rest of the app ----
-   app.css sets .btn:hover to a grey background. We override that here
-   so Test/Run keep their colours and still do the 1px lift. */
+/* Hover behaviour: lift, keep colours (no grey overlay) */
 .task-row .btn:hover{
   transform: translateY(-1px);
 }
-
-/* Keep colours on hover (prevent grey hover overlay) */
 .task-row .task-test:hover{
   background: rgba(124,92,255,.22);
   border-color: rgba(124,92,255,.35);
@@ -117,9 +107,7 @@
 .task-row .run-3:hover{ background: var(--run-3); }
 
 /* Status row */
-.status-wrap{
-  padding: var(--task-pad) 0;
-}
+.status-wrap{ padding: var(--task-pad) 0; }
 
 .status-top{
   width: 100%;
@@ -153,6 +141,13 @@
 
 #logWrap{ margin-top: 12px; }
 
+/* Live output: smaller + calmer (ONLY affects output text) */
+#logPre{
+  font-size: 0.75rem;
+  line-height: 1.35;
+  opacity: 0.9;
+}
+
 pre{
   max-width: 100%;
   max-height: 45vh;
@@ -162,11 +157,9 @@ pre{
   word-break: break-word;
 }
 
-/* Mobile: stack the 3 controls nicely */
-@media (max-width: 720px){
+/* Mobile: stack nicely */
+@media (max-width: 820px){
   .task-group{
     grid-template-columns: 1fr;
   }
-  .task-btn{ width: 100%; }
-  .step-label{ width: 100%; }
 }

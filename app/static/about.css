@@ -1,31 +1,38 @@
 /* =========================
-   About page (LEAN)
-   - Match Tasks/Settings pattern
-   - Card has padding: 0 (in app.css via .card--about)
-   - Top/bottom spacing controlled by sections ONLY
+   About page (v1 style)
+   - Matches your theme + card system
+   - Top steps, 3 coloured task cards, 2-col info grid
 ========================= */
 
 :root{
   --about-pad: 22px;
   --about-inset: 24px;
   --about-line: rgba(255,255,255,.14);
+
+  /* Brand task colours (from logo palette) */
+  --task-1: #AD5DA3;
+  --task-2: #5250A1;
+  --task-3: #26A9E0;
 }
 
-/* IMPORTANT:
-   Remove vertical padding here so About doesn't have extra top/bottom space.
-   Keep horizontal inset to match the other pages. */
-.about-content{
+/* Card has padding reset in app.css via .card--about { padding:0 } */
+.about-wrap{
+  padding: var(--about-pad) var(--about-inset);
   display: grid;
-  gap: 0;
-  padding: 0 var(--about-inset);
+  gap: 18px;
 }
 
-/* Each section provides the vertical spacing */
-.about-section{
-  padding: var(--about-pad) 0;
+.about-top{
+  color: var(--muted);
+  line-height: var(--lh);
+}
+.about-top p{
+  margin: 0 0 6px 0;
+}
+.about-top strong{
+  color: var(--text);
 }
 
-/* Divider line between sections (full width to the card edge) */
 .about-divider{
   height: 1px;
   background: var(--about-line);
@@ -33,39 +40,82 @@
   margin-right: calc(-1 * var(--about-inset));
 }
 
-/* Title pill centered */
-.about-title{
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
+.about-gap{ height: 2px; }
+
+/* --- Task cards row --- */
+.about-tasks{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
 }
 
-/* Sub headings */
-.about-subtitle{
-  margin: 18px 0 10px;
+.task-card{
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+}
+
+.task-card__title{
   font-weight: 800;
   letter-spacing: .2px;
+  margin-bottom: 10px;
 }
 
-/* Lists */
+.task-card__body p{
+  margin: 0 0 8px 0;
+  color: rgba(255,255,255,.92);
+  line-height: var(--lh);
+}
+
+.task-card--1{ background: linear-gradient(180deg, rgba(173,93,163,.92), rgba(173,93,163,.72)); }
+.task-card--2{ background: linear-gradient(180deg, rgba(82,80,161,.92),  rgba(82,80,161,.72)); }
+.task-card--3{ background: linear-gradient(180deg, rgba(38,169,224,.92), rgba(38,169,224,.72)); }
+
+/* --- Info grid --- */
+.about-grid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.info-card{
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
+  color: var(--muted);
+}
+
+.info-card__title{
+  color: var(--text);
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
 .about-list{
-  margin: 10px 0 0;
-  padding-left: 22px;
-  color: rgba(233,237,243,.92);
+  margin: 0;
+  padding-left: 18px;
 }
-.about-list li{ margin: 6px 0; }
-
-/* Paragraph rhythm */
-.about-section p{
-  margin: 10px 0 0;
-  color: rgba(233,237,243,.92);
+.about-list li{
+  margin: 6px 0;
 }
 
-/* Make inline mono bits look like chips (used on About) */
-.about-content .mono{
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: rgba(0,0,0,.20);
-  border: 1px solid rgba(255,255,255,.10);
+/* Ensure mono chips look consistent */
+.mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Responsive: stack gracefully */
+@media (max-width: 980px){
+  .about-tasks{ grid-template-columns: 1fr; }
+  .about-grid{ grid-template-columns: 1fr; }
+  .about-wrap{ padding: 18px 18px; }
+  .about-divider{
+    margin-left: -18px;
+    margin-right: -18px;
+  }
 }
