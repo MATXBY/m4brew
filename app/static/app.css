@@ -287,3 +287,17 @@ pre{
   opacity: 0.95;
   font-weight: 600;
 }
+
+/* =========================
+   Narrow content cards (About / Tasks / Settings only)
+   - Keeps mobile full width
+   - Centers on desktop
+========================= */
+.card--about,
+.card--tasks,
+.card--settings{
+  width: 100%;
+  max-width: 700px; /* ~70% of the 980px wrap */
+  margin-left: auto;
+  margin-right: auto;
+}

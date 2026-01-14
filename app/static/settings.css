@@ -1,8 +1,8 @@
 /* =========================
-   Settings page — match Tasks styling
-   - No per-row grey cards
-   - Rows separated by a clean line
-   - ONE source of vertical spacing: --settings-pad
+   Settings page (LEAN)
+   - Match Tasks layout rules
+   - Rows fill width, no wrapping on desktop
+   - No extra top/bottom padding inside the card
 ========================= */
 
 :root{
@@ -11,14 +11,16 @@
   --settings-line: rgba(255,255,255,.14);
 }
 
-/* Stack: NO vertical padding (prevents extra top/bottom space) */
+/* IMPORTANT:
+   Keep horizontal inset, remove vertical padding so the card top/bottom
+   matches other pages (Tasks pattern). */
 .stack{
   display: grid;
   gap: 0;
   padding: 0 var(--settings-inset);
 }
 
-/* Full-width divider line between rows */
+/* Divider line between rows (full width to the card edge) */
 .stack > * + *{
   position: relative;
 }
@@ -32,64 +34,36 @@
   background: var(--settings-line);
 }
 
-/* Row: this is the ONLY vertical spacing */
+/* Each settings row: 2-column grid so label + field stay on one line */
 .setting-row{
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 18px;
-
   padding: var(--settings-pad) 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  border-radius: 0;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: center;
 }
 
-/* Label pill (fixed width) */
+/* Label pill: same vibe as Tasks pills */
 .setting-row .label-pill{
-  width: 300px;
-  max-width: 300px;
-  flex: 0 0 300px;
-
-  display: inline-flex;
-  align-items: center;
+  width: 100%;
   justify-content: center;
   text-align: center;
+  white-space: nowrap; /* stops "SELECT:" breaking oddly */
 }
 
-/* Controls (fixed width) */
-.setting-row input[type="text"],
-.setting-row input[type="number"],
-.setting-row select{
-  width: 300px;
-  max-width: 300px;
+/* Field fills its half cleanly */
+.setting-row .field{
+  width: 100%;
 }
 
-/* Improve select arrow spacing */
-.setting-row select{
-  padding-right: 42px;
-}
-
-/* Mobile */
-@media (max-width: 720px){
-  .stack{
-    padding: 0 18px;
-  }
-
+/* Mobile: stack label above field */
+@media (max-width: 820px){
   .setting-row{
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    grid-template-columns: 1fr;
   }
-
-  .setting-row .label-pill,
-  .setting-row input[type="text"],
-  .setting-row input[type="number"],
-  .setting-row select{
-    width: 100%;
-    max-width: 100%;
-    flex: 1 1 auto;
+  .setting-row .label-pill{
+    white-space: normal;
   }
 }

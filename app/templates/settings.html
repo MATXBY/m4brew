@@ -12,7 +12,7 @@
     <div class="stack">
 
       <div class="setting-row">
-        <span class="label-pill">select source folder</span>
+        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Source folder</span>
         <input
           class="field"
           id="root_folder"
@@ -24,7 +24,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill">select audio tracks</span>
+        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
         <select class="field" id="audio_mode" name="audio_mode">
           {% set am = (settings.get("audio_mode") if settings else "match") %}
           <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
@@ -34,7 +34,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill">select bitrate (kbps)</span>
+        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
         {% set br = (settings.get("bitrate", 96) if settings else 96) %}
         <select class="field" id="bitrate" name="bitrate">
           {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}

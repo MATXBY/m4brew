@@ -1,30 +1,31 @@
 /* =========================
    About page (LEAN)
    - Match Tasks/Settings pattern
-   - Inset content + dividers
-   - Better typography rhythm
+   - Card has padding: 0 (in app.css via .card--about)
+   - Top/bottom spacing controlled by sections ONLY
 ========================= */
 
 :root{
-  --about-pad: 22px;                 /* matches your Tasks spacing preference */
+  --about-pad: 22px;
   --about-inset: 24px;
   --about-line: rgba(255,255,255,.14);
-  --about-max: 860px;
 }
 
-/* main inner wrapper */
+/* IMPORTANT:
+   Remove vertical padding here so About doesn't have extra top/bottom space.
+   Keep horizontal inset to match the other pages. */
 .about-content{
   display: grid;
   gap: 0;
-  padding: var(--about-pad) var(--about-inset);
+  padding: 0 var(--about-inset);
 }
 
-/* each section block */
+/* Each section provides the vertical spacing */
 .about-section{
   padding: var(--about-pad) 0;
 }
 
-/* divider line between sections */
+/* Divider line between sections (full width to the card edge) */
 .about-divider{
   height: 1px;
   background: var(--about-line);
@@ -32,60 +33,39 @@
   margin-right: calc(-1 * var(--about-inset));
 }
 
-/* title pill */
+/* Title pill centered */
 .about-title{
   display: flex;
-  justify-content: flex-start;       /* left aligns like normal reading */
-  margin: 0 0 14px 0;
-}
-.about-title .label-pill{
-  min-width: 220px;
   justify-content: center;
+  margin-bottom: 14px;
 }
 
-/* typography */
-.about-section p{
-  max-width: var(--about-max);
-  margin: 0 0 12px 0;
-  color: rgba(233,237,243,.86);
-  line-height: 1.5;
-}
-
+/* Sub headings */
 .about-subtitle{
-  max-width: var(--about-max);
-  margin: 18px 0 10px 0;
-  font-weight: 750;
-  color: rgba(233,237,243,.92);
+  margin: 18px 0 10px;
+  font-weight: 800;
+  letter-spacing: .2px;
 }
 
-/* lists */
+/* Lists */
 .about-list{
-  max-width: var(--about-max);
-  margin: 0 0 14px 0;
-  padding-left: 20px;
-  color: rgba(233,237,243,.86);
+  margin: 10px 0 0;
+  padding-left: 22px;
+  color: rgba(233,237,243,.92);
 }
-.about-list li{
-  margin: 6px 0;
-}
+.about-list li{ margin: 6px 0; }
 
-/* “essential path” / mono bits */
-.about-section .mono{
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.10);
-  padding: 2px 8px;
-  border-radius: 10px;
-  display: inline-block;
+/* Paragraph rhythm */
+.about-section p{
+  margin: 10px 0 0;
   color: rgba(233,237,243,.92);
 }
 
-/* mobile: make title pills full width */
-@media (max-width: 720px){
-  .about-title{
-    justify-content: center;
-  }
-  .about-title .label-pill{
-    width: 100%;
-    min-width: 0;
-  }
+/* Make inline mono bits look like chips (used on About) */
+.about-content .mono{
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.10);
 }
