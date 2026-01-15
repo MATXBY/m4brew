@@ -2,7 +2,7 @@
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.0.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.0.4">
 {% endblock %}
 
 {% block content %}
@@ -11,9 +11,9 @@
 
     <!-- Top quick steps -->
     <div class="about-top">
-      <p><strong>Step 1:</strong> m4brew converts your audiobooks into a single chapterised <span class="mono">.m4b</span>.</p>
-      <p><strong>Step 2:</strong> Rename your new <span class="mono">.m4b</span> files based on folder structure (see below).</p>
-      <p><strong>Step 3:</strong> Nothing is lost. Delete the original files <strong>ONLY</strong> when you’re ready.</p>
+      <p><strong>STEP 1:</strong> m4brew converts your audiobooks into a single chapterised <span class="mono">.m4b</span>.</p>
+      <p><strong>STEP 2:</strong> Rename your new <span class="mono">.m4b</span> files based on folder structure (see below).</p>
+      <p><strong>STEP 3:</strong> Nothing is lost. Delete the original files <strong>ONLY</strong> when you’re ready.</p>
     </div>
 
     <div class="about-divider"></div>
@@ -21,27 +21,26 @@
     <!-- Task cards -->
     <div class="about-tasks">
       <div class="task-card task-card--1">
-        <div class="task-card__title">Task 1 - Conversion</div>
+        <div class="task-card__title">Converting</div>
         <div class="task-card__body">
-          <p><strong>Test</strong> shows which books are going to be converted.</p>
-          <p><strong>Run</strong> begins the actual conversion session.</p>
+          <p><strong>Test:</strong> shows which books will be converted.</p>
+          <p><strong>Run:</strong> begins the actual conversion process.</p>
         </div>
       </div>
 
       <div class="task-card task-card--2">
-        <div class="task-card__title">Task 2 - Renaming</div>
+        <div class="task-card__title">Renaming</div>
         <div class="task-card__body">
-          <p>Renaming is based on folder structure:</p>
-          <p class="mono">author / book / files</p>
-          <p>This renames the m4b:</p>
-          <p class="mono">book-author.m4b</p>
+          <p>Renaming is based on folder structure...</p>
+          <p>author_name/book_title becomes the name: book - author.m4b</p>
         </div>
       </div>
 
       <div class="task-card task-card--3">
-        <div class="task-card__title">Task 3 - Delete</div>
+        <div class="task-card__title">Deleting</div>
         <div class="task-card__body">
-          <p>When you’re happy with all your new <span class="mono">.m4b</span> files you can delete the original mp3/m4a files.</p>
+          <p>If you are finished and you want to free up disc space...</p>
+          <p>This task deletes all the original files.</p>
         </div>
       </div>
     </div>
@@ -63,21 +62,24 @@
 
       <div class="info-card">
         <div class="info-card__title">How are chapters created?</div>
-        <p>Chapters are based on individual source files. Each file becomes a chapter in the final <span class="mono">.m4b</span>. Chapter names are based on source files.</p>
+        <p>Chapters are defined by source files.</p>
+        <p>Every individual file becomes its own chapter in the final converted <span class="mono">.m4b</span></p>
+        <p>Chapter names are also defined by the names of the source files.</p>
       </div>
 
       <div class="info-card">
-        <div class="info-card__title">What is the folder structure?</div>
-        <p><strong>ESSENTIAL:</strong></p>
-        <p class="mono">root_folder/</p>
-        <p class="mono">author_name/</p>
-        <p class="mono">book_name/</p>
-        <p class="mono">files</p>
+        <div class="info-card__title">Folder structure: IMPORTANT!</div>
+        <pre class="mono tree">Audiobooks/
+└── Author/
+    └── Book Title/
+        └── audio files</pre>
       </div>
 
       <div class="info-card">
         <div class="info-card__title">What about original files?</div>
-        <p><strong>NOTHING IS DELETED.</strong> After conversion all original files are moved to a separate <span class="mono">_backup_files</span> folder next to the newly created <span class="mono">.m4b</span>.</p>
+        <p><strong>NOTHING IS DELETED.</strong></p>
+        <p>After conversion all the original files are stored safely in a new folder:</p>
+        <p class="mono">book folder/_backup_files</p>
       </div>
 
       <div class="info-card">
@@ -89,11 +91,13 @@
 
       <div class="info-card">
         <div class="info-card__title">Coming soon</div>
-        <p>Other file types.</p>
-        <p>Light and Dark mode.</p>
-        <p>Notifications.</p>
-        <p>Match bitrate.</p>
-        <p>and much more</p>
+        <ul class="about-list">
+          <li>More file types.</li>
+          <li>Light and Dark mode.</li>
+          <li>Notifications.</li>
+          <li>Match source bitrate.</li>
+          <li>and much more</li>
+        </ul>
       </div>
     </div>
 
