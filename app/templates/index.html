@@ -2,7 +2,7 @@
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=0.9.9">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.0.4">
 {% endblock %}
 
 {% block content %}
@@ -79,8 +79,22 @@
         </form>
       </div>
 
-      <div id="logWrap" style="display:none;">
-        <pre id="logPre" class="mono"></pre>
+      <!-- Live panel (replaces raw log) -->
+      <div id="liveWrap" class="live-wrap" style="display:none;">
+        <div class="live-panel" id="livePanel" aria-live="polite">
+          <div class="live-row"><div class="live-k">Task</div><div class="live-v" id="lvTask">—</div></div>
+          <div class="live-row"><div class="live-k">Book</div><div class="live-v" id="lvBook">—</div></div>
+          <div class="live-row"><div class="live-k">Progress</div><div class="live-v" id="lvProgress">—</div></div>
+          <div class="live-row"><div class="live-k">Runtime</div><div class="live-v" id="lvRuntime">—</div></div>
+          <div class="live-row"><div class="live-k">Audio</div><div class="live-v" id="lvAudio">—</div></div>
+          <div class="live-row"><div class="live-k">Stage</div><div class="live-v" id="lvStage">—</div></div>
+          <div class="live-row"><div class="live-k">Warnings</div><div class="live-v" id="lvWarn">—</div></div>
+          <div class="live-row"><div class="live-k">Errors</div><div class="live-v" id="lvErr">—</div></div>
+        </div>
+
+        <div class="live-actions">
+          <a class="btn" id="historyLink" href="/history">View full log in History</a>
+        </div>
       </div>
     </div>
 
@@ -91,16 +105,54 @@
 (function(){
   const statusPill = document.getElementById("statusPill");
   const liveBtn = document.getElementById("liveBtn");
-  const logWrap = document.getElementById("logWrap");
-  const logPre  = document.getElementById("logPre");
+  const liveWrap = document.getElementById("liveWrap");
   const cancelBtn = document.getElementById("cancelBtn");
 
+  const lvTask = document.getElementById("lvTask");
+  const lvBook = document.getElementById("lvBook");
+  const lvProgress = document.getElementById("lvProgress");
+  const lvRuntime = document.getElementById("lvRuntime");
+  const lvAudio = document.getElementById("lvAudio");
+  const lvStage = document.getElementById("lvStage");
+  const lvWarn = document.getElementById("lvWarn");
+  const lvErr = document.getElementById("lvErr");
+
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
+
+  function pad2(n){ n = Number(n||0); return (n < 10 ? "0" : "") + n; }
+  function fmtRuntime(seconds){
+    const s = Math.max(0, Number(seconds || 0));
+    const hh = Math.floor(s / 3600);
+    const mm = Math.floor((s % 3600) / 60);
+    const ss = Math.floor(s % 60);
+    return pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
+  }
+
+  function runtimeFromStarted(startedIso){
+    if(!startedIso) return null;
+    const t0 = Date.parse(String(startedIso));
+    if(!Number.isFinite(t0)) return null;
+    return Math.floor((Date.now() - t0) / 1000);
+  }
+
+  function modeLabel(mode){
+    const m = String(mode || "").toLowerCase();
+    return (m === "convert") ? "Convert"
+         : (m === "correct") ? "Rename"
+         : (m === "cleanup") ? "Delete"
+         : "Run";
+  }
+
+  function isDryRun(job){
+    const s = (job && job.summary) ? job.summary : {};
+    return (job && (job.dry_run === true || job.dry_run === "true")) ||
+           (s && (s.dry_run === true || s.dry_run === "true"));
+  }
 
   function setLiveUI(){
     liveBtn.textContent = "Live output: " + (liveOn ? "ON" : "OFF");
     liveBtn.classList.toggle("primary", liveOn);
-    logWrap.style.display = liveOn ? "block" : "none";
+    liveWrap.style.display = liveOn ? "block" : "none";
   }
 
   liveBtn.addEventListener("click", () => {
@@ -128,22 +180,85 @@
                  : (mode === "cleanup") ? Number(s.deleted ?? 0)
                  : 0;
 
-    const isDry =
-      (s.dry_run === true) || (s.dry_run === "true") ||
-      (job && (job.dry_run === true || job.dry_run === "true"));
+    const dry = isDryRun(job);
 
     if(count > 0){
-      if(isDry) return "Test: " + count + " to " + noun;
+      if(dry) return "Test: " + count + " to " + noun;
       return '<span style="color:#6ee7b7;font-weight:800;">✓&nbsp;</span>Done: ' + count + " " + past;
     }
-
     return "Nothing to " + noun;
   }
 
-  function shouldAutoFollow(pre){
-    // Only auto-scroll if user is already at the bottom (or very close)
-    const threshold = 12;
-    return (pre.scrollTop + pre.clientHeight) >= (pre.scrollHeight - threshold);
+  function bookFromPath(p){
+    const s = String(p || "");
+    if(!s) return "—";
+    const parts = s.split("/").filter(Boolean);
+    if(parts.length < 2) return s;
+    const book = parts[parts.length - 1];
+    const author = parts[parts.length - 2];
+    return author + " / " + book;
+  }
+
+  function updateLivePanel(job){
+    if(!job || !job.status){
+      lvTask.textContent = "—";
+      lvBook.textContent = "—";
+      lvProgress.textContent = "—";
+      lvRuntime.textContent = "—";
+      lvAudio.textContent = "—";
+      lvStage.textContent = "—";
+      lvWarn.textContent = "—";
+      lvErr.textContent = "—";
+      return;
+    }
+
+    const mode = String(job.mode || "").toLowerCase();
+    const task = modeLabel(mode);
+    const dry = isDryRun(job);
+    const taskLine = task + " (" + (dry ? "Test" : "Run") + ")";
+
+    // Prefer current_path → "Author / Book"
+    const book = (job.current_path && String(job.current_path).trim())
+      ? bookFromPath(job.current_path)
+      : ((job.current_book && String(job.current_book).trim()) ? String(job.current_book) : "—");
+
+    const total = Number(job.total || 0);
+    const current = Number(job.current || 0);
+    const progress = (total > 0) ? (current + " / " + total) : "—";
+
+    // FIX: runtime while running when runtime_s is null
+    let seconds = null;
+    if (job.runtime_s != null) {
+      seconds = Number(job.runtime_s);
+    } else if (job.started) {
+      seconds = runtimeFromStarted(job.started);
+    }
+    const rt = (seconds != null) ? fmtRuntime(seconds) : "—";
+
+    const st = (job.status === "running")
+      ? (mode === "convert" ? "Converting"
+        : mode === "correct" ? "Renaming"
+        : mode === "cleanup" ? "Deleting"
+        : "Running")
+      : (job.status === "finished" ? "Finished" : String(job.status));
+
+    const settings = job.settings || {};
+    const am = settings.audio_mode ? String(settings.audio_mode) : "—";
+    const br = (settings.bitrate != null) ? String(settings.bitrate) + " kbps" : "—";
+    const audio = (am !== "—" || br !== "—") ? (am + ", " + br) : "—";
+
+    const sum = job.summary || {};
+    const warnings = "0";
+    const errors = String(Number(sum.failed || 0));
+
+    lvTask.textContent = taskLine;
+    lvBook.textContent = book;
+    lvProgress.textContent = progress;
+    lvRuntime.textContent = rt;
+    lvAudio.textContent = audio;
+    lvStage.textContent = st;
+    lvWarn.textContent = warnings;
+    lvErr.textContent = errors;
   }
 
   async function tick(){
@@ -151,18 +266,16 @@
       const r = await fetch("/api/job", {cache:"no-store"});
       const job = await r.json();
 
-      // Cancel button only visible while RUNNING a CONVERT job
       const showCancel = (job && job.status === "running" && job.mode === "convert");
       cancelBtn.style.display = showCancel ? "inline-flex" : "none";
 
-      // Status pill text
       if(!job || !job.status){
         statusPill.textContent = "Ready";
       }else if(job.status === "running"){
-        const mode = (job.mode || "").toLowerCase();
         if(job.total && job.total > 0){
           statusPill.textContent = `Running: ${job.current}/${job.total}`;
         }else{
+          const mode = (job.mode || "").toLowerCase();
           statusPill.textContent =
             mode === "convert" ? "Converting…" :
             mode === "correct" ? "Renaming…" :
@@ -171,20 +284,11 @@
       }else if(job.status === "finished"){
         statusPill.innerHTML = statusTextForFinished(job);
       }else{
-        statusPill.textContent = job.status;
+        statusPill.textContent = String(job.status || "");
       }
 
-      // Live output (auto-follow only if user was already at bottom)
       if(liveOn){
-        const follow = shouldAutoFollow(logPre);
-
-        const out = await fetch("/job/output", {cache:"no-store"});
-        const txt = await out.text();
-        logPre.textContent = txt || "";
-
-        if(follow){
-          logPre.scrollTop = logPre.scrollHeight;
-        }
+        updateLivePanel(job);
       }
     }catch(e){
       // keep UI calm if api hiccups

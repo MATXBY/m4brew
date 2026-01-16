@@ -15,7 +15,9 @@
 }
 
 /* Tasks card matches other pages (no inner padding) */
-.card--tasks{ padding: 0; }
+.card--tasks{
+  padding: 0;
+}
 
 .task-stack{
   display: grid;
@@ -24,7 +26,9 @@
 }
 
 /* Full-width divider line between items */
-.task-stack > * + *{ position: relative; }
+.task-stack > * + *{
+  position: relative;
+}
 .task-stack > * + *::before{
   content: "";
   position: absolute;
@@ -41,39 +45,37 @@
   padding: var(--task-pad) 0;
 }
 
-/* ✅ KEY CHANGE: grid row so nothing wraps */
 .task-group{
   width: 100%;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px 170px;
-  gap: 18px;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
 }
-
-/* make forms not affect layout sizing */
-.task-group form{ margin: 0; }
-.task-group form, .task-group button{ width: 100%; }
 
 /* STEP label (visual only) */
 .step-label{
   height: var(--pill-h);
   display: inline-flex;
   align-items: center;
-  justify-content: center; /* centred text */
+  justify-content: flex-start;
   padding: 0 18px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
-  letter-spacing: .1px;
 
-  /* allow it to shrink within the grid */
-  min-width: 0;
+  flex: 1 1 420px;
+  max-width: 560px;
+  min-width: 320px;
+
+  letter-spacing: .1px;
 }
 .step-strong{ font-weight: 850; }
 
-/* Test / Run buttons */
+/* Test / Run buttons: consistent width */
 .task-btn{
-  width: 100%;
+  width: 170px;
   justify-content: center;
   box-shadow: none;
   font-weight: 650;
@@ -94,10 +96,14 @@
 .run-2{ background: var(--run-2); }
 .run-3{ background: var(--run-3); }
 
-/* Hover behaviour: lift, keep colours (no grey overlay) */
+/* ---- FIX: make Tasks buttons behave like the rest of the app ----
+   app.css sets .btn:hover to a grey background. We override that here
+   so Test/Run keep their colours and still do the 1px lift. */
 .task-row .btn:hover{
   transform: translateY(-1px);
 }
+
+/* Keep colours on hover (prevent grey hover overlay) */
 .task-row .task-test:hover{
   background: rgba(124,92,255,.22);
   border-color: rgba(124,92,255,.35);
@@ -107,7 +113,9 @@
 .task-row .run-3:hover{ background: var(--run-3); }
 
 /* Status row */
-.status-wrap{ padding: var(--task-pad) 0; }
+.status-wrap{
+  padding: var(--task-pad) 0;
+}
 
 .status-top{
   width: 100%;
@@ -139,27 +147,124 @@
   font-weight: 600;
 }
 
-#logWrap{ margin-top: 12px; }
-
-/* Live output: smaller + calmer (ONLY affects output text) */
-#logPre{
-  font-size: 0.75rem;
-  line-height: 1.35;
-  opacity: 0.9;
+/* Live status panel (replaces raw log) */
+.live-wrap{
+  margin-top: 12px;
 }
 
-pre{
-  max-width: 100%;
-  max-height: 45vh;
-  overflow-y: auto;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+.live-panel{
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  border-radius: 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 26px rgba(0,0,0,.12);
+  padding: 16px;
+  display: grid;
+  gap: 10px;
 }
 
-/* Mobile: stack nicely */
-@media (max-width: 820px){
+.live-row{
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.live-k{
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .1px;
+}
+
+.live-v{
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-actions{
+  display: flex;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+@media (max-width: 680px){
+  .live-row{ grid-template-columns: 1fr; }
+  .live-v{ white-space: normal; }
+}
+
+.step-label {
+  max-width: 240px;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+/* ---- FIX: keep STEP / Test / Run on one line (desktop) ---- */
+.task-group{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 170px 170px;
+  align-items: center;
+  gap: 18px;
+}
+
+/* keep the STEP pill from forcing wraps */
+.step-label{
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* make the <form> cells behave as grid items */
+.task-group form{ margin: 0; }
+.task-group form .btn{ width: 100%; }
+
+/* mobile: stack again */
+@media (max-width: 900px){
   .task-group{
     grid-template-columns: 1fr;
+    justify-items: center;
   }
+  .step-label{
+    white-space: normal;
+    text-align: center;
+  }
+  .task-group form .btn{
+    width: 170px;
+  }
+}
+
+/* --- STEP ROW LAYOUT FIX (2 / 1 / 1) ---
+   Only affects STEP/Test/Run row. Does NOT touch live output panel. */
+.task-group{
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 18px;
+  align-items: center;
+  width: 100%;
+}
+
+.task-group form{ margin: 0; width: 100%; }
+.task-group form .btn{ width: 100%; justify-content: center; }
+
+.step-label{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mobile stack */
+@media (max-width: 720px){
+  .task-group{
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "step step"
+      "test run";
+  }
+  .step-label{ grid-area: step; }
+  .task-group form:nth-of-type(1){ grid-area: test; }
+  .task-group form:nth-of-type(2){ grid-area: run; }
 }
