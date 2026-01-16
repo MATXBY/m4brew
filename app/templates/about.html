@@ -2,73 +2,58 @@
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.0.4">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.0.7">
 {% endblock %}
 
 {% block content %}
 <div class="card card--about">
   <div class="about-wrap">
 
-    <!-- Top quick steps -->
-    <div class="about-top">
-      <p><strong>STEP 1:</strong> m4brew converts your audiobooks into a single chapterised <span class="mono">.m4b</span>.</p>
-      <p><strong>STEP 2:</strong> Rename your new <span class="mono">.m4b</span> files based on folder structure (see below).</p>
-      <p><strong>STEP 3:</strong> Nothing is lost. Delete the original files <strong>ONLY</strong> when you’re ready.</p>
-    </div>
+    <!-- STEP CARDS (full width, stacked) -->
+    <div class="about-steps">
 
-    <div class="about-divider"></div>
+      <div class="step-card step-card--1">
+        <div class="step-card__inner">
+          <div class="step-card__title">STEP 1: CONVERT</div>
 
-    <!-- Task cards -->
-    <div class="about-tasks">
-      <div class="task-card task-card--1">
-        <div class="task-card__title">Converting</div>
-        <div class="task-card__body">
-          <p><strong>Test:</strong> shows which books will be converted.</p>
-          <p><strong>Run:</strong> begins the actual conversion process.</p>
+          <p>Batch converts each of your audiobooks into a single chapterised M4B.</p>
+          <p>This makes make importing books into media mangers much easier.</p>
+
+          <p><strong>TEST:</strong> shows how many books will be converted.</p>
+          <p><strong>RUN:</strong> begins the actual conversion process.</p>
         </div>
       </div>
 
-      <div class="task-card task-card--2">
-        <div class="task-card__title">Renaming</div>
-        <div class="task-card__body">
-          <p>Renaming is based on folder structure...</p>
-          <p>author_name/book_title becomes the name: book - author.m4b</p>
+      <div class="step-card step-card--2">
+        <div class="step-card__inner">
+          <div class="step-card__title">STEP 2: RENAME</div>
+
+          <p>Renames your new audiobooks for easier metadata matching.</p>
+          <p>File naming is based on folder structure:</p>
+
+          <p>author_name/book_title/files becomes the name: book - author.m4b</p>
         </div>
       </div>
 
-      <div class="task-card task-card--3">
-        <div class="task-card__title">Deleting</div>
-        <div class="task-card__body">
-          <p>If you are finished and you want to free up disc space...</p>
-          <p>This task deletes all the original files.</p>
+      <div class="step-card step-card--3">
+        <div class="step-card__inner">
+          <div class="step-card__title">STEP 3: DELETE</div>
+
+          <p><strong>NOTHING</strong> is lost after conversion. After conversion all the original files are stored safely in a new folder here: book folder/backup.</p>
+
+          <p>However, If you want to reclaim disc space, this task batch deletes all the original file ‘backup’ folders in one go.</p>
         </div>
       </div>
+
     </div>
 
     <div class="about-gap"></div>
 
-    <!-- Info grid -->
+    <!-- INFO GRID (2 columns) -->
     <div class="about-grid">
-      <div class="info-card">
-        <div class="info-card__title">What file types are converted?</div>
-        <ul class="about-list">
-          <li>Single mp3 → single m4b</li>
-          <li>Multiple mp3 → single m4b</li>
-          <li>Single m4a → single m4b</li>
-          <li>Multiple m4a → single m4b</li>
-          <li>Multiple m4b → single m4b</li>
-        </ul>
-      </div>
 
       <div class="info-card">
-        <div class="info-card__title">How are chapters created?</div>
-        <p>Chapters are defined by source files.</p>
-        <p>Every individual file becomes its own chapter in the final converted <span class="mono">.m4b</span></p>
-        <p>Chapter names are also defined by the names of the source files.</p>
-      </div>
-
-      <div class="info-card">
-        <div class="info-card__title">Folder structure: IMPORTANT!</div>
+        <div class="info-card__title">Folder Structure: IMPORTANT!</div>
         <pre class="mono tree">Audiobooks/
 └── Author/
     └── Book Title/
@@ -76,29 +61,48 @@
       </div>
 
       <div class="info-card">
-        <div class="info-card__title">What about original files?</div>
-        <p><strong>NOTHING IS DELETED.</strong></p>
-        <p>After conversion all the original files are stored safely in a new folder:</p>
-        <p class="mono">book folder/_backup_files</p>
+        <div class="info-card__title">Setting things your way</div>
+        <p><strong>Select</strong> - audiobook folder</p>
+        <p><strong>Select</strong> - audio channels: mono / stereo / match existing</p>
+        <p><strong>Select</strong> - bitrate (kbps): match ‘coming soon’</p>
       </div>
 
       <div class="info-card">
-        <div class="info-card__title">Setting things your way</div>
-        <p><strong>Select</strong> — audiobook folder</p>
-        <p><strong>Select</strong> — audio channels: mono / stereo / match existing</p>
-        <p><strong>Select</strong> — bitrate (kbps): match ‘coming soon’</p>
+        <div class="info-card__title">What files types are converted?</div>
+        <ul class="about-list">
+          <li>Single mp3 &gt; single m4b</li>
+          <li>Multiple mp3 &gt; single m4b</li>
+          <li>Single m4a &gt; single m4b</li>
+          <li>Multiple m4a &gt; single m4b</li>
+          <li>Multiple m4b &gt; single m4b</li>
+        </ul>
       </div>
 
       <div class="info-card">
         <div class="info-card__title">Coming soon</div>
         <ul class="about-list">
-          <li>More file types.</li>
+          <li>Other file types.</li>
           <li>Light and Dark mode.</li>
           <li>Notifications.</li>
-          <li>Match source bitrate.</li>
+          <li>Match bitrate.</li>
           <li>and much more</li>
         </ul>
       </div>
+
+      <div class="info-card">
+        <div class="info-card__title">How are chapters created?</div>
+        <p>Chapters are based on individual source files.</p>
+        <p>Each file becomes a chapter in the final m4b. Chapter names are based on source files.</p>
+      </div>
+
+      <div class="info-card">
+        <div class="info-card__title">&nbsp;</div>
+        <p>Thank you for downloading and using m4brew.</p>
+        <p>I hope you find it useful.</p>
+        <br>
+        <p>Support the development here.</p>
+      </div>
+
     </div>
 
   </div>
