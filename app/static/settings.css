@@ -45,12 +45,18 @@
   align-items: center;
 }
 
-/* Label pill: same vibe as Tasks pills */
+/* Label pill: match Tasks vibe, but ONLY "SELECT:" bold */
 .setting-row .label-pill{
   width: 100%;
   justify-content: center;
   text-align: center;
-  white-space: nowrap; /* stops "SELECT:" breaking oddly */
+  white-space: nowrap;
+
+  /* override global label-pill bold */
+  font-weight: 500;
+}
+.setting-row .label-pill strong{
+  font-weight: 800;
 }
 
 /* Field fills its half cleanly */
