@@ -140,6 +140,11 @@
     return "Nothing to " + noun;
   }
 
+  function shouldAutoFollow(pre){
+    // Only auto-scroll if user is already at the bottom (or very close)
+    const threshold = 12;
+    return (pre.scrollTop + pre.clientHeight) >= (pre.scrollHeight - threshold);
+  }
 
   async function tick(){
     try{
@@ -169,11 +174,17 @@
         statusPill.textContent = job.status;
       }
 
-      // Live output
+      // Live output (auto-follow only if user was already at bottom)
       if(liveOn){
+        const follow = shouldAutoFollow(logPre);
+
         const out = await fetch("/job/output", {cache:"no-store"});
         const txt = await out.text();
         logPre.textContent = txt || "";
+
+        if(follow){
+          logPre.scrollTop = logPre.scrollHeight;
+        }
       }
     }catch(e){
       // keep UI calm if api hiccups
