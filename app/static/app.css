@@ -1,12 +1,8 @@
 /* =========================
    m4brew — BASE STYLES (LEAN)
-   - One font size system (12pt everywhere)
-   - One pill/button system
-   - Minimal overrides
 ========================= */
 
 :root{
-  /* colours */
   --bg: #111318;
   --text: #e9edf3;
   --muted: rgba(233,237,243,.68);
@@ -17,23 +13,19 @@
   --accent-border: rgba(124,92,255,.32);
   --danger: #ff5c7a;
 
-  /* layout */
   --radius: 18px;
   --radius-pill: 999px;
   --shadow: 0 18px 40px rgba(0,0,0,.38);
 
-  /* typography + sizing */
-  --font: 12pt;          /* ✅ global UI size */
+  --font: 12pt;
   --lh: 1.35;
   --pill-h: 44px;
   --pill-pad-x: 16px;
 
-  /* card gradients */
   --card-bg-a: rgba(255,255,255,.04);
   --card-bg-b: rgba(255,255,255,.03);
 
-  /* content stack defaults (History-style rows) */
-  --stack-pad: 22px; /* ✅ your preferred vertical spacing */
+  --stack-pad: 22px;
   --stack-line: rgba(255,255,255,.14);
 }
 
@@ -46,11 +38,10 @@ body{
   font-size: var(--font);
   line-height: var(--lh);
   color: var(--text);
-  background: transparent; /* base is on html; glow overlay below */
+  background: transparent;
   position: relative;
 }
 
-/* Make form controls inherit the 12pt size reliably */
 button, input, select, textarea{
   font: inherit;
   font-size: inherit;
@@ -58,7 +49,6 @@ button, input, select, textarea{
   color: inherit;
 }
 
-/* Top glow overlay (no tiling seams) */
 body::before{
   content:"";
   position: fixed;
@@ -74,16 +64,14 @@ body::before{
 
 a{ color: inherit; text-decoration: none; }
 
-/* Page shell */
 .wrap{
   max-width: 980px;
   margin: 0 auto;
   padding: 26px 18px 44px;
   position: relative;
-  z-index: 1; /* above glow overlay */
+  z-index: 1;
 }
 
-/* Header */
 .header{
   display: flex;
   flex-direction: column;
@@ -118,7 +106,6 @@ a{ color: inherit; text-decoration: none; }
   background: transparent;
 }
 
-/* Only exception: big app title */
 h1.title{
   margin: 0;
   line-height: 1.1;
@@ -131,12 +118,14 @@ h1.title{
   color: var(--muted);
 }
 
+/* ✅ Single source of truth: version is dark grey */
 .version{
   margin: 10px 0 0;
-  color: rgba(233,237,243,.85);
+  color: #2b2438;
+  opacity: 0.95;
+  font-weight: 600;
 }
 
-/* Nav pills */
 .nav{
   display:flex;
   gap: 10px;
@@ -159,8 +148,20 @@ h1.title{
 }
 .pill:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
 .pill.active{
-  background: rgba(124,92,255,.16);
-  border-color: rgba(124,92,255,.35);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* ✅ Header pills same width (desktop/tablet). Mobile stays flexible. */
+.nav .pill{
+  width: 170px;
+  justify-content: center;
+}
+@media (max-width: 520px){
+  .nav .pill{
+    width: auto;
+    justify-content: flex-start;
+  }
 }
 
 .dot{
@@ -171,7 +172,6 @@ h1.title{
 }
 .pill.active .dot{ background: var(--accent); }
 
-/* Content */
 .content{ margin-top: 18px; padding: 0 2px; }
 
 .card{
@@ -182,11 +182,6 @@ h1.title{
   padding: 16px;
 }
 
-/* =========================
-   Content stack helper
-   Use inside a .card to get:
-   row, divider, row, divider... (like History)
-========================= */
 .content-stack{
   display: grid;
   gap: 0;
@@ -199,7 +194,6 @@ h1.title{
   border-top: 1px solid var(--stack-line);
 }
 
-/* Inputs */
 input[type="text"], input[type="number"], select{
   width:100%;
   height: var(--pill-h);
@@ -211,7 +205,6 @@ input[type="text"], input[type="number"], select{
 }
 input::placeholder{ color: rgba(233,237,243,.35); }
 
-/* Buttons */
 .btn{
   display:inline-flex;
   align-items:center;
@@ -231,7 +224,6 @@ input::placeholder{ color: rgba(233,237,243,.35); }
 .btn.danger{ background: rgba(255,92,122,.14); border-color: rgba(255,92,122,.25); }
 .btn:disabled{ opacity: .55; cursor: not-allowed; transform:none; }
 
-/* Label pill */
 .label-pill{
   display:inline-flex;
   align-items:center;
@@ -265,39 +257,16 @@ pre{
   color: rgba(233,237,243,.92);
 }
 
-/* =========================
-   About page card alignment
-   - Match Tasks layout
-========================= */
-.card--about{
-  padding: 0;
-}
+/* Page card alignment */
+.card--about{ padding: 0; }
+.card--settings{ padding: 0; }
 
-/* =========================
-   Settings page card alignment
-   - Match Tasks/About layout
-========================= */
-.card--settings{
-  padding: 0;
-}
-
-/* Version number styling */
-.version{
-  color: #2b2438;
-  opacity: 0.95;
-  font-weight: 600;
-}
-
-/* =========================
-   Narrow content cards (About / Tasks / Settings only)
-   - Keeps mobile full width
-   - Centers on desktop
-========================= */
+/* Narrow content cards (About / Tasks / Settings only) */
 .card--about,
 .card--tasks,
 .card--settings{
   width: 100%;
-  max-width: 700px; /* ~70% of the 980px wrap */
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
 }

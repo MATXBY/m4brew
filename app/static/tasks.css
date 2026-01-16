@@ -268,3 +268,35 @@
   .task-group form:nth-of-type(1){ grid-area: test; }
   .task-group form:nth-of-type(2){ grid-area: run; }
 }
+
+/* --- m4brew: STATUS + LIVE pills equal width (Tasks page) --- */
+.status-top{
+  display: grid;
+  grid-template-columns: 1fr 1fr auto; /* status | live | cancel */
+  gap: 14px;
+  align-items: center;
+}
+
+/* make the two pills fill their grid cells */
+.status-top .status-pill{
+  width: 100%;
+  text-align: center;
+}
+
+.status-top #liveBtn{
+  width: 100%;
+  justify-content: center;
+}
+
+/* keep the cancel button from stretching */
+.status-top #cancelForm{
+  justify-self: end;
+}
+
+/* --- m4brew: centre STEP pill text --- */
+.step-label{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
