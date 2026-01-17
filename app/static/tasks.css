@@ -29,10 +29,11 @@
   gap: 0;
   padding: 0;
 }
+
 .setting-row{
   padding: var(--task-pad) 0;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 55fr 45fr; /* matches STEP label width logic */
   gap: 18px;
   align-items: center;
 }
@@ -46,7 +47,7 @@
 
 .task-group{
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 55fr 23fr 23fr;
   gap: 18px;
   align-items: center;
 }
@@ -54,14 +55,13 @@
 .task-group form{ margin: 0; width: 100%; }
 .task-group form .btn{ width: 100%; justify-content: center; }
 
-/* Step/Select pill look (already your STEP style) */
+/* Step/Select pill look */
 .step-label{
   height: var(--pill-h);
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
-  padding: 0 18px 0 14px;
+  padding: 0 18px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
@@ -70,25 +70,9 @@
   text-overflow: ellipsis;
   cursor: pointer;
 }
+
 .step-strong{ font-weight: 850; }
 .step-rest{ font-weight: 500; opacity: .98; }
-
-/* The little info icon */
-.pill-i{
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 12pt;
-  line-height: 1;
-  color: rgba(233,237,243,.92);
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.12);
-  flex: 0 0 26px;
-}
 
 /* Test button: purple */
 .task-test{
@@ -112,15 +96,14 @@
 .status-wrap{ padding: var(--task-pad) 0; }
 
 .status-top{
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 50/50 */
+  gap: 18px;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
 }
 
-/* outlined purple for status */
 .status-pill{
+  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -139,9 +122,24 @@
   box-shadow: 0 0 0 1px rgba(33,28,61,.18) inset;
 }
 
+/* live btn full width */
+.live-btn{
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  font-weight: 600;
+}
+
 /* live btn - when OFF we want purple outline */
 .live-btn.is-off{
   border-color: var(--accent-border);
+}
+
+/* Cancel spans full width under the row (only visible when needed) */
+.cancel-form{
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
 }
 
 /* Live panel (unchanged) */
@@ -173,6 +171,7 @@
 .live-actions{ display: flex; justify-content: center; margin-top: 12px; }
 
 @media (max-width: 680px){
+  .status-top{ grid-template-columns: 1fr; }
   .live-row{ grid-template-columns: 1fr; }
   .live-v{ white-space: normal; }
 }
@@ -215,10 +214,22 @@
   letter-spacing: .2px;
 }
 
-.help-close{
+/* X close */
+.help-x{
+  width: 38px;
   height: 38px;
-  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(233,237,243,.92);
+  font-size: 18pt;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
+.help-x:hover{ transform: translateY(-1px); }
 
 .help-body p{
   margin: 10px 0;

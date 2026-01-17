@@ -2,7 +2,7 @@
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.0.9">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.1.0">
 {% endblock %}
 
 {% block content %}
@@ -15,7 +15,6 @@
 
         <div class="setting-row">
           <div class="step-label is-select" data-help="select-source" role="button" tabindex="0" aria-label="More info: Source folder">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Source folder</span>
           </div>
 
@@ -31,7 +30,6 @@
 
         <div class="setting-row">
           <div class="step-label is-select" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Audio tracks</span>
           </div>
 
@@ -45,7 +43,6 @@
 
         <div class="setting-row">
           <div class="step-label is-select" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Bitrate (kbps)</span>
           </div>
 
@@ -69,11 +66,10 @@
       <div class="task-row">
         <div class="task-group">
           <div class="step-label" data-help="step-convert" role="button" tabindex="0" aria-label="More info: Step 1 Convert">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">STEP 1:</span>&nbsp;<span class="step-rest">Convert to m4b</span>
           </div>
 
-          <form method="post" action="/" class="help-test" data-help="step-convert-test">
+          <form method="post" action="/">
             <input type="hidden" name="mode" value="convert">
             <input type="hidden" name="dry_run" value="true">
             <button class="btn task-btn task-test" type="submit">Test</button>
@@ -91,11 +87,10 @@
       <div class="task-row">
         <div class="task-group">
           <div class="step-label" data-help="step-rename" role="button" tabindex="0" aria-label="More info: Step 2 Rename">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">STEP 2:</span>&nbsp;<span class="step-rest">Rename books</span>
           </div>
 
-          <form method="post" action="/" class="help-test" data-help="step-rename-test">
+          <form method="post" action="/">
             <input type="hidden" name="mode" value="correct">
             <input type="hidden" name="dry_run" value="true">
             <button class="btn task-btn task-test" type="submit">Test</button>
@@ -113,11 +108,10 @@
       <div class="task-row">
         <div class="task-group">
           <div class="step-label" data-help="step-delete" role="button" tabindex="0" aria-label="More info: Step 3 Delete">
-            <span class="pill-i" aria-hidden="true">i</span>
             <span class="step-strong">STEP 3:</span>&nbsp;<span class="step-rest">Remove backups</span>
           </div>
 
-          <form method="post" action="/" class="help-test" data-help="step-delete-test">
+          <form method="post" action="/">
             <input type="hidden" name="mode" value="cleanup">
             <input type="hidden" name="dry_run" value="true">
             <button class="btn task-btn task-test" type="submit">Test</button>
@@ -139,10 +133,9 @@
     <div class="status-wrap">
       <div class="status-top">
         <div class="status-pill status-pill--outlined" id="statusPill">Ready</div>
+        <button class="btn live-btn is-off" id="liveBtn" type="button">Live output: OFF</button>
 
-        <button class="btn live-btn" id="liveBtn" type="button">Live output: OFF</button>
-
-        <form method="post" action="/job/cancel" id="cancelForm">
+        <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form">
           <button class="btn danger" type="submit" id="cancelBtn" style="display:none;">Cancel</button>
         </form>
       </div>
@@ -173,7 +166,7 @@
   <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpBody">
     <div class="help-head">
       <div class="help-title" id="helpTitle">Help</div>
-      <button class="btn help-close" id="helpCloseBtn" type="button">Close</button>
+      <button class="help-x" id="helpCloseBtn" type="button" aria-label="Close">×</button>
     </div>
     <div class="help-body" id="helpBody"></div>
   </div>
@@ -181,7 +174,7 @@
 
 <script>
 (function(){
-  // ---------- HELP COPY (from About page content / same wording style) ----------
+  // ---------- HELP COPY ----------
   const HELP = {
     "select-source": {
       title: "Source folder",
@@ -206,7 +199,6 @@
         "Tip: 'match source' is coming soon."
       ]
     },
-
     "step-convert": {
       title: "STEP 1: Convert",
       body: [
@@ -216,13 +208,6 @@
         "RUN: begins the actual conversion process."
       ]
     },
-    "step-convert-test": {
-      title: "STEP 1: Convert (Test)",
-      body: [
-        "TEST: shows how many books will be converted."
-      ]
-    },
-
     "step-rename": {
       title: "STEP 2: Rename",
       body: [
@@ -231,24 +216,11 @@
         "author_name/book_title/files becomes the name: book - author.m4b"
       ]
     },
-    "step-rename-test": {
-      title: "STEP 2: Rename (Test)",
-      body: [
-        "TEST: shows how many books will be renamed."
-      ]
-    },
-
     "step-delete": {
       title: "STEP 3: Delete",
       body: [
         "NOTHING is lost after conversion. After conversion all the original files are stored safely in a new folder here: book folder/_backup_files",
         "However, If you want to reclaim disc space, this task batch deletes all the original file ‘backup’ folders in one go."
-      ]
-    },
-    "step-delete-test": {
-      title: "STEP 3: Delete (Test)",
-      body: [
-        "TEST: shows how many backup folders would be deleted."
       ]
     }
   };
@@ -259,60 +231,39 @@
   const titleEl = document.getElementById("helpTitle");
 
   function openHelp(key){
-    const h = HELP[key];
-    if(!h) return;
-    titleEl.textContent = h.title || "Help";
-    bodyEl.innerHTML = (h.body || []).map(line => `<p>${escapeHtml(line)}</p>`).join("");
+    const d = HELP[key];
+    if(!d) return;
+    titleEl.textContent = d.title || "Help";
+    bodyEl.innerHTML = (d.body || []).map(t => `<p>${String(t)}</p>`).join("");
     overlay.classList.add("open");
-    overlay.setAttribute("aria-hidden", "false");
+    overlay.setAttribute("aria-hidden","false");
     closeBtn.focus();
   }
 
   function closeHelp(){
     overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("aria-hidden","true");
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-    }[c]));
-  }
+  // open on pill click (SELECT + STEP)
+  document.querySelectorAll("[data-help]").forEach(el => {
+    // Only pills should open help (not forms/buttons)
+    if (!el.classList.contains("step-label")) return;
 
-  // click info pills (SELECT/STEP labels)
-  document.addEventListener("click", (e) => {
-    const t = e.target;
-
-    // If clicking the "i" or anywhere on the step-label with data-help
-    const label = t.closest && t.closest(".step-label[data-help]");
-    if(label){
-      openHelp(label.getAttribute("data-help"));
-      return;
-    }
-  });
-
-  // Test buttons: open help instead of submitting
-  document.querySelectorAll("form.help-test").forEach(form => {
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const key = form.getAttribute("data-help");
-      openHelp(key);
+    el.addEventListener("click", () => openHelp(el.getAttribute("data-help")));
+    el.addEventListener("keydown", (e) => {
+      if(e.key === "Enter" || e.key === " "){
+        e.preventDefault();
+        openHelp(el.getAttribute("data-help"));
+      }
     });
   });
 
-  // Close behaviours
   closeBtn.addEventListener("click", closeHelp);
+  overlay.addEventListener("click", (e) => { if(e.target === overlay) closeHelp(); });
+  document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeHelp(); });
 
-  overlay.addEventListener("click", (e) => {
-    // only close if clicking the dim background, not the modal
-    if(e.target === overlay) closeHelp();
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if(e.key === "Escape" && overlay.classList.contains("open")) closeHelp();
-  });
-
-  // ---------- Existing Tasks JS (unchanged behaviour) ----------
+  // ---------- EXISTING TASK PAGE LOGIC ----------
   const statusPill = document.getElementById("statusPill");
   const liveBtn = document.getElementById("liveBtn");
   const liveWrap = document.getElementById("liveWrap");
