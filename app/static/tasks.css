@@ -1,6 +1,5 @@
 :root{
-  /* You want: edge → 22 → pill → 22 → pill → 22 → pill → 22 → divider ... */
-  --task-gap: 22px;
+  --task-pad: 22px;
   --task-inset: 24px;
   --task-line: rgba(255,255,255,.14);
 
@@ -15,88 +14,35 @@
   display: grid;
   gap: 0;
   padding: 0 var(--task-inset);
-
-  /* ✅ card edge (top/bottom) gap = 22 */
-  padding-top: var(--task-gap);
-  padding-bottom: var(--task-gap);
 }
 
-/* ✅ divider lives BETWEEN two 22px gaps */
+/* ONLY dividers we explicitly place in HTML */
 .section-divider{
   height: 1px;
   background: var(--task-line);
-  margin: var(--task-gap) 0; /* 22 above + 22 below */
+  margin: 0;
 }
 
-/* =========================
-   SELECT block
-========================= */
+/* --- SELECT block --- */
 .stack{
   display: grid;
-  gap: var(--task-gap); /* ✅ 22 between select rows */
+  gap: 0;
   padding: 0;
 }
-
 .setting-row{
-  /* spacing now handled by .stack gap */
-  padding: 0;
-
+  padding: var(--task-pad) 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   align-items: center;
 }
-
-/* ✅ Make SELECT pills look like STEP pills */
-.setting-row .label-pill{
-  height: var(--pill-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-
-  color: var(--text);
-  font-weight: 650;
-  letter-spacing: .1px;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  box-shadow: none;          /* kill the “glowy” label-pill look */
-}
-
-/* (keep your bold SELECT: inside it) */
-.setting-row .label-pill strong{
-  font-weight: 850;
-}
-
-/* ✅ Round dropdown corners */
-.setting-row select.field{
-  border-radius: var(--radius-pill);
-}
-
 @media (max-width: 820px){
   .setting-row{ grid-template-columns: 1fr; }
 }
 
-/* =========================
-   STEPS
-========================= */
+/* --- STEPS --- */
 .steps-block{ padding: 0; }
-
-.task-row{
-  /* spacing handled by .steps-block gap below */
-  padding: 0;
-}
-
-.steps-block{
-  display: grid;
-  gap: var(--task-gap); /* ✅ 22 between step rows */
-}
+.task-row{ padding: var(--task-pad) 0; }
 
 .task-group{
   display: grid;
@@ -108,28 +54,49 @@
 .task-group form{ margin: 0; width: 100%; }
 .task-group form .btn{ width: 100%; justify-content: center; }
 
-/* STEP pill style (unchanged, your reference) */
+/* Step/Select pill look (already your STEP style) */
 .step-label{
   height: var(--pill-h);
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 18px;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 0 18px 0 14px;
   border-radius: 999px;
   border: 1px solid rgba(255,255,255,.12);
   background: rgba(255,255,255,.04);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 .step-strong{ font-weight: 850; }
+.step-rest{ font-weight: 500; opacity: .98; }
 
-/* Test + Run buttons */
+/* The little info icon */
+.pill-i{
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 12pt;
+  line-height: 1;
+  color: rgba(233,237,243,.92);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  flex: 0 0 26px;
+}
+
+/* Test button: purple */
 .task-test{
   background: var(--accent-soft);
   border-color: var(--accent-border);
 }
 
+/* Run buttons: brand colours */
 .task-run{ color:#fff; border-color: rgba(255,255,255,.14); }
 .run-1{ background: var(--run-1); }
 .run-2{ background: var(--run-2); }
@@ -141,55 +108,43 @@
 .task-row .run-2:hover{ background: var(--run-2); }
 .task-row .run-3:hover{ background: var(--run-3); }
 
-/* =========================
-   STATUS
-========================= */
-.status-wrap{
-  padding: 0; /* spacing handled by dividers + task-stack padding */
-}
+/* --- STATUS --- */
+.status-wrap{ padding: var(--task-pad) 0; }
 
-/* fill width for status/live */
 .status-top{
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 14px;
+  display: flex;
+  justify-content: center;
   align-items: center;
-  width: 100%;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-/* ✅ purple outline to make it “dynamic” */
+/* outlined purple for status */
 .status-pill{
   display: inline-flex;
   align-items: center;
   justify-content: center;
   height: var(--pill-h);
-  width: 100%;
   padding: 0 var(--pill-pad-x);
   border-radius: 999px;
-
   background: rgba(255,255,255,.06);
-  border: 1px solid var(--accent-border); /* ✅ purple stroke */
-  box-shadow: 0 0 0 1px rgba(0,0,0,.22) inset;
-
+  border: 1px solid var(--border);
   font-weight: 650;
   letter-spacing: .2px;
 }
 
-#liveBtn{
-  width: 100%;
-  justify-content: center;
-  text-align: center;
-  font-weight: 600;
+/* stronger purple outline */
+.status-pill--outlined{
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 1px rgba(33,28,61,.18) inset;
 }
 
-#cancelForm{ justify-self: end; }
-
-@media (max-width: 720px){
-  .status-top{ grid-template-columns: 1fr; }
-  #cancelForm{ justify-self: center; }
+/* live btn - when OFF we want purple outline */
+.live-btn.is-off{
+  border-color: var(--accent-border);
 }
 
-/* Live panel unchanged */
+/* Live panel (unchanged) */
 .live-wrap{ margin-top: 12px; }
 
 .live-panel{
@@ -222,21 +177,50 @@
   .live-v{ white-space: normal; }
 }
 
-/* =========================
-   “i” info icon (CSS ready)
-   (needs tiny HTML later)
-========================= */
-.info-dot{
-  width: 26px;
-  height: 26px;
-  border-radius: 999px;
-  display: inline-flex;
+/* -------- HELP MODAL -------- */
+.help-overlay{
+  position: fixed;
+  inset: 0;
+  display: none;
   align-items: center;
   justify-content: center;
-  font-weight: 850;
-  font-size: 12pt;
-  line-height: 1;
-  color: rgba(233,237,243,.85);
-  background: rgba(255,255,255,.06);
+  padding: 20px;
+  background: rgba(0,0,0,.55);
+  z-index: 9999;
+}
+.help-overlay.open{ display: flex; }
+
+.help-modal{
+  width: 100%;
+  max-width: 560px;
+  border-radius: 18px;
+  background: rgba(20,22,28,.96);
   border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  padding: 16px;
+}
+
+.help-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+  margin-bottom: 10px;
+}
+
+.help-title{
+  font-weight: 850;
+  letter-spacing: .2px;
+}
+
+.help-close{
+  height: 38px;
+  padding: 0 14px;
+}
+
+.help-body p{
+  margin: 10px 0;
+  color: rgba(233,237,243,.92);
 }
