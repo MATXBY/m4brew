@@ -1,70 +1,43 @@
 /* =========================
-   Settings page (LEAN)
-   - Match Tasks layout rules
-   - Rows fill width, no wrapping on desktop
-   - No extra top/bottom padding inside the card
+   Settings (embedded on Tasks)
+   - No extra outer padding (Tasks stack already insets)
+   - Clean 2-column rows
 ========================= */
 
 :root{
-  --settings-pad: 22px;
-  --settings-inset: 24px;
-  --settings-line: rgba(255,255,255,.14);
+  --settings-gap: 18px;
 }
 
-/* IMPORTANT:
-   Keep horizontal inset, remove vertical padding so the card top/bottom
-   matches other pages (Tasks pattern). */
+/* When embedded, DO NOT add its own inset/padding */
 .stack{
   display: grid;
-  gap: 0;
-  padding: 0 var(--settings-inset);
+  gap: var(--settings-gap);
+  padding: 0;
 }
 
-/* Divider line between rows (full width to the card edge) */
-.stack > * + *{
-  position: relative;
-}
-.stack > * + *::before{
-  content: "";
-  position: absolute;
-  left: calc(-1 * var(--settings-inset));
-  right: calc(-1 * var(--settings-inset));
-  top: 0;
-  height: 1px;
-  background: var(--settings-line);
-}
-
-/* Each settings row: 2-column grid so label + field stay on one line */
+/* 2-column row: label pill + field */
 .setting-row{
   width: 100%;
-  padding: var(--settings-pad) 0;
-
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   align-items: center;
 }
 
-/* Label pill: match Tasks vibe, but ONLY "SELECT:" bold */
+/* Label pill: centered, single line */
 .setting-row .label-pill{
   width: 100%;
   justify-content: center;
   text-align: center;
   white-space: nowrap;
-
-  /* override global label-pill bold */
-  font-weight: 500;
-}
-.setting-row .label-pill strong{
-  font-weight: 800;
 }
 
-/* Field fills its half cleanly */
+/* Field fills its half */
 .setting-row .field{
   width: 100%;
 }
 
-/* Mobile: stack label above field */
+/* Mobile: stack */
 @media (max-width: 820px){
   .setting-row{
     grid-template-columns: 1fr;

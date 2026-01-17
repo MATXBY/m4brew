@@ -2,7 +2,7 @@
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=carousel-only-1">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=carousel-10">
 {% endblock %}
 
 {% block content %}
@@ -11,9 +11,8 @@
 
     <section class="about-carousel" aria-label="m4brew walkthrough">
       <div class="carousel-shell">
-
         <div class="carousel-top">
-          <div class="carousel-title">How it works</div>
+          <div class="carousel-title">About</div>
 
           <div class="carousel-controls">
             <button class="btn carousel-nav" type="button" data-dir="-1" aria-label="Previous slide">Prev</button>
@@ -22,6 +21,7 @@
         </div>
 
         <div class="carousel-slides" id="aboutSlides" aria-live="polite">
+          <!-- 1 -->
           <div class="carousel-slide is-active" data-slide="0">
             <div class="slide-kicker">WELCOME</div>
             <div class="slide-body">
@@ -31,6 +31,7 @@
             </div>
           </div>
 
+          <!-- 2 -->
           <div class="carousel-slide" data-slide="1">
             <div class="slide-kicker">FOLDERS</div>
             <div class="slide-body">
@@ -42,6 +43,7 @@
             </div>
           </div>
 
+          <!-- 3 -->
           <div class="carousel-slide" data-slide="2">
             <div class="slide-kicker">SETUP</div>
             <div class="slide-body">
@@ -51,6 +53,7 @@
             </div>
           </div>
 
+          <!-- 4 -->
           <div class="carousel-slide" data-slide="3">
             <div class="slide-kicker">CONVERT</div>
             <div class="slide-body">
@@ -61,6 +64,7 @@
             </div>
           </div>
 
+          <!-- 5 -->
           <div class="carousel-slide" data-slide="4">
             <div class="slide-kicker">FILE TYPES</div>
             <div class="slide-body">
@@ -75,6 +79,7 @@
             </div>
           </div>
 
+          <!-- 6 -->
           <div class="carousel-slide" data-slide="5">
             <div class="slide-kicker">CHAPTERS</div>
             <div class="slide-body">
@@ -83,6 +88,7 @@
             </div>
           </div>
 
+          <!-- 7 -->
           <div class="carousel-slide" data-slide="6">
             <div class="slide-kicker">RENAMING</div>
             <div class="slide-body">
@@ -92,6 +98,7 @@
             </div>
           </div>
 
+          <!-- 8 -->
           <div class="carousel-slide" data-slide="7">
             <div class="slide-kicker">RENAME</div>
             <div class="slide-body">
@@ -101,6 +108,7 @@
             </div>
           </div>
 
+          <!-- 9 -->
           <div class="carousel-slide" data-slide="8">
             <div class="slide-kicker">DELETE</div>
             <div class="slide-body">
@@ -109,6 +117,7 @@
             </div>
           </div>
 
+          <!-- 10 -->
           <div class="carousel-slide" data-slide="9">
             <div class="slide-kicker">COMING SOON</div>
             <div class="slide-body">
@@ -127,7 +136,6 @@
             <button type="button" class="dot-btn {% if i==0 %}is-active{% endif %}" data-go="{{ i }}" aria-label="Slide {{ i+1 }}" aria-selected="{{ 'true' if i==0 else 'false' }}"></button>
           {% endfor %}
         </div>
-
       </div>
     </section>
 
