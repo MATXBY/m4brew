@@ -1,96 +1,57 @@
-/* =========================
-   About page — layout + cards
-========================= */
-
-:root{
-  --about-pad: 22px;
-  --about-inset: 24px;
-  --about-line: rgba(255,255,255,.14);
-
-  /* STEP card fills (match your design colours) */
-  --step-1: #AD5DA3;
-  --step-2: #5250A1;
-  --step-3: #26A9E0;
-}
-
-/* Card itself has no padding; the inner wrap controls spacing */
 .card--about{ padding: 0; }
 
 .about-wrap{
-  padding: var(--about-pad) var(--about-inset);
+  padding: 22px 24px 26px;
 }
 
-/* ---- TOP: 3 big STEP cards ---- */
-.about-steps{
-  display: grid;
-  gap: 18px;
-}
-
-.step-card{
-  border-radius: 16px;
+/* Carousel container */
+.carousel-shell{
+  border-radius: 18px;
   border: 1px solid rgba(255,255,255,.12);
-  overflow: hidden;
-}
-
-.step-card__inner{
-  padding: 22px 22px;
-  color: rgba(255,255,255,.92);
-}
-
-.step-card__title{
-  font-weight: 900;
-  letter-spacing: .4px;
-  margin: 0 0 12px 0;
-  text-transform: uppercase;
-}
-
-/* spacing like your screenshot: bigger paragraph gaps */
-.step-card__inner p{
-  margin: 0 0 14px 0;
-}
-.step-card__inner p:last-child{
-  margin-bottom: 0;
-}
-
-.step-card--1{ background: var(--step-1); }
-.step-card--2{ background: var(--step-2); }
-.step-card--3{ background: var(--step-3); }
-
-/* ---- divider before the grid ---- */
-.about-gap{ height: 22px; }
-
-.about-wrap > .about-gap{
-  position: relative;
-}
-.about-wrap > .about-gap::before{
-  content:"";
-  position:absolute;
-  left: calc(-1 * var(--about-inset));
-  right: calc(-1 * var(--about-inset));
-  top: 0;
-  height: 1px;
-  background: var(--about-line);
-}
-
-/* ---- GRID: 2 columns of info cards ---- */
-.about-grid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-  padding-top: var(--about-pad);
-}
-
-.info-card{
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.05);
+  background: rgba(255,255,255,.03);
+  box-shadow: 0 18px 40px rgba(0,0,0,.22);
   padding: 18px;
 }
 
-.info-card__title{
-  font-weight: 850;
-  margin: 0 0 12px 0;
+.carousel-top{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
 }
+
+.carousel-title{
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: rgba(233,237,243,.9);
+}
+
+.carousel-controls{ display:flex; gap:10px; }
+.carousel-nav{ min-width: 92px; }
+
+.carousel-slides{ outline:none; }
+
+/* Slides: all same height */
+.carousel-slide{
+  display: none;
+  border-radius: 18px;
+  padding: 22px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.14);
+  min-height: 300px;
+}
+.carousel-slide.is-active{ display:block; }
+
+.slide-kicker{
+  font-weight: 900;
+  letter-spacing: .6px;
+  opacity: .95;
+  margin-bottom: 12px;
+}
+
+.slide-body p{ margin: 0 0 12px 0; color: rgba(233,237,243,.90); }
+.slide-body p:last-child{ margin-bottom: 0; }
 
 .about-list{
   margin: 0;
@@ -99,23 +60,40 @@
 }
 .about-list li{ margin: 6px 0; }
 
-.info-card p{
-  margin: 0 0 10px 0;
-  color: rgba(233,237,243,.88);
-}
-.info-card p:last-child{ margin-bottom: 0; }
-
-pre.tree{
-  margin: 0;
-  padding: 16px;
+.tree{
+  margin: 10px 0 0;
+  padding: 14px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.12);
   background: rgba(0,0,0,.18);
-  color: rgba(233,237,243,.92);
-  overflow: auto;
+  border: 1px solid rgba(255,255,255,.10);
 }
 
-/* mobile: single column */
+/* Dots */
+.carousel-dots{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  padding-top:14px;
+}
+
+.dot-btn{
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.26);
+  background: rgba(255,255,255,.10);
+  cursor: pointer;
+  padding: 0;
+}
+.dot-btn.is-active{
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+/* Mobile */
 @media (max-width: 820px){
-  .about-grid{ grid-template-columns: 1fr; }
+  .about-wrap{ padding: 22px 18px 24px; }
+  .carousel-top{ flex-direction: column; align-items: stretch; }
+  .carousel-controls{ justify-content: center; }
+  .carousel-slide{ min-height: 360px; }
 }
