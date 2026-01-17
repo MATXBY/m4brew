@@ -26,12 +26,12 @@
 /* --- SELECT block --- */
 .stack{
   display: grid;
-  gap: 0;
-  padding: 0;
+  gap: var(--task-pad);
+  padding: var(--task-pad) 0;
 }
 
 .setting-row{
-  padding: var(--task-pad) 0;
+  padding: 0;
   display: grid;
   grid-template-columns: 55fr 45fr; /* matches STEP label width logic */
   gap: 18px;
@@ -42,13 +42,14 @@
 }
 
 /* --- STEPS --- */
-.steps-block{ padding: 0; }
-.task-row{ padding: var(--task-pad) 0; }
+.steps-block{ display: grid; gap: var(--task-pad); padding: var(--task-pad) 0; }
+.task-row{ padding: 0; }
 
 .task-group{
   display: grid;
   grid-template-columns: 55fr 23fr 23fr;
-  gap: 18px;
+  column-gap: 18px;
+  row-gap: 0;
   align-items: center;
 }
 
