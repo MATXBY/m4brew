@@ -2,84 +2,130 @@
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.0.4">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.0.8">
 {% endblock %}
 
 {% block content %}
 <div class="card card--tasks">
   <div class="task-stack">
 
-    <!-- STEP 1 -->
-    <div class="task-row">
-      <div class="task-group">
-        <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 1:</span>&nbsp;Convert to m4b</div>
+    <!-- SELECT / SETTINGS (embedded, NOT included) -->
+    <form method="post" action="/settings" id="settingsForm">
+      <div class="stack">
 
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="convert">
-          <input type="hidden" name="dry_run" value="true">
-          <button class="btn task-btn task-test" type="submit">Test</button>
-        </form>
+        <div class="setting-row">
+          <span class="label-pill"><strong>SELECT:</strong>&nbsp;Source folder</span>
+          <input
+            class="field"
+            id="root_folder"
+            type="text"
+            name="root_folder"
+            placeholder="/mnt/remotes/.../Audiobooks"
+            value="{{ settings.get('root_folder','') if settings else '' }}"
+          >
+        </div>
 
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="convert">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="btn task-btn task-run run-1" type="submit">Run</button>
-        </form>
+        <div class="setting-row">
+          <span class="label-pill"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
+          <select class="field" id="audio_mode" name="audio_mode">
+            {% set am = (settings.get("audio_mode") if settings else "match") %}
+            <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
+            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
+            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <span class="label-pill"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
+          {% set br = (settings.get("bitrate", 96) if settings else 96) %}
+          <select class="field" id="bitrate" name="bitrate">
+            {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
+              <option value="{{ v }}" {% if br == v %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
       </div>
+    </form>
+
+    <div class="section-divider"></div>
+
+    <!-- STEPS (no dividers between them) -->
+    <div class="steps-block">
+
+      <!-- STEP 1 -->
+      <div class="task-row">
+        <div class="task-group">
+          <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 1:</span>&nbsp;Convert to m4b</div>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="convert">
+            <input type="hidden" name="dry_run" value="true">
+            <button class="btn task-btn task-test" type="submit">Test</button>
+          </form>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="convert">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="btn task-btn task-run run-1" type="submit">Run</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="task-row">
+        <div class="task-group">
+          <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 2:</span>&nbsp;Rename books</div>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="correct">
+            <input type="hidden" name="dry_run" value="true">
+            <button class="btn task-btn task-test" type="submit">Test</button>
+          </form>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="correct">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="btn task-btn task-run run-2" type="submit">Run</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="task-row">
+        <div class="task-group">
+          <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 3:</span>&nbsp;Remove backups</div>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="cleanup">
+            <input type="hidden" name="dry_run" value="true">
+            <button class="btn task-btn task-test" type="submit">Test</button>
+          </form>
+
+          <form method="post" action="/">
+            <input type="hidden" name="mode" value="cleanup">
+            <input type="hidden" name="dry_run" value="false">
+            <button class="btn task-btn task-run run-3" type="submit">Run</button>
+          </form>
+        </div>
+      </div>
+
     </div>
 
-    <!-- STEP 2 -->
-    <div class="task-row">
-      <div class="task-group">
-        <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 2:</span>&nbsp;Rename books</div>
+    <div class="section-divider"></div>
 
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="correct">
-          <input type="hidden" name="dry_run" value="true">
-          <button class="btn task-btn task-test" type="submit">Test</button>
-        </form>
-
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="correct">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="btn task-btn task-run run-2" type="submit">Run</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- STEP 3 -->
-    <div class="task-row">
-      <div class="task-group">
-        <div class="step-label" aria-hidden="true"><span class="step-strong">STEP 3:</span>&nbsp;Remove backups</div>
-
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="cleanup">
-          <input type="hidden" name="dry_run" value="true">
-          <button class="btn task-btn task-test" type="submit">Test</button>
-        </form>
-
-        <form method="post" action="/">
-          <input type="hidden" name="mode" value="cleanup">
-          <input type="hidden" name="dry_run" value="false">
-          <button class="btn task-btn task-run run-3" type="submit">Run</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- STATUS -->
+    <!-- STATUS + LIVE -->
     <div class="status-wrap">
       <div class="status-top">
         <div class="status-pill" id="statusPill">Ready</div>
 
         <button class="btn" id="liveBtn" type="button">Live output: OFF</button>
 
-        <!-- Cancel: hidden unless a convert job is running -->
         <form method="post" action="/job/cancel" id="cancelForm">
           <button class="btn danger" type="submit" id="cancelBtn" style="display:none;">Cancel</button>
         </form>
       </div>
 
-      <!-- Live panel (replaces raw log) -->
       <div id="liveWrap" class="live-wrap" style="display:none;">
         <div class="live-panel" id="livePanel" aria-live="polite">
           <div class="live-row"><div class="live-k">Task</div><div class="live-v" id="lvTask">—</div></div>
@@ -117,6 +163,41 @@
   const lvWarn = document.getElementById("lvWarn");
   const lvErr = document.getElementById("lvErr");
 
+  // Autosave settings
+  const form = document.getElementById("settingsForm");
+  let t = null;
+  const rootInput = document.getElementById("root_folder");
+  const initialRoot = rootInput ? (rootInput.value || "") : "";
+  let rootDirty = false;
+
+  function autosave() {
+    if (!form) return;
+    if (t) clearTimeout(t);
+    t = setTimeout(async () => {
+      try {
+        const fd = new FormData(form);
+        await fetch("/settings", {
+          method: "POST",
+          body: fd,
+          headers: {
+            "X-M4Brew-Autosave": "1",
+            "X-M4Brew-Root-Dirty": rootDirty ? "1" : "0"
+          }
+        });
+      } catch (e) {}
+    }, 250);
+  }
+
+  if (rootInput) {
+    rootInput.addEventListener("input", () => {
+      rootDirty = (rootInput.value || "") !== initialRoot;
+    });
+  }
+  if (form){
+    form.addEventListener("input", autosave);
+    form.addEventListener("change", autosave);
+  }
+
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
 
   function pad2(n){ n = Number(n||0); return (n < 10 ? "0" : "") + n; }
@@ -127,14 +208,12 @@
     const ss = Math.floor(s % 60);
     return pad2(hh) + ":" + pad2(mm) + ":" + pad2(ss);
   }
-
   function runtimeFromStarted(startedIso){
     if(!startedIso) return null;
     const t0 = Date.parse(String(startedIso));
     if(!Number.isFinite(t0)) return null;
     return Math.floor((Date.now() - t0) / 1000);
   }
-
   function modeLabel(mode){
     const m = String(mode || "").toLowerCase();
     return (m === "convert") ? "Convert"
@@ -142,19 +221,16 @@
          : (m === "cleanup") ? "Delete"
          : "Run";
   }
-
   function isDryRun(job){
     const s = (job && job.summary) ? job.summary : {};
     return (job && (job.dry_run === true || job.dry_run === "true")) ||
            (s && (s.dry_run === true || s.dry_run === "true"));
   }
-
   function setLiveUI(){
     liveBtn.textContent = "Live output: " + (liveOn ? "ON" : "OFF");
     liveBtn.classList.toggle("primary", liveOn);
     liveWrap.style.display = liveOn ? "block" : "none";
   }
-
   liveBtn.addEventListener("click", () => {
     liveOn = !liveOn;
     localStorage.setItem("m4brew_live", liveOn ? "1" : "0");
@@ -217,7 +293,6 @@
     const dry = isDryRun(job);
     const taskLine = task + " (" + (dry ? "Test" : "Run") + ")";
 
-    // Prefer current_path → "Author / Book"
     const book = (job.current_path && String(job.current_path).trim())
       ? bookFromPath(job.current_path)
       : ((job.current_book && String(job.current_book).trim()) ? String(job.current_book) : "—");
@@ -226,13 +301,9 @@
     const current = Number(job.current || 0);
     const progress = (total > 0) ? (current + " / " + total) : "—";
 
-    // FIX: runtime while running when runtime_s is null
     let seconds = null;
-    if (job.runtime_s != null) {
-      seconds = Number(job.runtime_s);
-    } else if (job.started) {
-      seconds = runtimeFromStarted(job.started);
-    }
+    if (job.runtime_s != null) seconds = Number(job.runtime_s);
+    else if (job.started) seconds = runtimeFromStarted(job.started);
     const rt = (seconds != null) ? fmtRuntime(seconds) : "—";
 
     const st = (job.status === "running")
@@ -290,9 +361,7 @@
       if(liveOn){
         updateLivePanel(job);
       }
-    }catch(e){
-      // keep UI calm if api hiccups
-    }
+    }catch(e){}
   }
 
   setLiveUI();
