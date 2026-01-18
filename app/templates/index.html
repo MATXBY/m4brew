@@ -180,68 +180,160 @@
       title: "FOLDERS: LOCATION & STRUCTURE",
       body: [
         "Enter your Audiobooks root folder here.",
-        "IMPORTANT: That folder's structure must match this:",
-        "Root / Author Name / Book Title / Files."
+        "IMPORTANT: That folder's structure must match this:"
+      ],
+      boxes: [
+        {
+          title: "FOLDER STRUCTURE",
+          lines: [
+            "Audiobooks/",
+            "└── Author Name/",
+            "    └── Book Title/",
+            "        └── audio files"
+          ]
+        }
       ]
     },
+
     "select-audio": {
       title: "AUDIO CHANNELS",
       body: [
-        "Choose your preferred audio channel behaviour:",
-        "MATCH — Keep what the source uses",
-        "MONO — Forces mono",
-        "STEREO — Forces stereo"
+        "Choose audio channel behaviour:"
+      ],
+      boxes: [
+        {
+          title: "",
+          lines: [
+            "MATCH — keep what the source uses",
+            "MONO — force mono",
+            "STEREO — force stereo"
+          ]
+        }
       ]
     },
+
     "select-bitrate": {
       title: "BITRATE",
       body: [
-        "Choose your preferred audio bitrate.",
-        "32kbps - 320kbps.",
-        "COMING SOON 'match source'."
+        "Choose your preferred audio bitrate."
+      ],
+      boxes: [
+        {
+          title: "",
+          lines: [
+            "Bitrate range: 32kbps – 320kbps.",
+            "Match source coming soon"
+          ]
+        }
       ]
     },
     "step-convert": {
       title: "CONVERTING YOUR FILES",
-      body: [
-        "TEST",
-        "Preview how many books will be converted.",
-        "RUN",
-        "Begins the actual conversion process.",
-        "Batch convert audiobooks into a single chapterised M4B.",
-        "This makes make importing books into media mangers much easier.",
-        "FILE TYPES",
-        "• Single mp3 > single m4b",
-        "• Multiple mp3 > single m4b",
-        "• Single m4a > single m4b",
-        "• Multiple m4a > single m4b",
-        "• Multiple m4b > single m4b",
-        "CHAPTERS",
-        "Chapters are based on individual source files.",
-        "Each file becomes a chapter in the final m4b.",
-        "Chapter names are based on source file names."
+      body: [],
+      boxes: [
+        {
+          title: "TEST",
+          tone: "run",
+          lines: [
+            "Preview how many books will be converted.",
+            "No files are changed."
+          ]
+        },
+        {
+          title: "RUN",
+          tone: "test",
+          lines: [
+            "Begins the actual conversion process.",
+            "Batch converts all eligible audiobooks into single, chapterised M4B files.",
+            "This makes importing into media managers much easier and more reliable."
+          ]
+        },
+        {
+          title: "CHAPTERS",
+          lines: [
+            "Chapters are defined by each source file.",
+            "Each file becomes a chapter in the final M4B.",
+            "Each file's name becomes that chapter's name.",
+            "Chapters embedded in source files are retained."
+          ]
+        },
+        {
+          title: "SUPPORTED FILE TYPES",
+          lines: [
+            "Single MP3 → single M4B",
+            "Multiple MP3 → single M4B",
+            "Single M4A → single M4B",
+            "Multiple M4A → single M4B",
+            "Multiple M4B → single M4B"
+          ]
+        }
       ]
     },
+
     "step-rename": {
       title: "RENAMING YOUR FILES",
-      body: [
-        "Renames your new audiobooks for easier metadata matching.",
-        "File naming is based on folder structure:",
-        "Author / book = book - author.m4b"
+      body: [],
+      boxes: [
+        {
+          title: "TEST",
+          tone: "test",
+          lines: [
+            "Shows which files would be renamed."
+          ]
+        },
+        {
+          title: "RUN",
+          tone: "run",
+          lines: [
+            "Performs the actual renaming.",
+            "Renames your new audiobooks for easier metadata matching.",
+            "File naming is based on folder structure:"
+          ]
+        },
+        {
+          title: "RENAMING RULES",
+          lines: [
+            "Audiobooks/",
+            "└── Author Name/",
+            "    └── Book Title/",
+            "        └── audio files",
+            "",
+            "This becomes 'title - author.m4b'"
+          ]
+        }
       ]
     },
+
+
+
     "step-delete": {
-      title: "DELETING BACKUPS",
-      body: [
-        "This does NOT affect your new .m4b files.",
-        "It only deletes the backup folders created after conversion.",
-        "Backups live here: book folder/_backup_files",
-        "TEST shows how many backup folders would be deleted.",
-        "RUN permanently deletes those backup folders.",
-        "CAUTION: Delete is NOT reversible."
+  title: "DELETING BACKUPS",
+  body: [],
+  boxes: [
+    {
+      title: "TEST",
+      tone: "test",
+      lines: [
+        "Shows how many backup folders would be deleted."
+      ]
+    },
+    {
+      title: "RUN",
+      tone: "run-3",
+      lines: [
+        "RUN permanently deletes those backup folders."
+      ]
+    },
+    {
+      title: "SAFETY FIRST",
+      lines: [
+        "M4Brew only moves your original files after a successful conversion.",
+        "The delete function only removes files that have already been moved into a backup folder."
       ]
     }
-  };
+  ]
+}
+};
 
   const overlay = document.getElementById("helpOverlay");
   const closeBtn = document.getElementById("helpCloseBtn");
@@ -253,6 +345,26 @@
     if(!d) return;
     titleEl.textContent = d.title || "Help";
     bodyEl.innerHTML = (d.body || []).map(t => `<p>${String(t)}</p>`).join("");
+
+      if (d.boxes && Array.isArray(d.boxes)) {
+        d.boxes.forEach(b => {
+          const wrap = document.createElement("div");
+          wrap.className = "help-box" + (b.tone ? (" help-box--" + b.tone) : "");
+
+          const h = document.createElement("div");
+          h.className = "help-box-title";
+          h.textContent = b.title || "";
+          wrap.appendChild(h);
+
+          (b.lines || []).forEach(l => {
+            const p = document.createElement("p");
+            p.textContent = l;
+            wrap.appendChild(p);
+          });
+
+          bodyEl.appendChild(wrap);
+        });
+      }
     overlay.classList.add("open");
     overlay.setAttribute("aria-hidden","false");
     closeBtn.focus();

@@ -236,3 +236,44 @@
   margin: 10px 0;
   color: rgba(233,237,243,.92);
 }
+
+/* ---- HELP MODAL: highlighted info boxes ---- */
+.help-box{
+  margin-top: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  padding: 12px 14px;
+}
+
+.help-box-title{
+  font-weight: 850;
+  letter-spacing: .2px;
+  margin-bottom: 8px;
+  color: rgba(233,237,243,.95);
+}
+
+.help-box p{
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  margin: 6px 0;
+  color: rgba(233,237,243,.90);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ---- HELP MODAL: toned info boxes (match Test/Run pills) ---- */
+.help-box--test{
+  background: rgba(82,80,161,.14); /* accent-soft vibe */
+  border-color: rgba(82,80,161,.40);
+}
+.help-box--run{
+  background: rgba(173,93,163,.14);  /* run-2 vibe (safe, consistent) */
+  border-color: rgba(173,93,163,.40);
+}
+
+/* ---- HELP MODAL: rename RUN (run-2) ---- */
+.help-box--run-2{
+  background: rgba(82,80,161,.14); /* matches --run-2 */
+  border-color: rgba(82,80,161,.40);
+}
