@@ -264,8 +264,8 @@
 
 /* ---- HELP MODAL: toned info boxes (match Test/Run pills) ---- */
 .help-box--test{
-  background: rgba(82,80,161,.14); /* accent-soft vibe */
-  border-color: rgba(82,80,161,.40);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
 }
 .help-box--run{
   background: rgba(173,93,163,.14);  /* run-2 vibe (safe, consistent) */
