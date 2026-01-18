@@ -33,7 +33,7 @@
 .setting-row{
   padding: 0;
   display: grid;
-  grid-template-columns: 51fr 49fr; /* matches STEP label width logic */
+  grid-template-columns: 50fr 50fr; /* matches STEP label width logic */
   gap: 18px;
   align-items: center;
 }
@@ -47,7 +47,7 @@
 
 .task-group{
   display: grid;
-  grid-template-columns: 52fr 16fr 32fr;
+  grid-template-columns: 51fr 16fr 33fr;
   column-gap: 18px;
   row-gap: 0;
   align-items: center;
