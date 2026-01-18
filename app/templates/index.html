@@ -2,7 +2,7 @@
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.1.6">
 {% endblock %}
 
 {% block content %}
@@ -177,50 +177,67 @@
   // ---------- HELP COPY ----------
   const HELP = {
     "select-source": {
-      title: "Source folder",
+      title: "FOLDERS: LOCATION & STRUCTURE",
       body: [
-        "Point m4brew at your Audiobooks root folder.",
-        "Your audiobooks should be organised like: author / book / audio files."
+        "Enter your Audiobooks root folder here.",
+        "IMPORTANT: That folder's structure must match this:",
+        "Root / Author Name / Book Title / Files."
       ]
     },
     "select-audio": {
-      title: "Audio tracks",
+      title: "AUDIO CHANNELS",
       body: [
-        "Choose how audio should be handled:",
-        "• match — keep what the source uses",
-        "• mono — force mono",
-        "• stereo — force stereo"
+        "Choose your preferred audio channel behaviour:",
+        "MATCH — Keep what the source uses",
+        "MONO — Forces mono",
+        "STEREO — Forces stereo"
       ]
     },
     "select-bitrate": {
-      title: "Bitrate (kbps)",
+      title: "BITRATE",
       body: [
-        "Pick the output bitrate for conversions.",
-        "Tip: 'match source' is coming soon."
+        "Choose your preferred audio bitrate.",
+        "32kbps - 320kbps.",
+        "COMING SOON 'match source'."
       ]
     },
     "step-convert": {
-      title: "STEP 1: Convert",
+      title: "CONVERTING YOUR FILES",
       body: [
-        "Batch converts each of your audiobooks into a single chapterised M4B.",
+        "TEST",
+        "Preview how many books will be converted.",
+        "RUN",
+        "Begins the actual conversion process.",
+        "Batch convert audiobooks into a single chapterised M4B.",
         "This makes make importing books into media mangers much easier.",
-        "TEST: shows how many books will be converted.",
-        "RUN: begins the actual conversion process."
+        "FILE TYPES",
+        "• Single mp3 > single m4b",
+        "• Multiple mp3 > single m4b",
+        "• Single m4a > single m4b",
+        "• Multiple m4a > single m4b",
+        "• Multiple m4b > single m4b",
+        "CHAPTERS",
+        "Chapters are based on individual source files.",
+        "Each file becomes a chapter in the final m4b.",
+        "Chapter names are based on source file names."
       ]
     },
     "step-rename": {
-      title: "STEP 2: Rename",
+      title: "RENAMING YOUR FILES",
       body: [
         "Renames your new audiobooks for easier metadata matching.",
         "File naming is based on folder structure:",
-        "author_name/book_title/files becomes the name: book - author.m4b"
+        "Author / book = book - author.m4b"
       ]
     },
     "step-delete": {
-      title: "STEP 3: Delete",
+      title: "DELETING BACKUPS",
       body: [
-        "NOTHING is lost after conversion. After conversion all the original files are stored safely in a new folder here: book folder/_backup_files",
-        "However, If you want to reclaim disc space, this task batch deletes all the original file ‘backup’ folders in one go."
+        "NOTHING is lost after conversion.",
+        "All the original files are moved to a new folder:",
+        "book folder/_backup_files",
+        "However, If you want to reclaim disc space, this task batch deletes all ‘backup’ folders in one go.",
+        "CAUTION: Delete is NOT reversible"
       ]
     }
   };

@@ -2,188 +2,42 @@
 {% block title %}m4brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=carousel-10">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.1.6">
 {% endblock %}
 
 {% block content %}
-<div class="card card--about">
-  <div class="about-wrap">
+<div class="card about-card">
 
-    <section class="about-carousel" aria-label="m4brew walkthrough">
-      <div class="carousel-shell">
-        <div class="carousel-top">
-          <div class="carousel-title">About</div>
+  <div class="about-grid">
 
-          <div class="carousel-controls">
-            <button class="btn carousel-nav" type="button" data-dir="-1" aria-label="Previous slide">Prev</button>
-            <button class="btn carousel-nav" type="button" data-dir="1" aria-label="Next slide">Next</button>
-          </div>
-        </div>
+    <!-- LEFT: WELCOME -->
+    <div class="about-panel about-panel--primary">
+      <h2>Welcome to m4brew</h2>
 
-        <div class="carousel-slides" id="aboutSlides" aria-live="polite">
-          <!-- 1 -->
-          <div class="carousel-slide is-active" data-slide="0">
-            <div class="slide-kicker">WELCOME</div>
-            <div class="slide-body">
-              <p>M4Brew is a tool that makes converting your audiobooks super simple.</p>
-              <p>Select your folder, select your quality.</p>
-              <p>Then sit back and grab a brew whilst the app does everything.</p>
-            </div>
-          </div>
+      <p class="about-lead">
+        <strong>M4Brew is a simple tool for converting audiobooks to M4B with AAC audio for better file management.</strong>
+      </p>
 
-          <!-- 2 -->
-          <div class="carousel-slide" data-slide="1">
-            <div class="slide-kicker">FOLDERS</div>
-            <div class="slide-body">
-              <p>Folder structure is important. Doing this is the only thing you need to do.</p>
-              <pre class="mono tree">Audiobooks/
-└── Author/
-    └── Book Title/
-        └── audio files</pre>
-            </div>
-          </div>
+      <p>
+        Select your audiobook folder, choose your quality settings, then sit back
+        and grab a brew while the app does all the work.
+      </p>
+    </div>
 
-          <!-- 3 -->
-          <div class="carousel-slide" data-slide="2">
-            <div class="slide-kicker">SETUP</div>
-            <div class="slide-body">
-              <p><strong>Select</strong> — audiobook root folder</p>
-              <p><strong>Select</strong> — audio channels: mono / stereo / match existing</p>
-              <p><strong>Select</strong> — bitrate (kbps): match ‘coming soon’</p>
-            </div>
-          </div>
+    <!-- RIGHT: COMING SOON -->
+    <div class="about-panel about-panel--secondary">
+      <h2>Coming soon</h2>
 
-          <!-- 4 -->
-          <div class="carousel-slide" data-slide="3">
-            <div class="slide-kicker">CONVERT</div>
-            <div class="slide-body">
-              <p>Batch converts each of your audiobooks into a single chapterised M4B.</p>
-              <p>This makes make importing books into media mangers much easier.</p>
-              <p><strong>TEST:</strong> shows how many books will be converted.</p>
-              <p><strong>RUN:</strong> begins the actual conversion process.</p>
-            </div>
-          </div>
-
-          <!-- 5 -->
-          <div class="carousel-slide" data-slide="4">
-            <div class="slide-kicker">FILE TYPES</div>
-            <div class="slide-body">
-              <p>What files types are converted?</p>
-              <ul class="about-list">
-                <li>Single mp3 &gt; single m4b</li>
-                <li>Multiple mp3 &gt; single m4b</li>
-                <li>Single m4a &gt; single m4b</li>
-                <li>Multiple m4a &gt; single m4b</li>
-                <li>Multiple m4b &gt; single m4b</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- 6 -->
-          <div class="carousel-slide" data-slide="5">
-            <div class="slide-kicker">CHAPTERS</div>
-            <div class="slide-body">
-              <p>Chapters are based on individual source files.</p>
-              <p>Each file becomes a chapter in the final m4b. Chapter names are based on source files.</p>
-            </div>
-          </div>
-
-          <!-- 7 -->
-          <div class="carousel-slide" data-slide="6">
-            <div class="slide-kicker">RENAMING</div>
-            <div class="slide-body">
-              <p>Renames your new audiobooks for easier metadata matching.</p>
-              <p>File naming is based on folder structure:</p>
-              <p class="mono">author_name/book_title/files becomes the name: book - author.m4b</p>
-            </div>
-          </div>
-
-          <!-- 8 -->
-          <div class="carousel-slide" data-slide="7">
-            <div class="slide-kicker">RENAME</div>
-            <div class="slide-body">
-              <p>Renames your new audiobooks for easier metadata matching.</p>
-              <p>File naming is based on folder structure:</p>
-              <p class="mono">author_name/book_title/files becomes the name: book - author.m4b</p>
-            </div>
-          </div>
-
-          <!-- 9 -->
-          <div class="carousel-slide" data-slide="8">
-            <div class="slide-kicker">DELETE</div>
-            <div class="slide-body">
-              <p><strong>NOTHING</strong> is lost after conversion. After conversion all the original files are stored safely in a new folder here: book folder/backup.</p>
-              <p>However, If you want to reclaim disc space, this task batch deletes all the original file ‘backup’ folders in one go.</p>
-            </div>
-          </div>
-
-          <!-- 10 -->
-          <div class="carousel-slide" data-slide="9">
-            <div class="slide-kicker">COMING SOON</div>
-            <div class="slide-body">
-              <ul class="about-list">
-                <li>Other file types.</li>
-                <li>Light and Dark mode.</li>
-                <li>Notifications.</li>
-                <li>Match bitrate.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div class="carousel-dots" id="aboutDots" role="tablist" aria-label="Slides">
-          {% for i in range(10) %}
-            <button type="button" class="dot-btn {% if i==0 %}is-active{% endif %}" data-go="{{ i }}" aria-label="Slide {{ i+1 }}" aria-selected="{{ 'true' if i==0 else 'false' }}"></button>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
+      <ul class="about-list">
+        <li>More audio handling options</li>
+        <li>Improved metadata support</li>
+        <li>Smarter folder validation</li>
+        <li>Notifications when jobs complete</li>
+        <li>Further format support</li>
+      </ul>
+    </div>
 
   </div>
+
 </div>
-
-<script>
-(function(){
-  const slidesWrap = document.getElementById("aboutSlides");
-  const dotsWrap = document.getElementById("aboutDots");
-  if(!slidesWrap || !dotsWrap) return;
-
-  const slides = Array.from(slidesWrap.querySelectorAll(".carousel-slide"));
-  const dots = Array.from(dotsWrap.querySelectorAll(".dot-btn"));
-  const navBtns = Array.from(document.querySelectorAll(".carousel-nav"));
-
-  let idx = 0;
-
-  function setActive(n){
-    idx = (n + slides.length) % slides.length;
-    slides.forEach((el,i)=> el.classList.toggle("is-active", i === idx));
-    dots.forEach((d,i)=>{
-      const active = (i === idx);
-      d.classList.toggle("is-active", active);
-      d.setAttribute("aria-selected", active ? "true" : "false");
-    });
-  }
-
-  navBtns.forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const dir = Number(btn.getAttribute("data-dir") || "0");
-      setActive(idx + dir);
-    });
-  });
-
-  dots.forEach(d=>{
-    d.addEventListener("click", ()=>{
-      setActive(Number(d.getAttribute("data-go") || "0"));
-    });
-  });
-
-  slidesWrap.addEventListener("keydown", (e)=>{
-    if(e.key === "ArrowLeft") setActive(idx - 1);
-    if(e.key === "ArrowRight") setActive(idx + 1);
-  });
-  slidesWrap.setAttribute("tabindex", "0");
-
-  setActive(0);
-})();
-</script>
 {% endblock %}
