@@ -2,7 +2,7 @@
 {% block title %}m4brew • Tasks{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.1.6">
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}?v=1.1.9">
 {% endblock %}
 
 {% block content %}
@@ -241,7 +241,7 @@
         },
         {
           title: "RUN",
-          tone: "run",
+          tone: "convert",
           lines: [
             "Begins the actual conversion process.",
             "Batch converts all eligible audiobooks into single, chapterised M4B files.",
@@ -283,7 +283,7 @@
         },
         {
           title: "RUN",
-          tone: "run",
+          tone: "rename",
           lines: [
             "Performs the actual renaming.",
             "Renames your new audiobooks for easier metadata matching.",
@@ -319,7 +319,7 @@
     },
     {
       title: "RUN",
-      tone: "run",
+      tone: "delete",
       lines: [
         "RUN permanently deletes those backup folders."
       ]

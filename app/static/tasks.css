@@ -267,13 +267,21 @@
   background: var(--accent-soft);
   border-color: var(--accent-border);
 }
-.help-box--run{
-  background: rgba(173,93,163,.14);  /* run-2 vibe (safe, consistent) */
+
+/* Legacy tone names (keep these for safety) */.help-box--run-2{
+  background: rgb(82,80,161);
+  border-color: rgba(82,80,161,.40);
+}
+/* New explicit tones */
+.help-box--convert{
+  background: rgb(173,93,163);
   border-color: rgba(173,93,163,.40);
 }
-
-/* ---- HELP MODAL: rename RUN (run-2) ---- */
-.help-box--run-2{
-  background: rgba(82,80,161,.14); /* matches --run-2 */
+.help-box--rename{
+  background: rgb(82,80,161);
   border-color: rgba(82,80,161,.40);
+}
+.help-box--delete{
+  background: rgb(38,169,224);
+  border-color: rgba(38,169,224,.40);
 }
