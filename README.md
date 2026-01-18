@@ -25,7 +25,7 @@ Each source file becomes a chapter in the final M4B, so chapter navigation remai
 3. Run a **Test** to see what would happen  
 4. Run the conversion when you’re happy  
 
-Then grab a brew ☕ — everything runs in the background.
+Then grab a brew ☕ - everything runs in the background.
 
 ---
 
@@ -52,7 +52,7 @@ This structure is essential. It allows m4brew to:
 Every task supports **Test** and **Run** modes:
 
 **Test**  
-Shows exactly what would happen — no files are modified.
+Shows exactly what would happen - no files are modified.
 
 **Run**  
 Performs the actual conversion, renaming, or cleanup.
@@ -74,7 +74,7 @@ m4brew is intentionally cautious by design.
 
 ## Under the hood
 
-m4brew uses **FFmpeg** for all audio processing — the same trusted, industry-standard tool used by professional media workflows.
+m4brew uses **FFmpeg** for all audio processing - the same trusted, industry-standard tool used by professional media workflows.
 
 The app simply wraps this power in a focused, friendly interface.
 
