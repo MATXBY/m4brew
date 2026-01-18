@@ -32,10 +32,12 @@ Then grab a brew ☕ — everything runs in the background.
 ## Folder structure (important)
 
 m4brew expects your audiobooks to be organised like this:
+```text
 Audiobooks/
 └── Author Name/
-└── Book Title/
-└── audio files
+    └── Book Title/
+        └── audio files
+```
 
 This structure is essential. It allows m4brew to:
 
