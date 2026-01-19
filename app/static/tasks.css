@@ -268,10 +268,6 @@
   border-color: var(--accent-border);
 }
 
-/* Legacy tone names (keep these for safety) */.help-box--run-2{
-  background: rgb(82,80,161);
-  border-color: rgba(82,80,161,.40);
-}
 /* New explicit tones */
 .help-box--convert{
   background: rgb(173,93,163);
