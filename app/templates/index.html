@@ -131,12 +131,12 @@
 
     <!-- STATUS + LIVE -->
     <div class="status-wrap">
-      <div class="status-top">
+      <div class="status-top" id="statusTop">
         <div class="status-pill status-pill--outlined" id="statusPill">Ready</div>
         <button class="btn live-btn is-off" id="liveBtn" type="button">Live output: OFF</button>
 
-        <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form">
-          <button class="btn danger" type="submit" id="cancelBtn" style="display:none;">Cancel</button>
+        <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form" style="display:none;">
+          <button class="btn danger" type="submit" id="cancelBtn">Cancel</button>
         </form>
       </div>
 
@@ -397,7 +397,9 @@
   const statusPill = document.getElementById("statusPill");
   const liveBtn = document.getElementById("liveBtn");
   const liveWrap = document.getElementById("liveWrap");
+  const cancelForm = document.getElementById("cancelForm");
   const cancelBtn = document.getElementById("cancelBtn");
+  const statusTop = document.getElementById("statusTop");
 
   const lvTask = document.getElementById("lvTask");
   const lvBook = document.getElementById("lvBook");
@@ -584,7 +586,9 @@
       const job = await r.json();
 
       const showCancel = (job && job.status === "running" && job.mode === "convert");
-      cancelBtn.style.display = showCancel ? "inline-flex" : "none";
+      cancelForm.style.display = showCancel ? "flex" : "none";
+
+      if(statusTop) statusTop.classList.toggle("has-cancel", showCancel);
 
       if(!job || !job.status){
         statusPill.textContent = "Ready";

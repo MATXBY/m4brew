@@ -94,13 +94,19 @@
 .task-row .run-3:hover{ background: var(--run-3); }
 
 /* --- STATUS --- */
-.status-wrap{ padding: var(--task-pad) 0; }
+.status-wrap{
+  padding: var(--task-pad) 0 calc(var(--task-pad) + 8px);
+}
 
 .status-top{
   display: grid;
   grid-template-columns: 1fr 1fr; /* 50/50 */
   gap: 18px;
   align-items: center;
+}
+
+.status-top.has-cancel{
+  grid-template-columns: 51fr 32fr 16fr;
 }
 
 .status-pill{
@@ -138,13 +144,13 @@
 
 /* Cancel spans full width under the row (only visible when needed) */
 .cancel-form{
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
+  grid-column: auto;
+display: flex;
+  justify-content: flex-end;
 }
 
 /* Live panel (unchanged) */
-.live-wrap{ margin-top: 12px; }
+.live-wrap{ margin-top: 20px; }
 
 .live-panel{
   width: 100%;
@@ -280,4 +286,9 @@
 .help-box--delete{
   background: rgb(38,169,224);
   border-color: rgba(38,169,224,.40);
+}
+
+/* When Cancel is shown, make it fill its 20% column (prevents odd right-float padding feel) */
+.status-top.has-cancel #cancelBtn{
+  width: 100%;
 }
