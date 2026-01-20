@@ -1,6 +1,6 @@
 services:
   m4brew:
-    build: .
+    image: matxby/m4brew:latest
     container_name: m4brew
 
     labels:
@@ -19,9 +19,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /mnt/cache/appdata/m4brew/app:/app
 
-    environment:
-      MODE: "convert"
-      DRY_RUN: "true"
 
     networks:
       - matt-net

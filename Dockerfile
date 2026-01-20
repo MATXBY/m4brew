@@ -1,40 +1,39 @@
 FROM python:3.12-slim
 
 LABEL app.name="m4brew" \
-      app.version="0.3.0-dev" \
-      app.release_date="2026-01-04" \
+      app.version="1.2.0" \
+      app.release_date="2026-01-20" \
       app.description="Audiobook source manager and M4B converter"
 
-# Install bash, curl and ffmpeg/ffprobe
+# System deps (ffmpeg + tooling)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       bash \
       ca-certificates \
       curl \
-      ffmpeg && \
+      ffmpeg \
+      gnupg && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Docker CLI (so the script's docker commands can be sent to the host via docker.sock)
-RUN curl -fsSL https://get.docker.com -o /tmp/get-docker.sh && \
-    sh /tmp/get-docker.sh && \
-    rm -f /tmp/get-docker.sh
+# Install Docker CLI only (NOT full engine)
+RUN set -eux; \
+    install -m 0755 -d /etc/apt/keyrings; \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc; \
+    chmod a+r /etc/apt/keyrings/docker.asc; \
+    . /etc/os-release; \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian ${VERSION_CODENAME} stable" \
+      > /etc/apt/sources.list.d/docker.list; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends docker-ce-cli; \
+    rm -rf /var/lib/apt/lists/*
 
-# Set working directory for the web app
 WORKDIR /app
 
-# Copy Flask web app
 COPY app/ /app/
-
-# Copy scripts
 COPY scripts/ /scripts/
 RUN chmod +x /scripts/m4brew.sh
 
-# Install Python dependencies
 RUN pip install --no-cache-dir flask
 
-# Expose the web UI port
 EXPOSE 8080
-
-# Run the Flask app
 CMD ["python", "web.py"]
-
