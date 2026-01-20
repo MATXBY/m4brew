@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+# Don’t write __pycache__ / .pyc inside the container
+ENV PYTHONDONTWRITEBYTECODE=1
+
+
 LABEL app.name="m4brew" \
       app.version="1.2.0" \
       app.release_date="2026-01-20" \
