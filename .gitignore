@@ -1,24 +1,18 @@
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.pyc
+
+# ----------------------------
+# App config (user data)
+# ----------------------------
 config/
 
-# Local safety backups
-app/templates/*.bak.*
-__pycache__/
-*.pyc
-__pycache__/
-*.pyc
-# Python
-__pycache__/
-*.pyc
-
-# Local safety backups
+# ----------------------------
+# Local safety / snapshot files
+# ----------------------------
 *.bak.*
-
-# local snapshots
-app/templates/*.BROKEN.*
-app/templates/*.bak.*
-app/static/*.bak.*
-
-# local snapshots
 app/templates/*.BROKEN.*
 app/templates/*.bak.*
 app/static/*.bak.*
