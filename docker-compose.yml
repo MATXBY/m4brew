@@ -6,7 +6,7 @@ services:
     labels:
       - "net.unraid.docker.name=m4brew"
       - "net.unraid.docker.webui=http://[IP]:8585/"
-      - "net.unraid.docker.icon=http://192.168.4.10:8585/static/m4brew%20logo.png"
+      - "net.unraid.docker.icon=http://192.168.4.10:8585/static/images/m4brew-logo.png"
 
     ports:
       - "8585:8080"

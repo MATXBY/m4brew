@@ -1,6 +1,6 @@
 {
-  "name": "m4brew",
-  "short_name": "m4brew",
+  "name": "M4Brew",
+  "short_name": "M4Brew",
   "icons": [
     {
       "src": "/web-app-manifest-192x192.png",
@@ -15,7 +15,7 @@
       "purpose": "maskable"
     }
   ],
-  "theme_color": "#222049",
-  "background_color": "#222049",
+  "theme_color": "#1f2452",
+  "background_color": "#1f2452",
   "display": "standalone"
 }
