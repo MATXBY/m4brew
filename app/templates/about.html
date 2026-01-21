@@ -1,43 +1,50 @@
 {% extends "base.html" %}
-{% block title %}m4brew • About{% endblock %}
+{% block title %}M4Brew • About{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.1.6">
+<link rel="stylesheet" href="{{ url_for('static', filename='about.css') }}?v=1.2.3">
 {% endblock %}
 
 {% block content %}
-<div class="card about-card">
-
+<div class="card card--about">
   <div class="about-grid">
 
-    <!-- LEFT: WELCOME -->
+    <!-- LEFT PANEL -->
     <div class="about-panel about-panel--primary">
-      <h2>Welcome to m4brew</h2>
+      <h2>Welcome to M4BREW</h2>
 
-      <p class="about-lead">
-        <strong>M4Brew is a simple tool for converting audiobooks to M4B with AAC audio for better file management.</strong>
+      <p>
+        M4Brew is a simple tool for converting audiobooks to M4B with AAC audio
+        for easier media player management.
       </p>
 
       <p>
-        Select your audiobook folder, choose your quality settings, then sit back
-        and grab a brew while the app does all the work.
+        Select your audiobook folder, choose your quality settings,
+        then sit back and grab a brew while the app does all the work.
       </p>
     </div>
 
-    <!-- RIGHT: COMING SOON -->
+    <!-- RIGHT PANEL -->
     <div class="about-panel about-panel--secondary">
-      <h2>Coming soon</h2>
-
+      <h2>Coming Soon</h2>
       <ul class="about-list">
-        <li>More audio handling options</li>
-        <li>Improved metadata support</li>
-        <li>Smarter folder validation</li>
-        <li>Notifications when jobs complete</li>
-        <li>Further format support</li>
+        <li>More file types.</li>
+        <li>Light and Dark mode.</li>
+        <li>Notifications.</li>
+        <li>Match bitrate.</li>
       </ul>
     </div>
 
   </div>
 
+  <!-- FOOTER / DONATION -->
+  <div class="section-divider"></div>
+
+  <p class="muted" style="text-align:center;">
+    If enjoy using M4Brew, please consider
+    <a href="https://buymeacoffee.com/YOURNAME" target="_blank" rel="noopener">
+      buying me a coffee ☕
+    </a>
+  </p>
 </div>
 {% endblock %}
