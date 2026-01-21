@@ -79,6 +79,10 @@
 
     window.addEventListener("pagehide", save);
     window.addEventListener("beforeunload", save);
+
+    // Save immediately when any form submits (POST -> redirect)
+    document.addEventListener("submit", () => save(), true);
+
   })();
   </script>
 

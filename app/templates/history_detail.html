@@ -1,27 +1,49 @@
 {% extends "base.html" %}
-{% set active_page = "history" %}
-{% block title %}m4brew — Run{% endblock %}
+{% block title %}m4brew • Run{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='history.css') }}?v=1.2.3">
+{% endblock %}
 
 {% block content %}
-  <div class="card">
-    <h2 style="margin:0 0 10px 0;">Run detail</h2>
+<div class="card card--history-detail">
+  <a class="run-detail-close" href="/history" aria-label="Close">×</a>
 
-    <div class="muted" style="margin-bottom: 12px;">
-      <span class="mono">{{ detail.ts_human }}</span> • <span class="mono">{{ detail.ts }}</span>
-    </div>
+  <h2 class="run-detail-title">Run detail</h2>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-      <div class="card" style="margin:0; background: rgba(255,255,255,.03);">
-        <div class="muted">Mode</div>
-        <div class="mono" style="font-size:16px;">{{ detail.mode }}</div>
-      </div>
-      <div class="card" style="margin:0; background: rgba(255,255,255,.03);">
-        <div class="muted">Dry run</div>
-        <div class="mono" style="font-size:16px;">{{ "true" if detail.dry_run else "false" }}</div>
-      </div>
-    </div>
-
-    <div class="muted" style="margin: 8px 0 6px;">Output</div>
-    <pre>{{ detail.output }}</pre>
+  <div class="run-detail-meta muted">
+    <span class="mono">{{ detail.runtime_h }}</span>
+    •
+    <span class="mono">{{ detail.ts_human }}</span>
   </div>
+
+  <div class="run-detail-grid">
+    <div class="card run-detail-chip">
+      <div class="muted">Task</div>
+      <div class="mono run-detail-value">
+        {{ 'Convert' if detail.mode == 'convert' else ('Rename' if detail.mode == 'correct' else ('Delete' if detail.mode == 'cleanup' else detail.mode)) }}
+      </div>
+    </div>
+
+    <div class="card run-detail-chip">
+      <div class="muted">Run type</div>
+      <div class="mono run-detail-value">
+        {{ 'Test' if detail.dry_run else 'Live run' }}
+      </div>
+    </div>
+  </div>
+
+  <div class="muted run-detail-label">Output</div>
+  <pre class="run-detail-pre">{{ detail.output }}</pre>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") window.location.href = "/history";
+  });
+})();
+</script>
 {% endblock %}

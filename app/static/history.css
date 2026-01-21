@@ -98,3 +98,71 @@
   }
   .status{ width: 56px; }
 }
+
+/* =========================
+   Run detail page
+========================= */
+
+.card.card--history-detail{
+  position: relative;
+  padding: 22px 24px;
+}
+
+.run-detail-close{
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(233,237,243,.92);
+  font-size: 26px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.run-detail-close:hover{ transform: translateY(-1px); }
+
+.run-detail-title{
+  margin: 0 0 10px 0;
+}
+
+.run-detail-meta{
+  margin: 0 0 16px 0;
+}
+
+.run-detail-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 16px 0;
+}
+
+.run-detail-chip{
+  margin: 0;
+  background: rgba(255,255,255,.03);
+}
+
+.run-detail-value{
+  font-size: 16px;
+}
+
+.run-detail-label{
+  margin: 8px 0 6px;
+}
+
+.run-detail-pre{
+  margin: 0;
+  max-height: 58vh;
+  overflow: auto;
+}
+
+/* Mobile */
+@media (max-width: 720px){
+  .run-detail-grid{ grid-template-columns: 1fr; }
+}
