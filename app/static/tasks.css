@@ -292,3 +292,33 @@ display: flex;
 .status-top.has-cancel #cancelBtn{
   width: 100%;
 }
+
+/* Mobile: step pill on its own row, Test/Run split 50/50 underneath */
+@media (max-width: 640px) {
+  .task-row{ padding: 0; }
+
+  .task-row .task-group{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 12px;
+    row-gap: 14px;
+    width: 100%;
+  }
+
+  .task-row .step-label{
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .task-row .task-group form{
+    width: 100%;
+    margin: 0;
+  }
+
+  .task-row .task-group .btn,
+  .task-row .task-group .task-btn{
+    width: 100%;
+    justify-content: center;
+  }
+}
+

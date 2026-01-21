@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}m4brew{% endblock %}</title>
 
-  <!-- Favicons (single block) -->
+  <!-- Favicons -->
   <link rel="icon" href="{{ url_for('static', filename='icons/favicon.ico') }}">
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/favicon.svg') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
   <link rel="manifest" href="{{ url_for('static', filename='icons/site.webmanifest') }}">
 
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=1.1.9">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}?v=1.2.3">
   {% block extra_head %}{% endblock %}
 </head>
 
@@ -20,12 +20,12 @@
     <header class="header">
       <div class="brand">
         <div class="logo" aria-hidden="true">
-          <img src="{{ url_for('static', filename='m4brew logo.png') }}" alt="m4brew logo">
+          <img src="{{ url_for('static', filename='images/m4brew-logo.svg') }}" alt="m4brew logo">
         </div>
         <div>
           <h1 class="title">m4brew</h1>
           <p class="subtitle">Brewing better audiobooks</p>
-          <p class="version">v1.2.0</p>
+          <p class="version">v1.2.3</p>
         </div>
       </div>
 
@@ -48,5 +48,39 @@
   </div>
 
   {% block extra_js %}{% endblock %}
+
+  <!--
+    GLOBAL PAGE BEHAVIOUR
+    This file is always rendered.
+    Any JS that must survive POST/redirect belongs HERE.
+  -->
+
+  <script>
+  /* m4brew: persist scroll position on Tasks page */
+  (() => {
+    const KEY = "m4brew_tasks_scroll";
+    if (location.pathname !== "/") return;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      try {
+        const y = Number(sessionStorage.getItem(KEY) || "0");
+        if (y > 0) {
+          window.scrollTo(0, y);
+          sessionStorage.removeItem(KEY);
+        }
+      } catch (_) {}
+    });
+
+    const save = () => {
+      try {
+        sessionStorage.setItem(KEY, String(window.scrollY || 0));
+      } catch (_) {}
+    };
+
+    window.addEventListener("pagehide", save);
+    window.addEventListener("beforeunload", save);
+  })();
+  </script>
+
 </body>
 </html>
