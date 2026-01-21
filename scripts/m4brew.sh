@@ -2,8 +2,12 @@
 set -u
 IFS=$'\n\t'
 
+# Job identifier (safe default)
+JOB_ID="${JOB_ID:-manual}"
+
+
 # Root of your audiobooks (Author/Book folders)
-ROOT_DEFAULT="/mnt/remotes/192.168.4.4_media/Audiobooks"
+ROOT_DEFAULT="/audiobooks"
 ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
 
 # Operation mode (can be overridden via environment variable MODE):
@@ -13,15 +17,14 @@ MODE="${MODE:-convert}"
 DRY_RUN="${DRY_RUN:-true}"
 
 # Ensure helper containers join the same docker network as m4brew
-DOCKER_NETWORK="${DOCKER_NETWORK:-matt-net}"
+DOCKER_NETWORK="${DOCKER_NETWORK:-bridge}"
 
 # Audio mode policy (can be overridden via environment variable AUDIO_MODE):
 AUDIO_MODE_DEFAULT="match"
 AUDIO_MODE="${AUDIO_MODE:-$AUDIO_MODE_DEFAULT}"   # match | mono | stereo
 
 # Docker user:group (match your mount ownership)
-DOCKER_UID_GID="1026:100"
-DOCKER_GID="${DOCKER_UID_GID##*:}"
+DOCKER_UID_GID="${DOCKER_UID_GID:-1000:1000}"
 
 # Docker image for m4b-tool (merge + optional re-encode)
 M4B_IMAGE="sandreas/m4b-tool:latest"
