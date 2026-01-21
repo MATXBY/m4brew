@@ -86,7 +86,7 @@
       boxes: [
         { title: "TEST", tone: "test", lines: ["Shows how many backup folders would be deleted."] },
         { title: "RUN",  tone: "delete", lines: ["RUN permanently deletes those backup folders."] },
-        { title: "SAFETY FIRST", lines: ["m4brew only moves originals after a successful conversion.", "Delete only removes already-backed-up folders."] }
+        { title: "SAFETY FIRST", lines: ["M4Brew only moves originals after a successful conversion.", "Delete only removes already-backed-up folders."] }
       ]
     }
   };

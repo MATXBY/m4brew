@@ -1,6 +1,6 @@
-# m4brew
+# M4Brew
 
-m4brew is a simple tool for converting and organising audiobooks into clean, chapterised **M4B** files with **AAC audio**, making them easier to manage and more reliable for media players like **Plex**, **Jellyfin**, **Audiobookshelf**, and similar tools.
+M4Brew is a simple tool for converting and organising audiobooks into clean, chapterised **M4B** files with **AAC audio**, making them easier to manage and more reliable for media players like **Plex**, **Jellyfin**, **Audiobookshelf**, and similar tools.
 
 It’s designed to remove the fiddly parts of audiobook housekeeping while staying **safe, predictable, and transparent**.
 
@@ -8,13 +8,13 @@ It’s designed to remove the fiddly parts of audiobook housekeeping while stayi
 
 ## Who it’s for
 
-m4brew is for anyone with audiobook folders full of MP3s or M4As who wants clean, reliable M4B files — without manual FFmpeg work.
+M4Brew is for anyone with audiobook folders full of MP3s or M4As who wants clean, reliable M4B files — without manual FFmpeg work.
 
 ---
 
-## What m4brew does
+## What M4Brew does
 
-m4brew batch converts your audiobooks into single `.m4b` files using **FFmpeg**, preserving audio quality while producing files that are:
+M4Brew batch converts your audiobooks into single `.m4b` files using **FFmpeg**, preserving audio quality while producing files that are:
 
 - Easier for media managers to recognise  
 - Simpler to tag and match with metadata  
@@ -37,7 +37,7 @@ Then grab a brew ☕ — everything runs in the background.
 
 ## Folder structure (important)
 
-m4brew expects your audiobooks to be organised like this:
+M4Brew expects your audiobooks to be organised like this:
 ```text
 Audiobooks/
 └── Author Name/
@@ -45,7 +45,7 @@ Audiobooks/
         └── audio files
 ```
 
-This structure is essential. It allows m4brew to:
+This structure is essential. It allows M4Brew to:
 
 - Name output files consistently  
 - Generate reliable chapter titles  
@@ -79,7 +79,7 @@ Nothing destructive happens unless you explicitly choose to run it.
 
 ## Safety first
 
-m4brew is intentionally cautious by design:
+M4Brew is intentionally cautious by design:
 
 - Original audio files are never deleted automatically  
 - Converted files are created alongside your existing structure  
@@ -90,16 +90,16 @@ m4brew is intentionally cautious by design:
 
 ## Under the hood
 
-m4brew uses **FFmpeg** for all audio processing — the same trusted, industry-standard tool used by professional media workflows.
+M4Brew uses **FFmpeg** for all audio processing — the same trusted, industry-standard tool used by professional media workflows.
 
 The app simply wraps this power in a focused, friendly interface.
 
 ---
 
-## Why m4brew?
+## Why M4Brew?
 
 Audiobooks often come in messy formats that confuse media players.  
-m4brew exists to:
+M4Brew exists to:
 
 - Reduce friction  
 - Improve metadata matching  
