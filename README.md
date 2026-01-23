@@ -6,6 +6,22 @@ It’s designed to remove the fiddly parts of audiobook housekeeping while stayi
 
 ---
 
+## 📸 Screenshots
+
+### Tasks – idle
+![Tasks idle](docs/screenshots/tasks-idle.png)
+
+### Tasks – running
+![Tasks running](docs/screenshots/tasks-running.png)
+
+### History
+![History](docs/screenshots/history.png)
+
+### Run detail
+![Run detail](docs/screenshots/history-detail.png)
+
+---
+
 ## Who it’s for
 
 M4Brew is for anyone with audiobook folders full of MP3s or M4As who wants clean, reliable M4B files — without manual FFmpeg work.
