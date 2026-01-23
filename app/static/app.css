@@ -284,3 +284,19 @@ pre{
   margin-left: auto;
   margin-right: auto;
 }
+
+
+/* Donate line – intro grey, link white (About + Tasks) */
+.donate-line{
+  text-align: center;
+}
+.donate-line .muted{
+  color: rgba(233,237,243,.55);
+}
+.donate-line a{
+  color: var(--text);
+  text-decoration: none;
+}
+.donate-line a:hover{
+  text-decoration: underline;
+}
