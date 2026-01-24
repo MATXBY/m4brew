@@ -382,3 +382,74 @@
   tick();
   setInterval(tick, 1200);
 })();
+
+
+  /* --- M4Brew: Tasks scroll behaviour (v2) ---
+     Goals:
+     - Pressing Test/Run (form submit + redirect back to Tasks) should KEEP scroll position.
+     - Navigating away to another page, then returning to Tasks, should RESET to top.
+  */
+  (function(){
+    const KEY_KEEP  = "m4brew_tasks_keep_scroll";
+    const KEY_Y     = "m4brew_tasks_scroll_y";
+    const KEY_FORCE = "m4brew_tasks_force_top";
+
+    function navType(){
+      try{
+        const n = performance.getEntriesByType("navigation");
+        return (n && n[0] && n[0].type) ? n[0].type : null;
+      }catch(_){ return null; }
+    }
+
+    try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch(_){}
+
+    // Any form submit on this page = in-page action (Test/Run/settings), so preserve scroll
+    document.addEventListener("submit", () => {
+      try{
+        sessionStorage.setItem(KEY_KEEP, "1");
+        sessionStorage.setItem(KEY_Y, String(window.scrollY || 0));
+      }catch(_){}
+    }, true);
+
+    // Mark "left the page" only if it wasn't a form submit
+    window.addEventListener("pagehide", () => {
+      try{
+        if (sessionStorage.getItem(KEY_KEEP) === "1") return;
+        sessionStorage.setItem(KEY_FORCE, "1");
+      }catch(_){}
+    });
+
+    window.addEventListener("pageshow", (e) => {
+      let keep = false;
+      let y = 0;
+
+      try{
+        keep = (sessionStorage.getItem(KEY_KEEP) === "1");
+        y = Number(sessionStorage.getItem(KEY_Y) || 0);
+      }catch(_){}
+
+      if (keep){
+        // restore exact prior scroll after Test/Run redirect
+        setTimeout(() => window.scrollTo(0, y), 0);
+        try{
+          sessionStorage.removeItem(KEY_KEEP);
+          sessionStorage.removeItem(KEY_Y);
+          sessionStorage.removeItem(KEY_FORCE);
+        }catch(_){}
+        return;
+      }
+
+      let forceTop = false;
+      if (e && e.persisted) forceTop = true;
+      if (navType() === "back_forward") forceTop = true;
+
+      try{
+        if (sessionStorage.getItem(KEY_FORCE) === "1") forceTop = true;
+        sessionStorage.removeItem(KEY_FORCE);
+      }catch(_){}
+
+      if (forceTop){
+        setTimeout(() => window.scrollTo(0, 0), 0);
+      }
+    });
+  })();
