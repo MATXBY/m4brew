@@ -335,3 +335,64 @@ pre{
   animation: m4brewStatusDone 900ms ease-out 1;
 }
 
+
+/* =========================
+   M4Brew: Status pill (1.3.0 groundwork)
+   - full width
+   - double-height (2-line)
+   - warn / error states
+========================= */
+
+.status-wrap .status-pill{
+  width: 100%;
+  text-align: left;
+}
+
+.status-pill .pill-line1{
+  display: block;
+  line-height: 1.15;
+  font-weight: 800;
+}
+
+.status-pill .pill-line2{
+  display: block;
+  margin-top: 6px;
+  line-height: 1.15;
+  opacity: .92;
+}
+
+/* keep pill height consistent even when line2 is empty */
+.status-pill.is-two-line{
+  padding-top: 22px;
+  padding-bottom: 22px;
+  min-height: 88px;
+}
+
+/* Warn = orange (nothing to do, cancelled, partial failure) */
+.status-pill.status-warn{
+  background: rgba(245,158,11,.14);
+  border-color: rgba(245,158,11,.32);
+  font-weight: 850;
+}
+
+/* Error = red (write denied, folder not mounted, hard failures) */
+.status-pill.status-error{
+  background: rgba(239,68,68,.14);
+  border-color: rgba(239,68,68,.35);
+  font-weight: 850;
+}
+
+/* M4Brew: Force 2-line status pill to STACK (not side-by-side) */
+.status-pill.is-two-line{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.status-pill.is-two-line .pill-line1,
+.status-pill.is-two-line .pill-line2{
+  width: 100%;
+  text-align: center;
+}

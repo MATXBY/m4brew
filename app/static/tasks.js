@@ -346,34 +346,95 @@
 
       if(statusTop) statusTop.classList.toggle("has-cancel", showCancel);
 
-      if(!job || !job.status){
-        statusPill.textContent = "Ready";
-        statusPill.classList.remove("status-running","status-done");
-        lastJobStatus = null;
-      }else if(job.status === "running"){
-        statusPill.classList.add("status-running");
-        statusPill.classList.remove("status-done");
-        if(job.total && job.total > 0){
-          statusPill.textContent = `Running: ${job.current}/${job.total}`;
-        }else{
-          const mode = (job.mode || "").toLowerCase();
-          statusPill.textContent =
-            mode === "convert" ? "Converting…" :
-            mode === "correct" ? "Renaming…" :
-            mode === "cleanup" ? "Deleting…" : "Running…";
-        }
-      }else if(job.status === "finished"){
-        statusPill.classList.remove("status-running");
-        if(lastJobStatus === "running"){
-          statusPill.classList.add("status-done");
-          setTimeout(() => statusPill.classList.remove("status-done"), 1100);
-        }
-        statusPill.innerHTML = statusTextForFinished(job);
-      }else{
-        statusPill.textContent = String(job.status || "");
-      }
+        // ----- Status pill (2-line, stateful) -----
+        const mode = String(job && job.mode ? job.mode : "").toLowerCase();
+        const dry = isDryRun(job);
 
-      lastJobStatus = (job && job.status) ? job.status : null;
+        function setPill(stateClass, line1, line2){
+          statusPill.classList.remove("status-running","status-done","status-warn","status-error");
+          if(stateClass) statusPill.classList.add(stateClass);
+          statusPill.classList.add("is-two-line");
+          statusPill.innerHTML = "<span class=\"pill-line1\"></span><span class=\"pill-line2\"></span>";
+          statusPill.querySelector(".pill-line1").textContent = line1 || "";
+          const el2 = statusPill.querySelector(".pill-line2");
+          if(line2){
+            el2.textContent = line2;
+            el2.style.display = "block";
+          }else{
+            el2.textContent = "";
+            el2.style.display = "none";
+          }
+        }
+
+        function currentBook(job){
+          if(job && job.current_path && String(job.current_path).trim()) return bookFromPath(job.current_path);
+          if(job && job.current_book && String(job.current_book).trim()) return String(job.current_book);
+          return "";
+        }
+
+        if(!job || !job.status){
+          setPill(null, "Ready", "");
+          lastJobStatus = null;
+        }else if(job.status === "running"){
+          const total = Number(job.total || 0);
+          const current = Number(job.current || 0);
+          const book = currentBook(job);
+          if(dry){
+            const l1 = (total > 0) ? ("Test: Checking " + current + "/" + total) : "Test: Checking…";
+            setPill("status-running", l1, book);
+          }else{
+            let seconds = null;
+            if (job.runtime_s != null) seconds = Number(job.runtime_s);
+            else if (job.started) seconds = runtimeFromStarted(job.started);
+            const rt = (seconds != null) ? fmtRuntime(seconds) : "00:00:00";
+            const task = modeLabel(mode);
+            let l1 = rt + " Run: " + task;
+            if(total > 0) l1 += " " + current + "/" + total;
+            setPill("status-running", l1, book);
+          }
+        }else if(job.status === "finished"){
+          const s = (job && job.summary) ? job.summary : {};
+          const failed = Number(s.failed ?? 0);
+          const count = (mode === "convert") ? Number(s.created ?? 0)
+                       : (mode === "correct") ? Number(s.renamed ?? 0)
+                       : (mode === "cleanup") ? Number(s.deleted ?? 0)
+                       : 0;
+          const noun = (mode === "convert") ? "convert"
+                     : (mode === "correct") ? "rename"
+                     : (mode === "cleanup") ? "delete"
+                     : "run";
+          const past = (mode === "convert") ? "converted"
+                     : (mode === "correct") ? "renamed"
+                     : (mode === "cleanup") ? "deleted"
+                     : "done";
+
+          const cancelled = (job && job.cancel_requested === true) || (Number(job.exit_code || 0) === 130);
+          if(cancelled){
+            setPill("status-warn", "Cancelled", "");
+          }else if(failed > 0 && count > 0){
+            if(dry){
+              setPill("status-warn", "Test: " + count + " to " + noun + " · " + failed + " failed", "");
+            }else{
+              setPill("status-warn", "Done: " + count + " " + past + " · " + failed + " failed", "");
+            }
+          }else if(failed > 0 && count === 0){
+            setPill("status-error", "Error: " + failed + " failed", "See History for details");
+          }else if(count > 0){
+            if(dry){
+              setPill("status-done", "Test: " + count + " to " + noun, "");
+            }else{
+              setPill("status-done", "Done: " + count + " " + past, "");
+            }
+          }else{
+            const l1 = dry ? ("Test: Nothing to " + noun) : ("Nothing to " + noun);
+            setPill("status-warn", l1, "");
+          }
+        }else{
+          setPill("status-warn", String(job.status || ""), "");
+        }
+
+        lastJobStatus = (job && job.status) ? job.status : null;
+
       if(liveOn){
         updateLivePanel(job);
       }
