@@ -419,3 +419,8 @@ pre{
   0%,100%{ transform: scale(0.992); opacity: .25; }
   50%    { transform: scale(1.02);  opacity: .80; }
 }
+
+/* --- M4Brew: brew bar smooth colour transitions (red -> orange fade) --- */
+.status-pill{
+  transition: background-color 1s ease, border-color 1s ease, color 1s ease, box-shadow 1s ease;
+}

@@ -760,7 +760,21 @@
 
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
-      setPillError((code === "folder_missing") ? "Source folder does not exist" : "Fix source folder", (code === "folder_missing") ? "" : msg);
+      if(code === "folder_missing"){
+      setPillError("Source folder does not exist", "");
+      // After 1s, downgrade from red (action-block) to orange (setup warning)
+      setTimeout(() => {
+        const pill = document.getElementById("statusPill");
+        if(!pill) return;
+        const l1 = pill.querySelector(".pill-line1");
+        if(pill.classList.contains("status-error") && l1 && l1.textContent === "Source folder does not exist"){
+          pill.classList.remove("status-error");
+          pill.classList.add("status-warn");
+        }
+      }, 3000);
+    }else{
+      setPillError("Fix source folder", msg);
+    }
 }, true);
 })();
 
@@ -814,7 +828,21 @@
 
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
-      setPillError((code === "folder_missing") ? "Source folder does not exist" : "Fix source folder", (code === "folder_missing") ? "" : msg);
+      if(code === "folder_missing"){
+      setPillError("Source folder does not exist", "");
+      // After 1s, downgrade from red (action-block) to orange (setup warning)
+      setTimeout(() => {
+        const pill = document.getElementById("statusPill");
+        if(!pill) return;
+        const l1 = pill.querySelector(".pill-line1");
+        if(pill.classList.contains("status-error") && l1 && l1.textContent === "Source folder does not exist"){
+          pill.classList.remove("status-error");
+          pill.classList.add("status-warn");
+        }
+      }, 3000);
+    }else{
+      setPillError("Fix source folder", msg);
+    }
 }, true);
 })();
 
