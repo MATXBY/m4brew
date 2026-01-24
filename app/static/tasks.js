@@ -221,6 +221,9 @@
     t = setTimeout(async () => {
       try {
         const fd = new FormData(form);
+        // Only send root_folder when user actually changed it
+        if (!rootDirty) fd.delete("root_folder");
+
         await fetch("/settings", {
           method: "POST",
           body: fd,
