@@ -186,7 +186,7 @@
     const code = pf && pf.error_code ? String(pf.error_code) : "unknown";
     const root = pf && pf.root_folder ? String(pf.root_folder) : "";
     const base = root ? ("Source: " + root) : "";
-    if(code === "folder_missing") return {cls:"status-warn", l1:"Folder missing", l2: base || "Check the path in Source folder"};
+    if(code === "folder_missing") return {cls:"status-warn", l1:"Source folder does not exist", l2:""};
     if(code === "not_mounted")   return {cls:"status-error", l1:"Folder not mounted", l2:"Add it to the Docker template"};
     if(code === "write_denied")  return {cls:"status-error", l1:"Write denied", l2:"Fix PUID/PGID or permissions"};
     if(code === "no_root")       return {cls:"status-warn", l1:"No source folder set", l2:"Set Source folder above"};
@@ -451,7 +451,7 @@
         const msg  = String(pre.message || "Needs attention");
         let l1 = "Setup needs attention";
         if(code === "not_mounted")      l1 = "Setup: Folder not mounted";
-        else if(code === "folder_missing") l1 = "Setup: Folder missing";
+        else if(code === "folder_missing"){ l1 = "Source folder does not exist"; msg = ""; }
         else if(code === "write_denied")   l1 = "Setup: No write access";
         else if(code === "no_root")        l1 = "Setup: Choose a source folder";
 
@@ -759,8 +759,9 @@
     }
 
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
-    setPillError("Fix source folder", msg);
-  }, true);
+      const code = (pf && pf.error_code) ? String(pf.error_code) : "";
+      setPillError((code === "folder_missing") ? "Source folder does not exist" : "Fix source folder", (code === "folder_missing") ? "" : msg);
+}, true);
 })();
 
 /* --- M4Brew: If preflight blocks Test/Run, explain it in the status pill --- */
@@ -812,6 +813,94 @@
     }
 
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
-    setPillError("Fix source folder", msg);
-  }, true);
+      const code = (pf && pf.error_code) ? String(pf.error_code) : "";
+      setPillError((code === "folder_missing") ? "Source folder does not exist" : "Fix source folder", (code === "folder_missing") ? "" : msg);
+}, true);
+})();
+
+/* --- M4Brew: idle preflight paint (orange) --- */
+(function(){
+  const pill = document.getElementById("statusPill");
+  if(!pill) return;
+
+  // Only paint when the page loads (idle). Red on button press still works elsewhere.
+  fetch("/api/preflight?ts=" + Date.now(), {cache:"no-store"})
+    .then(r => r.json())
+    .then(pf => {
+      if(!pf || pf.ok !== false) return;
+
+      const code = String(pf.error_code || "");
+      if(code !== "folder_missing") return;
+
+      // Make it orange + one-line (no second line)
+      pill.classList.remove("status-running","status-done","status-warn","status-error");
+      pill.classList.add("status-warn","is-two-line");
+      pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
+      pill.querySelector(".pill-line1").textContent = "Source folder does not exist";
+      const el2 = pill.querySelector(".pill-line2");
+      el2.textContent = "";
+      el2.style.display = "none";
+    })
+    .catch(() => {});
+})();
+
+/* --- M4Brew: autosave hook -> preflight paint (orange) --- */
+(function(){
+  const pill = document.getElementById("statusPill");
+  if(!pill) return;
+
+  function isRedSourceMissing(){
+    return pill.classList.contains("status-error") &&
+           (pill.textContent || "").includes("Source folder does not exist");
+  }
+
+  function paintOrangeIfMissing(){
+    // Don't override the red "blocked" state (your rule: red sticks until refresh)
+    if(isRedSourceMissing()) return;
+
+    // Also don't mess with UI mid-job
+    fetch("/api/job", {cache:"no-store"})
+      .then(r => r.json())
+      .then(job => {
+        const running = job && (job.status === "running" || job.status === "canceling");
+        if(running) return;
+
+        return fetch("/api/preflight?ts=" + Date.now(), {cache:"no-store"})
+          .then(r => r.json())
+          .then(pf => {
+            if(!pf || pf.ok !== false) return;
+            if(String(pf.error_code || "") !== "folder_missing") return;
+
+            pill.classList.remove("status-running","status-done","status-warn","status-error");
+            pill.classList.add("status-warn","is-two-line");
+            pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
+            pill.querySelector(".pill-line1").textContent = "Source folder does not exist";
+            const el2 = pill.querySelector(".pill-line2");
+            el2.textContent = "";
+            el2.style.display = "none";
+          });
+      })
+      .catch(() => {});
+  }
+
+  // Hook fetch(): when autosave posts settings, repaint orange after it completes.
+  const origFetch = window.fetch;
+  window.fetch = function(){
+    const p = origFetch.apply(this, arguments);
+    try{
+      const url = String(arguments[0] || "");
+      const opts = arguments[1] || {};
+      const method = String(opts.method || "GET").toUpperCase();
+
+      // "settings" endpoints (covers most variants)
+      const looksLikeSettingsSave =
+        method === "POST" &&
+        (url.includes("/settings") || url.includes("/api/settings") || url.includes("/save"));
+
+      if(looksLikeSettingsSave){
+        p.then(() => setTimeout(paintOrangeIfMissing, 0)).catch(() => {});
+      }
+    }catch(_){}
+    return p;
+  };
 })();
