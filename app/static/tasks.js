@@ -195,9 +195,11 @@
     });
   }
   if (form){
-    form.addEventListener("input", autosave);
-    form.addEventListener("change", autosave);
-  }
+      // Prevent full page reloads when pressing Enter (autosave handles it)
+      form.addEventListener("submit", (e) => { e.preventDefault(); });
+      form.addEventListener("input", autosave);
+      form.addEventListener("change", autosave);
+    }
 
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
 
