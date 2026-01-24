@@ -10,3 +10,4 @@ __pycache__/
 app/templates/*.bak.*
 app/templates/*.BROKEN.*
 app/static/*.bak.*
+*.bak
