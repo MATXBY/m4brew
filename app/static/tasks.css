@@ -175,7 +175,7 @@ display: flex;
 .live-k{ color: var(--muted); font-weight: 700; }
 .live-v{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.live-actions{ display: flex; justify-content: center; margin-top: 12px; }
+.live-actions{ display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 0; margin-bottom: 14px; gap: 14px; }
 
 @media (max-width: 680px){
   .status-top{ grid-template-columns: 1fr; }
@@ -325,3 +325,128 @@ display: flex;
 
 /* M4Brew: Status pill is the primary control; hide Live button */
 #liveBtn{display:none !important;}
+
+/* M4Brew: Advanced view (full log) should be shorter + scroll */
+#fullLog{
+  max-height: 260px;   /* ~half-height cap */
+  overflow: auto;
+}
+
+/* M4Brew: keep the Live card the same size in Simple vs Advanced */
+.live-panel{
+  min-height: 420px;   /* adjust if you want taller/shorter */
+}
+
+/* M4Brew: keep the Live card the same size in Simple vs Advanced */
+.live-panel{
+  min-height: 420px;   /* adjust if you want taller/shorter */
+}
+
+/* M4Brew: keep the Live card the same size in Simple vs Advanced */
+.live-panel{
+  min-height: 360px;   /* adjust if you want taller/shorter */
+}
+
+/* M4Brew: Advanced log should look "flat" (no inset box) */
+#fullLog{
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 520px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 260px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 400px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 300px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 380px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 380px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 300px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 400px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 380px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 300px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 380px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 280px;
+  overflow: auto;
+}
+
+/* Keep Live panel height stable between Simple/Advanced */
+.live-panel{
+  min-height: 400px;
+}
+
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* Live panel: transparent card with outline */
+.live-panel{
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,.12) !important;
+  box-shadow: none !important;
+}

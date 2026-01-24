@@ -147,14 +147,20 @@ Do NOT assume this file is standalone.
     <div class="status-wrap">
       <div class="status-top" id="statusTop">
         <div class="status-pill status-pill--outlined is-two-line" id="statusPill"><span class="pill-line1">Ready</span><span class="pill-line2" style="display:none;"></span></div>
-
-        <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form" style="display:none;">
-          <button class="btn danger" type="submit" id="cancelBtn">Cancel</button>
-        </form>
       </div>
 
       <div id="liveWrap" class="live-wrap" style="display:none;">
         <div class="live-panel" id="livePanel" aria-live="polite">
+
+          <!-- ACTIONS (ABOVE OUTPUT) -->
+          <div class="live-actions">
+            <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form" style="display:none;">
+              <button class="btn danger" type="submit" id="cancelBtn">Cancel</button>
+            </form>
+            <button class="btn" id="viewToggleBtn" type="button">Advanced</button>
+            <a class="btn" id="historyLink" href="/history">All logs</a>
+          </div>
+
           <div class="live-row"><div class="live-k">Task</div><div class="live-v" id="lvTask">—</div></div>
           <div class="live-row"><div class="live-k">Book</div><div class="live-v" id="lvBook">—</div></div>
           <div class="live-row"><div class="live-k">Progress</div><div class="live-v" id="lvProgress">—</div></div>
@@ -164,9 +170,6 @@ Do NOT assume this file is standalone.
           <div class="live-row"><div class="live-k">Warnings</div><div class="live-v" id="lvWarn">—</div></div>
           <div class="live-row"><div class="live-k">Errors</div><div class="live-v" id="lvErr">—</div></div>
 
-          <div class="live-actions">
-            <a class="btn" id="historyLink" href="/history">View full logs</a>
-          </div>
         </div>
       </div>
     </div>
@@ -174,11 +177,10 @@ Do NOT assume this file is standalone.
   </div>
 </div>
 
-
-  <p class="donate-line">
-    <span class="muted">If you enjoy using M4Brew, please consider </span>
-    <a href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
-  </p>
+<p class="donate-line">
+  <span class="muted">If you enjoy using M4Brew, please consider </span>
+  <a href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
+</p>
 
 <!-- HELP MODAL (Tasks page only) -->
 <div class="help-overlay" id="helpOverlay" aria-hidden="true">

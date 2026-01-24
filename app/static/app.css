@@ -396,3 +396,26 @@ pre{
   width: 100%;
   text-align: center;
 }
+
+/* --- M4Brew: status pill pulse uses task colour --- */
+.status-pill.status-running{
+  position: relative;
+  overflow: visible;
+}
+
+/* Animated outline sits on top of the pill border */
+.status-pill.status-running::after{
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 999px;
+  border: 2px solid var(--pulse-border, var(--accent-border));
+  opacity: .35;
+  pointer-events: none;
+  animation: m4brewPulseOutline 1.2s ease-in-out infinite;
+}
+
+@keyframes m4brewPulseOutline{
+  0%,100%{ transform: scale(0.992); opacity: .25; }
+  50%    { transform: scale(1.02);  opacity: .80; }
+}

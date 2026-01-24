@@ -338,17 +338,79 @@
     lvErr.textContent = errors;
   }
 
+
+    // --- M4Brew: Live panel view toggle (Human vs Full log) ---
+    function setupLiveViews(){
+      const viewBtn = document.getElementById("viewToggleBtn");
+      if(!livePanel || !viewBtn) return;
+
+      let logPre = document.getElementById("fullLog");
+      if(!logPre){
+        logPre = document.createElement("pre");
+        logPre.id = "fullLog";
+        logPre.className = "full-log";
+        logPre.style.display = "none";
+        const actions = livePanel.querySelector(".live-actions");
+        const firstRow = livePanel.querySelector(".live-row");
+        if(firstRow) livePanel.insertBefore(logPre, firstRow);
+        else livePanel.appendChild(logPre);
+      }
+
+      let mode = localStorage.getItem("m4brew_live_view") || "human";
+
+      async function refreshLog(){
+        try{
+          const r = await fetch("/job/output?ts=" + Date.now(), {cache:"no-store"});
+          const t = await r.text();
+          logPre.textContent = t;
+          logPre.scrollTop = logPre.scrollHeight;
+        }catch(_){ }
+      }
+
+      function apply(){
+        const rows = livePanel.querySelectorAll(".live-row");
+        rows.forEach(el => { el.style.display = (mode === "human") ? "" : "none"; });
+        logPre.style.display = (mode === "log") ? "block" : "none";
+        viewBtn.textContent = (mode === "human") ? "Advanced" : "Simple View";
+      }
+
+      viewBtn.addEventListener("click", () => {
+        mode = (mode === "human") ? "log" : "human";
+        localStorage.setItem("m4brew_live_view", mode);
+        apply();
+        if(mode === "log") refreshLog();
+      });
+
+      apply();
+      window.__m4brew_live_view = () => mode;
+      window.__m4brew_refresh_log = refreshLog;
+    }
+
   async function tick(){
     try{
       const r = await fetch("/api/job", {cache:"no-store"});
       const job = await r.json();
 
       const showCancel = (job && job.status === "running" && job.mode === "convert");
-      cancelForm.style.display = showCancel ? "flex" : "none";
+      if(cancelForm) cancelForm.style.display = showCancel ? "flex" : "none";
 
       if(statusTop) statusTop.classList.toggle("has-cancel", showCancel);
 
         // ----- Status pill (2-line, stateful) -----
+
+          function setPulseForMode(mode){
+            const m = String(mode || "").toLowerCase();
+            const v = (m === "convert") ? "var(--run-1)"
+                    : (m === "correct") ? "var(--run-2)"
+                    : (m === "cleanup") ? "var(--run-3)"
+                    : "var(--accent-border)";
+            try{ statusPill.style.setProperty("--pulse-border", v); }catch(_){ }
+          }
+
+          function clearPulse(){
+            try{ statusPill.style.removeProperty("--pulse-border"); }catch(_){ }
+          }
+
         const mode = String(job && job.mode ? job.mode : "").toLowerCase();
         const dry = isDryRun(job);
 
@@ -375,9 +437,10 @@
         }
 
         if(!job || !job.status){
-          setPill(null, "Ready", "");
+          setPill(null, "Ready", "");            clearPulse();
           lastJobStatus = null;
         }else if(job.status === "running"){
+            setPulseForMode(mode);
           const total = Number(job.total || 0);
           const current = Number(job.current || 0);
           const book = currentBook(job);
@@ -438,6 +501,12 @@
         lastJobStatus = (job && job.status) ? job.status : null;
 
       if(liveOn){
+          try{
+            if(window.__m4brew_live_view && window.__m4brew_live_view() === "log" && window.__m4brew_refresh_log){
+              window.__m4brew_refresh_log();
+            }
+          }catch(_){ }
+
         updateLivePanel(job);
       }
     }catch(e){}
@@ -463,6 +532,8 @@
         if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleLive(); }
       });
     }
+
+    setupLiveViews();
 
     tick();
   setInterval(tick, 1200);
