@@ -100,13 +100,13 @@
 
 .status-top{
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 50/50 */
+  grid-template-columns: 1fr; /* full width pill */
   gap: 18px;
   align-items: center;
 }
 
 .status-top.has-cancel{
-  grid-template-columns: 51fr 32fr 16fr;
+  grid-template-columns: 1fr;
 }
 
 .status-pill{
@@ -322,3 +322,6 @@ display: flex;
   }
 }
 
+
+/* M4Brew: Status pill is the primary control; hide Live button */
+#liveBtn{display:none !important;}
