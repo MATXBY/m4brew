@@ -24,6 +24,12 @@ AUDIO_MODE_DEFAULT="match"
 AUDIO_MODE="${AUDIO_MODE:-$AUDIO_MODE_DEFAULT}"   # match | mono | stereo
 
 # Docker user:group (match your mount ownership)
+# Prefer DOCKER_UID_GID, else PUID/PGID, else DOCKER_UID/DOCKER_GID
+PUID="${PUID:-${DOCKER_UID:-}}"
+PGID="${PGID:-${DOCKER_GID:-}}"
+if [ -z "${DOCKER_UID_GID:-}" ] && [ -n "${PUID}" ] && [ -n "${PGID}" ]; then
+  DOCKER_UID_GID="${PUID}:${PGID}"
+fi
 DOCKER_UID_GID="${DOCKER_UID_GID:-1000:1000}"
 
 # Docker image for m4b-tool (merge + optional re-encode)

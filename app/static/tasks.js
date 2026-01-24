@@ -149,6 +149,7 @@
 
   // ---------- TASK PAGE LOGIC ----------
   const statusPill = document.getElementById("statusPill");
+  let lastJobStatus = null;
   const liveBtn = document.getElementById("liveBtn");
   const liveWrap = document.getElementById("liveWrap");
   const cancelForm = document.getElementById("cancelForm");
@@ -345,7 +346,11 @@
 
       if(!job || !job.status){
         statusPill.textContent = "Ready";
+        statusPill.classList.remove("status-running","status-done");
+        lastJobStatus = null;
       }else if(job.status === "running"){
+        statusPill.classList.add("status-running");
+        statusPill.classList.remove("status-done");
         if(job.total && job.total > 0){
           statusPill.textContent = `Running: ${job.current}/${job.total}`;
         }else{
@@ -356,11 +361,17 @@
             mode === "cleanup" ? "Deleting…" : "Running…";
         }
       }else if(job.status === "finished"){
+        statusPill.classList.remove("status-running");
+        if(lastJobStatus === "running"){
+          statusPill.classList.add("status-done");
+          setTimeout(() => statusPill.classList.remove("status-done"), 1100);
+        }
         statusPill.innerHTML = statusTextForFinished(job);
       }else{
         statusPill.textContent = String(job.status || "");
       }
 
+      lastJobStatus = (job && job.status) ? job.status : null;
       if(liveOn){
         updateLivePanel(job);
       }
