@@ -146,8 +146,7 @@ Do NOT assume this file is standalone.
     <!-- STATUS + LIVE -->
     <div class="status-wrap">
       <div class="status-top" id="statusTop">
-        <div class="status-pill status-pill--outlined" id="statusPill">Ready</div>
-        <button class="btn live-btn is-off" id="liveBtn" type="button">Live output: OFF</button>
+        <div class="status-pill status-pill--outlined is-two-line" id="statusPill"><span class="pill-line1">Ready</span><span class="pill-line2" style="display:none;"></span></div>
 
         <form method="post" action="/job/cancel" id="cancelForm" class="cancel-form" style="display:none;">
           <button class="btn danger" type="submit" id="cancelBtn">Cancel</button>

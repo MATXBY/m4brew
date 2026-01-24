@@ -230,12 +230,14 @@
            (s && (s.dry_run === true || s.dry_run === "true"));
   }
   function setLiveUI(){
+    if (liveBtn) {
     liveBtn.textContent = "Live output: " + (liveOn ? "ON" : "OFF");
     liveBtn.classList.toggle("primary", liveOn);
     liveBtn.classList.toggle("is-off", !liveOn);
+    }
     liveWrap.style.display = liveOn ? "block" : "none";
   }
-  liveBtn.addEventListener("click", () => {
+  if (liveBtn) liveBtn.addEventListener("click", () => {
     liveOn = !liveOn;
     localStorage.setItem("m4brew_live", liveOn ? "1" : "0");
     setLiveUI();
@@ -442,7 +444,27 @@
   }
 
   setLiveUI();
-  tick();
+
+    // Status pill toggles Live output (replaces Live button)
+    if (statusPill) {
+      statusPill.style.cursor = "pointer";
+      statusPill.setAttribute("role","button");
+      statusPill.setAttribute("tabindex","0");
+      statusPill.setAttribute("title","Click to toggle live output");
+
+      const toggleLive = () => {
+        liveOn = !liveOn;
+        localStorage.setItem("m4brew_live", liveOn ? "1" : "0");
+        setLiveUI();
+      };
+
+      statusPill.addEventListener("click", toggleLive);
+      statusPill.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleLive(); }
+      });
+    }
+
+    tick();
   setInterval(tick, 1200);
 })();
 

@@ -856,6 +856,64 @@ def history_clear():
     return redirect(url_for("history_get"))
 
 
+
+# --- M4Brew: Preflight checks (root folder mounted + writable) ---
+# Used by the Tasks status pill to show friendly errors before/after runs.
+try:
+  import json, os, subprocess
+except Exception:
+  pass
+
+@app.route("/api/preflight")
+def api_preflight():
+  settings_path = "/config/settings.json"
+  root = ""
+  try:
+    with open(settings_path, "r") as f:
+      s = json.load(f)
+      root = str(s.get("root_folder", "") or "").strip()
+  except Exception:
+    root = ""
+
+  if not root:
+    return jsonify({"ok": False, "error_code": "no_root", "message": "No root folder set"}), 200
+
+  puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
+  pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
+  uidgid = f"{puid}:{pgid}"
+
+  # Run a tiny container to validate mount + write access as the target user.
+  # If the root isn't in the Docker template / not visible to the Docker daemon, this fails.
+  cmd = [
+    "docker","run","--rm",
+    "-u", uidgid,
+    "-v", f"{root}:/data:rw",
+    "busybox",
+    "sh","-lc",
+    "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test"
+  ]
+
+  try:
+    p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+    ok = (p.returncode == 0)
+    out = (p.stdout or "").strip()
+    err = (p.stderr or "").strip()
+  except Exception as e:
+    return jsonify({"ok": False, "error_code": "preflight_exception", "message": str(e)}), 200
+
+  if ok:
+    return jsonify({"ok": True, "root_folder": root, "uidgid": uidgid}), 200
+
+  blob = (err + "\n" + out).lower()
+  if "permission denied" in blob:
+    return jsonify({"ok": False, "error_code": "write_denied", "message": "Write access denied (PUID/PGID)"}), 200
+
+  # Common Docker mount/visibility failures
+  if ("no such file or directory" in blob) or ("invalid mount config" in blob) or ("mount" in blob and "not" in blob):
+    return jsonify({"ok": False, "error_code": "not_mounted", "message": "Folder not available to Docker (add it to the template)"}), 200
+
+  return jsonify({"ok": False, "error_code": "unknown", "message": (err or out or "Unknown error")}), 200
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8080"))
     app.run(host="0.0.0.0", port=port)
