@@ -552,6 +552,66 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
 
 
 # -------------------------
+
+# -------------------------
+# Preflight (server-side guard)
+# -------------------------
+def preflight_root(root: str) -> Dict[str, Any]:
+    root = (root or "").strip()
+
+    if not root:
+        return {"ok": False, "error_code": "no_root", "message": "No root folder set"}
+
+    # IMPORTANT: never create folders here; missing path is a clean warning state.
+    try:
+        if not Path(root).exists():
+            return {
+                "ok": False,
+                "error_code": "folder_missing",
+                "message": "Folder does not exist (check the path)",
+                "root_folder": root,
+            }
+    except Exception:
+        return {
+            "ok": False,
+            "error_code": "folder_missing",
+            "message": "Folder does not exist (check the path)",
+            "root_folder": root,
+        }
+
+    puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
+    pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
+    uidgid = f"{puid}:{pgid}"
+
+    # Validate Docker visibility + write access (as target user)
+    cmd = [
+        "docker", "run", "--rm",
+        "-u", uidgid,
+        "-v", f"{root}:/data:rw",
+        "busybox",
+        "sh", "-lc",
+        "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test",
+    ]
+
+    try:
+        p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+        ok = (p.returncode == 0)
+        out = (p.stdout or "").strip()
+        err = (p.stderr or "").strip()
+    except Exception as e:
+        return {"ok": False, "error_code": "preflight_exception", "message": str(e), "root_folder": root, "uidgid": uidgid}
+
+    if ok:
+        return {"ok": True, "root_folder": root, "uidgid": uidgid}
+
+    blob = (err + "\n" + out).lower()
+    if "permission denied" in blob:
+        return {"ok": False, "error_code": "write_denied", "message": "Write access denied (PUID/PGID)", "root_folder": root, "uidgid": uidgid}
+
+    if ("no such file or directory" in blob) or ("invalid mount config" in blob):
+        return {"ok": False, "error_code": "not_mounted", "message": "Folder not available to Docker (add it to the template)", "root_folder": root, "uidgid": uidgid}
+
+    return {"ok": False, "error_code": "unknown", "message": (err or out or "Unknown error"), "root_folder": root, "uidgid": uidgid}
 # Routes
 # -------------------------
 @app.get("/")
@@ -583,7 +643,44 @@ def index_post():
         return redirect(url_for("settings_get"))
 
     # Persist last selections (mode + dry_run only)
+
+    # --- M4Brew: Guard Test/Run with preflight (do NOT start jobs if setup is broken) ---
+    try:
+        puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
+        pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
+        uidgid = f"{puid}:{pgid}"
+
+        # 1) Check the host folder exists WITHOUT creating it
+        check_cmd = [
+            "docker","run","--rm",
+            "-v","/:/host:ro",
+            "busybox","sh","-lc",
+            f"test -d \"/host{root_folder}\""
+        ]
+        p = subprocess.run(check_cmd, capture_output=True, text=True, timeout=10)
+        if p.returncode != 0:
+            return redirect(url_for("index_get"))
+
+        # 2) Check Docker can write to it as PUID/PGID
+        write_cmd = [
+            "docker","run","--rm",
+            "-u", uidgid,
+            "-v", f"{root_folder}:/data:rw",
+            "busybox","sh","-lc",
+            "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test"
+        ]
+        p2 = subprocess.run(write_cmd, capture_output=True, text=True, timeout=20)
+        if p2.returncode != 0:
+            return redirect(url_for("index_get"))
+    except Exception:
+        return redirect(url_for("index_get"))
+
     save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
+
+    # Server-side guard: do not start jobs if preflight fails
+    pf = preflight_root(root_folder)
+    if not pf.get("ok"):
+        return redirect(url_for("index_get"))
 
     start_job(mode, dry_run, root_folder, audio_mode, bitrate)
     return redirect(url_for("index_get"))
@@ -857,63 +954,146 @@ def history_clear():
 
 
 
-# --- M4Brew: Preflight checks (root folder mounted + writable) ---
-# Used by the Tasks status pill to show friendly errors before/after runs.
-try:
-  import json, os, subprocess
-except Exception:
-  pass
+# --- M4Brew: Preflight checks (NON-DESTRUCTIVE) ---
+# Goals:
+# - Never create folders on the host
+# - Tell the user whether the path is (a) not mounted, (b) missing, (c) not writable
+# - Only return "failed" for real job failures, not setup issues
+
+def _docker_mount_map() -> list[tuple[str, str]]:
+    """
+    Return list of (host_source, container_dest) mounts for THIS container.
+    Uses docker inspect via /var/run/docker.sock (already mounted in your setup).
+    """
+    cid = os.environ.get("HOSTNAME", "").strip()  # container id
+    if not cid:
+        return []
+    try:
+        p = subprocess.run(
+            ["docker", "inspect", cid, "--format", "{{range .Mounts}}{{println .Source \"|\" .Destination}}{{end}}"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if p.returncode != 0:
+            return []
+        out = (p.stdout or "").splitlines()
+        mounts: list[tuple[str, str]] = []
+        for line in out:
+            line = line.strip()
+            if not line or "|" not in line:
+                continue
+            src, dst = line.split("|", 1)
+            src = (src or "").strip()
+            dst = (dst or "").strip()
+            if src and dst:
+                mounts.append((src, dst))
+        return mounts
+    except Exception:
+        return []
+
+
+def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]:
+    """
+    Given a host path the user typed, map it to an in-container path if it's within a mounted source.
+    Returns (container_path, matched_mount_source).
+    """
+    host_path = os.path.normpath(host_path)
+
+    mounts = _docker_mount_map()
+    best_src = None
+    best_dst = None
+
+    for src, dst in mounts:
+        src_n = os.path.normpath(src)
+        if host_path == src_n or host_path.startswith(src_n.rstrip("/") + "/"):
+            if best_src is None or len(src_n) > len(best_src):
+                best_src = src_n
+                best_dst = dst
+
+    if not best_src or not best_dst:
+        return (None, None)
+
+    rel = host_path[len(best_src):].lstrip("/")
+    container_path = os.path.normpath(os.path.join(best_dst, rel))
+    return (container_path, best_src)
+
 
 @app.route("/api/preflight")
 def api_preflight():
-  settings_path = "/config/settings.json"
-  root = ""
-  try:
-    with open(settings_path, "r") as f:
-      s = json.load(f)
-      root = str(s.get("root_folder", "") or "").strip()
-  except Exception:
+    settings_path = "/config/settings.json"
+
+    # read root folder from settings.json
     root = ""
+    try:
+        with open(settings_path, "r") as f:
+            s = json.load(f)
+            root = str(s.get("root_folder", "") or "").strip()
+    except Exception:
+        root = ""
 
-  if not root:
-    return jsonify({"ok": False, "error_code": "no_root", "message": "No root folder set"}), 200
+    if not root:
+        return jsonify({"ok": False, "error_code": "no_root", "message": "No root folder set"}), 200
 
-  puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
-  pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
-  uidgid = f"{puid}:{pgid}"
+    # map host path -> container path (without creating anything)
+    container_path, matched_src = _map_host_to_container_path(root)
+    if not container_path:
+        return jsonify(
+            {
+                "ok": False,
+                "error_code": "not_mounted",
+                "message": "Folder not available to M4Brew (add it to the Docker template)",
+                "root_folder": root,
+            }
+        ), 200
 
-  # Run a tiny container to validate mount + write access as the target user.
-  # If the root isn't in the Docker template / not visible to the Docker daemon, this fails.
-  cmd = [
-    "docker","run","--rm",
-    "-u", uidgid,
-    "-v", f"{root}:/data:rw",
-    "busybox",
-    "sh","-lc",
-    "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test"
-  ]
+    # must exist (again: non-destructive; no mkdir)
+    if not os.path.isdir(container_path):
+        return jsonify(
+            {
+                "ok": False,
+                "error_code": "folder_missing",
+                "message": "Folder does not exist (check the path)",
+                "root_folder": root,
+            }
+        ), 200
 
-  try:
-    p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
-    ok = (p.returncode == 0)
-    out = (p.stdout or "").strip()
-    err = (p.stderr or "").strip()
-  except Exception as e:
-    return jsonify({"ok": False, "error_code": "preflight_exception", "message": str(e)}), 200
+    # write test (create + remove a tiny file INSIDE the existing folder)
+    test_file = os.path.join(container_path, ".m4brew_write_test")
+    try:
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write("ok\n")
+        try:
+            os.remove(test_file)
+        except Exception:
+            pass
+    except PermissionError:
+        return jsonify(
+            {
+                "ok": False,
+                "error_code": "write_denied",
+                "message": "Write access denied (check PUID/PGID + permissions)",
+                "root_folder": root,
+            }
+        ), 200
+    except Exception as e:
+        return jsonify(
+            {
+                "ok": False,
+                "error_code": "unknown",
+                "message": str(e),
+                "root_folder": root,
+            }
+        ), 200
 
-  if ok:
-    return jsonify({"ok": True, "root_folder": root, "uidgid": uidgid}), 200
-
-  blob = (err + "\n" + out).lower()
-  if "permission denied" in blob:
-    return jsonify({"ok": False, "error_code": "write_denied", "message": "Write access denied (PUID/PGID)"}), 200
-
-  # Common Docker mount/visibility failures
-  if ("no such file or directory" in blob) or ("invalid mount config" in blob) or ("mount" in blob and "not" in blob):
-    return jsonify({"ok": False, "error_code": "not_mounted", "message": "Folder not available to Docker (add it to the template)"}), 200
-
-  return jsonify({"ok": False, "error_code": "unknown", "message": (err or out or "Unknown error")}), 200
-
+    return jsonify(
+        {
+            "ok": True,
+            "root_folder": root,
+            "mapped_path": container_path,
+            "matched_mount": matched_src,
+        }
+    ), 200
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8080"))
     app.run(host="0.0.0.0", port=port)

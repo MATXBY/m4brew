@@ -164,6 +164,50 @@
   const lvWarn = document.getElementById("lvWarn");
   const lvErr = document.getElementById("lvErr");
 
+  // ---------- PREFLIGHT (block start when root invalid) ----------
+  let _pf_cache = null;
+  let _pf_cache_ts = 0;
+
+  async function fetchPreflight(force=false){
+    const now = Date.now();
+    if(!force && _pf_cache && (now - _pf_cache_ts) < 4000) return _pf_cache;
+    try{
+      const r = await fetch("/api/preflight?ts=" + now, {cache:"no-store"});
+      const j = await r.json();
+      _pf_cache = j;
+      _pf_cache_ts = now;
+      return j;
+    }catch(_){
+      return {ok:false, error_code:"preflight_exception", message:"Preflight request failed"};
+    }
+  }
+
+  function preflightToPill(pf){
+    const code = pf && pf.error_code ? String(pf.error_code) : "unknown";
+    const root = pf && pf.root_folder ? String(pf.root_folder) : "";
+    const base = root ? ("Source: " + root) : "";
+    if(code === "folder_missing") return {cls:"status-warn", l1:"Folder missing", l2: base || "Check the path in Source folder"};
+    if(code === "not_mounted")   return {cls:"status-error", l1:"Folder not mounted", l2:"Add it to the Docker template"};
+    if(code === "write_denied")  return {cls:"status-error", l1:"Write denied", l2:"Fix PUID/PGID or permissions"};
+    if(code === "no_root")       return {cls:"status-warn", l1:"No source folder set", l2:"Set Source folder above"};
+    if(code === "preflight_exception") return {cls:"status-error", l1:"Preflight error", l2: String((pf && pf.message) ? pf.message : "")};
+    return {cls:"status-error", l1:"Cannot start", l2: String((pf && (pf.message||pf.error_code)) ? (pf.message||pf.error_code) : "Unknown error")};
+  }
+
+  function setPillDirect(stateClass, line1, line2){
+    if(!statusPill) return;
+    statusPill.classList.remove("status-running","status-done","status-warn","status-error");
+    if(stateClass) statusPill.classList.add(stateClass);
+    statusPill.classList.add("is-two-line");
+    statusPill.innerHTML = "<span class=\"pill-line1\"></span><span class=\"pill-line2\"></span>";
+    statusPill.querySelector(".pill-line1").textContent = line1 || "";
+    const el2 = statusPill.querySelector(".pill-line2");
+    if(line2){ el2.textContent = line2; el2.style.display = "block"; }
+    else { el2.textContent = ""; el2.style.display = "none"; }
+    try{ statusPill.style.removeProperty("--pulse-border"); }catch(_){ }
+  }
+
+
   // Autosave settings
   const form = document.getElementById("settingsForm");
   let t = null;
@@ -282,7 +326,7 @@
   }
 
   function updateLivePanel(job){
-    if(!job || !job.status){
+    if(!job || !job.status || job.status === "none"){
       lvTask.textContent = "—";
       lvBook.textContent = "—";
       lvProgress.textContent = "—";
@@ -371,7 +415,7 @@
         const rows = livePanel.querySelectorAll(".live-row");
         rows.forEach(el => { el.style.display = (mode === "human") ? "" : "none"; });
         logPre.style.display = (mode === "log") ? "block" : "none";
-        viewBtn.textContent = (mode === "human") ? "Advanced" : "Simple View";
+        viewBtn.textContent = (mode === "human") ? "Advanced View" : "Simple View";
       }
 
       viewBtn.addEventListener("click", () => {
@@ -390,6 +434,31 @@
     try{
       const r = await fetch("/api/job", {cache:"no-store"});
       const job = await r.json();
+
+      // --- M4Brew: Preflight (setup) warning when NOT running ---
+      let pre = null;
+      try{
+        const pr = await fetch("/api/preflight", {cache:"no-store"});
+        pre = await pr.json();
+      }catch(_){ pre = null; }
+
+      const jobRunning = (job && (job.status === "running" || job.status === "canceling"));
+      if(!jobRunning && pre && pre.ok === false){
+        const code = String(pre.error_code || "");
+        const msg  = String(pre.message || "Needs attention");
+        let l1 = "Setup needs attention";
+        if(code === "not_mounted")      l1 = "Setup: Folder not mounted";
+        else if(code === "folder_missing") l1 = "Setup: Folder missing";
+        else if(code === "write_denied")   l1 = "Setup: No write access";
+        else if(code === "no_root")        l1 = "Setup: Choose a source folder";
+
+        setPill("status-warn", l1, msg);
+        clearPulse();
+        if(cancelForm) cancelForm.style.display = "none";
+        if(statusTop) statusTop.classList.remove("has-cancel");
+        if(liveOn) updateLivePanel(job);
+        return;
+      }
 
       const showCancel = (job && job.status === "running" && job.mode === "convert");
       if(cancelForm) cancelForm.style.display = showCancel ? "flex" : "none";
@@ -436,8 +505,14 @@
           return "";
         }
 
-        if(!job || !job.status){
-          setPill(null, "Ready", "");            clearPulse();
+        if(!job || !job.status || job.status === "none"){
+          const pf = await fetchPreflight();
+          if(pf && pf.ok === false){
+            const info = preflightToPill(pf);
+            setPill(info.cls, info.l1, info.l2);
+          }else{
+            setPill(null, "Ready", "");
+          }
           lastJobStatus = null;
         }else if(job.status === "running"){
             setPulseForMode(mode);
@@ -533,6 +608,26 @@
       });
     }
 
+
+    // Block Test/Run submits if preflight fails (no folder creation, no job started)
+    document.addEventListener("submit", async (e) => {
+      const f = e.target;
+      if(!f || f.tagName !== "FORM") return;
+      const action = (f.getAttribute("action") || "").trim();
+      if(action !== "/") return;
+      if(!f.querySelector("input[name=\"mode\"]")) return;
+
+      e.preventDefault();
+
+      const pf = await fetchPreflight(true);
+      if(pf && pf.ok === true){
+        f.submit();
+        return;
+      }
+      const info = preflightToPill(pf || {});
+      setPillDirect(info.cls, info.l1, info.l2);
+    }, true);
+
     setupLiveViews();
 
     tick();
@@ -609,3 +704,111 @@
       }
     });
   })();
+
+/* --- M4Brew: If preflight blocks Test/Run, explain it in the status pill --- */
+(function(){
+  const pill = document.getElementById("statusPill");
+  if(!pill) return;
+
+  function setPillError(line1, line2){
+    pill.classList.remove("status-running","status-done","status-warn","status-error");
+    pill.classList.add("status-error","is-two-line");
+    pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
+    pill.querySelector(".pill-line1").textContent = line1 || "";
+    const el2 = pill.querySelector(".pill-line2");
+    if(line2){
+      el2.textContent = line2;
+      el2.style.display = "block";
+    }else{
+      el2.textContent = "";
+      el2.style.display = "none";
+    }
+  }
+
+  // Intercept Step buttons (convert/correct/cleanup) and only allow submit if preflight is OK.
+  // If blocked: show a human message instead of “nothing happens”.
+  document.addEventListener("submit", async (e) => {
+    const form = e.target;
+    if(!form || form.tagName !== "FORM") return;
+
+    // Only guard the Step forms (POST to "/")
+    const action = (form.getAttribute("action") || "").trim();
+    if(action !== "/") return;
+
+    // Avoid infinite loop when we re-submit programmatically
+    if(form.__m4brew_allowed === true) return;
+
+    e.preventDefault();
+
+    let pf = null;
+    try{
+      const r = await fetch("/api/preflight?ts=" + Date.now(), {cache:"no-store"});
+      pf = await r.json();
+    }catch(_){
+      setPillError("Can’t start job", "Preflight check failed (network/error).");
+      return;
+    }
+
+    if(pf && pf.ok === true){
+      form.__m4brew_allowed = true;
+      form.submit();
+      return;
+    }
+
+    const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
+    setPillError("Fix source folder", msg);
+  }, true);
+})();
+
+/* --- M4Brew: If preflight blocks Test/Run, explain it in the status pill --- */
+(function(){
+  const pill = document.getElementById("statusPill");
+  if(!pill) return;
+
+  function setPillError(line1, line2){
+    pill.classList.remove("status-running","status-done","status-warn","status-error");
+    pill.classList.add("status-error","is-two-line");
+    pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
+    pill.querySelector(".pill-line1").textContent = line1 || "";
+    const el2 = pill.querySelector(".pill-line2");
+    if(line2){
+      el2.textContent = line2;
+      el2.style.display = "block";
+    }else{
+      el2.textContent = "";
+      el2.style.display = "none";
+    }
+  }
+
+  // Guard ONLY the Step forms (POST to "/") and only in the browser.
+  document.addEventListener("submit", async (e) => {
+    const form = e.target;
+    if(!form || form.tagName !== "FORM") return;
+
+    const action = (form.getAttribute("action") || "").trim();
+    if(action !== "/") return;
+
+    // allow the real submit after we pass preflight
+    if(form.__m4brew_allowed === true) return;
+
+    e.preventDefault();
+
+    let pf = null;
+    try{
+      const r = await fetch("/api/preflight?ts=" + Date.now(), {cache:"no-store"});
+      pf = await r.json();
+    }catch(_){
+      setPillError("Can’t start job", "Preflight check failed.");
+      return;
+    }
+
+    if(pf && pf.ok === true){
+      form.__m4brew_allowed = true;
+      form.submit();
+      return;
+    }
+
+    const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
+    setPillError("Fix source folder", msg);
+  }, true);
+})();
