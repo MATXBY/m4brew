@@ -312,7 +312,7 @@
     const dry = isDryRun(job);
 
     if(count > 0){
-      if(dry) return "Test: " + count + " to " + noun;
+      if(dry) return "Test · " + count + " to " + noun;
       return '<span style="color:#6ee7b7;font-weight:800;">✓&nbsp;</span>Done: ' + count + " " + past;
     }
     return "Nothing to " + noun;
@@ -567,7 +567,7 @@
             else if (job.started) seconds = runtimeFromStarted(job.started);
             const rt = (seconds != null) ? fmtRuntime(seconds) : "00:00:00";
             const task = modeLabel(mode);
-            let l1 = rt + " Run: " + task;
+            let l1 = rt + " · " + (mode === "convert" ? "Converting" : mode === "correct" ? "Renaming" : mode === "cleanup" ? "Deleting" : task);
             if(total > 0) l1 += " " + current + "/" + total;
             setPill("status-running", l1, "");
           }
@@ -592,7 +592,7 @@
             setPill("status-warn", "Cancelled", "");
           }else if(failed > 0 && count > 0){
             if(dry){
-              setPill("status-warn", "Test: " + count + " to " + noun + " · " + failed + " failed", "");
+              setPill("status-warn", "Test · " + count + " to " + noun + " · " + failed + " failed", "");
             }else{
               setPill("status-warn", "Done: " + count + " " + past + " · " + failed + " failed", "");
             }
@@ -600,12 +600,12 @@
             setPill("status-error", "Error: " + failed + " failed", "See History for details");
           }else if(count > 0){
             if(dry){
-              setPill("status-test", "Test: " + count + " to " + noun, "");
+              setPill("status-test", "Test · " + count + " to " + noun, "");
             }else{
               setPill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past, "");
             }
           }else{
-            const l1 = dry ? ("Test: Nothing to " + noun) : ("Nothing to " + noun);
+            const l1 = dry ? ("Test · Nothing to " + noun) : ("Nothing to " + noun);
             setPill(dry ? "status-test" : (mode === "convert" ? "status-run1" : (mode === "correct" ? "status-run2" : (mode === "cleanup" ? "status-run3" : "status-warn"))), l1, "");
           }
         }else{
