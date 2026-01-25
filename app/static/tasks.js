@@ -187,7 +187,7 @@
     const root = pf && pf.root_folder ? String(pf.root_folder) : "";
     const base = root ? ("Source: " + root) : "";
     if(code === "folder_missing") return {cls:"status-warn", l1:"Source folder does not exist", l2:""};
-    if(code === "not_mounted")   return {cls:"status-error", l1:"Folder not mounted", l2:"Add it to the Docker template"};
+    if(code === "not_mounted")   return {cls:"status-warn", l1:"Add folder path to M4Brew template", l2:""};
     if(code === "write_denied")  return {cls:"status-error", l1:"Write denied", l2:"Fix PUID/PGID or permissions"};
     if(code === "no_root")       return {cls:"status-warn", l1:"No source folder set", l2:"Set Source folder above"};
     if(code === "preflight_exception") return {cls:"status-error", l1:"Preflight error", l2: String((pf && pf.message) ? pf.message : "")};
@@ -448,9 +448,9 @@
       const jobRunning = (job && (job.status === "running" || job.status === "canceling"));
       if(!jobRunning && pre && pre.ok === false){
         const code = String(pre.error_code || "");
-        const msg  = String(pre.message || "Needs attention");
+        let msg  = String(pre.message || "Needs attention");
         let l1 = "Setup needs attention";
-        if(code === "not_mounted")      l1 = "Setup: Folder not mounted";
+        if(code === "not_mounted"){ l1 = "Add folder path to M4Brew template"; msg = ""; }
         else if(code === "folder_missing"){ l1 = "Source folder does not exist"; msg = ""; }
         else if(code === "write_denied")   l1 = "Setup: No write access";
         else if(code === "no_root")        l1 = "Setup: Choose a source folder";
@@ -514,7 +514,7 @@
             const info = preflightToPill(pf);
             setPill(info.cls, info.l1, info.l2);
           }else{
-            setPill(null, "Ready", "");
+            setPill(null, "Ready to Brew", "");
           }
           lastJobStatus = null;
         }else if(job.status === "running"){
@@ -761,20 +761,32 @@
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
       if(code === "folder_missing"){
-      setPillError("Source folder does not exist", "");
-      // After 1s, downgrade from red (action-block) to orange (setup warning)
-      setTimeout(() => {
+        setPillError("Source folder does not exist", "");
+        // After 1s, downgrade from red (action-block) to orange (setup warning)
+        setTimeout(() => {
         const pill = document.getElementById("statusPill");
         if(!pill) return;
         const l1 = pill.querySelector(".pill-line1");
-        if(pill.classList.contains("status-error") && l1 && l1.textContent === "Source folder does not exist"){
+        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Source folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
           pill.classList.remove("status-error");
           pill.classList.add("status-warn");
         }
       }, 3000);
-    }else{
-      setPillError("Fix source folder", msg);
-    }
+    }else if(code === "not_mounted"){
+        setPillError("Add folder path to M4Brew template", "");
+        // After 1s, downgrade from red (action-block) to orange (setup warning)
+        setTimeout(() => {
+          const pill = document.getElementById("statusPill");
+          if(!pill) return;
+          const l1 = pill.querySelector(".pill-line1");
+          if(pill.classList.contains("status-error") && l1 && l1.textContent === "Add folder path to M4Brew template"){
+            pill.classList.remove("status-error");
+            pill.classList.add("status-warn");
+          }
+        }, 1000);
+      }else{
+        setPillError("Fix source folder", msg);
+      }
 }, true);
 })();
 
@@ -829,20 +841,32 @@
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
       if(code === "folder_missing"){
-      setPillError("Source folder does not exist", "");
-      // After 1s, downgrade from red (action-block) to orange (setup warning)
-      setTimeout(() => {
+        setPillError("Source folder does not exist", "");
+        // After 1s, downgrade from red (action-block) to orange (setup warning)
+        setTimeout(() => {
         const pill = document.getElementById("statusPill");
         if(!pill) return;
         const l1 = pill.querySelector(".pill-line1");
-        if(pill.classList.contains("status-error") && l1 && l1.textContent === "Source folder does not exist"){
+        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Source folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
           pill.classList.remove("status-error");
           pill.classList.add("status-warn");
         }
       }, 3000);
-    }else{
-      setPillError("Fix source folder", msg);
-    }
+    }else if(code === "not_mounted"){
+        setPillError("Add folder path to M4Brew template", "");
+        // After 1s, downgrade from red (action-block) to orange (setup warning)
+        setTimeout(() => {
+          const pill = document.getElementById("statusPill");
+          if(!pill) return;
+          const l1 = pill.querySelector(".pill-line1");
+          if(pill.classList.contains("status-error") && l1 && l1.textContent === "Add folder path to M4Brew template"){
+            pill.classList.remove("status-error");
+            pill.classList.add("status-warn");
+          }
+        }, 1000);
+      }else{
+        setPillError("Fix source folder", msg);
+      }
 }, true);
 })();
 
@@ -878,8 +902,7 @@
   if(!pill) return;
 
   function isRedSourceMissing(){
-    return pill.classList.contains("status-error") &&
-           (pill.textContent || "").includes("Source folder does not exist");
+    return true;
   }
 
   function paintOrangeIfMissing(){
