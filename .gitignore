@@ -11,3 +11,4 @@ app/templates/*.bak.*
 app/templates/*.BROKEN.*
 app/static/*.bak.*
 *.bak
+app/static/tasks.js.BROKEN.*
