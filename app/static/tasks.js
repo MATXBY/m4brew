@@ -470,16 +470,47 @@
 
         // ----- Status pill (2-line, stateful) -----
 
-          function setPulseForMode(mode){
+                    function setPulseForMode(mode, dry){
             const m = String(mode || "").toLowerCase();
-            const v = (m === "convert") ? "var(--run-1)"
-                    : (m === "correct") ? "var(--run-2)"
-                    : (m === "cleanup") ? "var(--run-3)"
-                    : "var(--accent-border)";
-            try{ statusPill.style.setProperty("--pulse-border", v); }catch(_){ }
+            let v = "rgba(99,102,241,.22)"; /* test = purple pulse */
+            if(!dry){
+              v = (m === "convert") ? "rgba(173,93,163,.22)"
+                : (m === "correct") ? "rgba(82,80,161,.22)"
+                : (m === "cleanup") ? "rgba(38,169,224,.22)"
+                : "rgba(58,52,112,.22)";
+            }
+            try{ statusPill.style.setProperty("--pulse-color", v); }catch(_){ }
+            let bg = "rgba(99,102,241,.18)";
+            let br = "rgba(99,102,241,.38)";
+            if(!dry){
+              bg = (m === "convert") ? "rgba(173,93,163,.18)"
+                 : (m === "correct") ? "rgba(82,80,161,.18)"
+                 : (m === "cleanup") ? "rgba(38,169,224,.18)"
+                 : "rgba(58,52,112,.18)";
+              br = (m === "convert") ? "rgba(173,93,163,.38)"
+                 : (m === "correct") ? "rgba(82,80,161,.38)"
+                 : (m === "cleanup") ? "rgba(38,169,224,.38)"
+                 : "rgba(58,52,112,.38)";
+            }
+            try{ statusPill.style.setProperty("--running-bg", bg); }catch(_){ }
+            try{ statusPill.style.setProperty("--running-border", br); }catch(_){ }
           }
 
-          function clearPulse(){
+          function setTestOutlineForMode(mode){
+            const m = String(mode || "").toLowerCase();
+            const v = (m === "convert") ? "var(--run-1, #AD5DA3)"
+                    : (m === "correct") ? "var(--run-2, #5250A1)"
+                    : (m === "cleanup") ? "var(--run-3, #26A9E0)"
+                    : "rgba(99,102,241,.38)";
+            try{ statusPill.style.setProperty("--test-outline", v); }catch(_){ }
+          }
+
+          function clearTestOutline(){
+            try{ statusPill.style.removeProperty("--test-outline"); }catch(_){ }
+          }
+
+          function clearPulse
+(){
             try{ statusPill.style.removeProperty("--pulse-border"); }catch(_){ }
           }
 
@@ -500,6 +531,11 @@
             el2.textContent = "";
             el2.style.display = "none";
           }
+        
+          try{
+            if(stateClass === "status-test") setTestOutlineForMode(mode);
+            else clearTestOutline();
+          }catch(_){ }
         }
 
         function currentBook(job){
@@ -518,13 +554,13 @@
           }
           lastJobStatus = null;
         }else if(job.status === "running"){
-            setPulseForMode(mode);
+            setPulseForMode(mode, dry);
           const total = Number(job.total || 0);
           const current = Number(job.current || 0);
           const book = currentBook(job);
           if(dry){
-            const l1 = (total > 0) ? ("Test: Checking " + current + "/" + total) : "Test: Checking…";
-            setPill("status-running", l1, book);
+            const l1 = (total > 0) ? ("Test · Checking " + current + "/" + total) : "Test · Checking…";
+            setPill("status-running", l1, "");
           }else{
             let seconds = null;
             if (job.runtime_s != null) seconds = Number(job.runtime_s);
@@ -533,7 +569,7 @@
             const task = modeLabel(mode);
             let l1 = rt + " Run: " + task;
             if(total > 0) l1 += " " + current + "/" + total;
-            setPill("status-running", l1, book);
+            setPill("status-running", l1, "");
           }
         }else if(job.status === "finished"){
           const s = (job && job.summary) ? job.summary : {};
