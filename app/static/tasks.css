@@ -453,19 +453,13 @@ display: flex;
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--run-2, #6b6fcf);
+  background-color: var(--run-2, #5250A1);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
 }
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
-.status-pill.status-run2{
-  background-color: var(--run-2, #5b58c7);
-  border-color: rgba(255,255,255,.14);
-  color: rgba(255,255,255,.95);
-  font-weight: 850;
-}
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
@@ -473,4 +467,21 @@ display: flex;
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
+}
+
+/* --- M4Brew: Force status pills to match Run button solid colours --- */
+.status-pill.status-run1{
+  background: var(--run-1) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.95) !important;
+}
+.status-pill.status-run2{
+  background: var(--run-2) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.95) !important;
+}
+.status-pill.status-run3{
+  background: var(--run-3) !important;
+  border-color: rgba(255,255,255,.14) !important;
+  color: rgba(255,255,255,.95) !important;
 }
