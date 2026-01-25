@@ -196,7 +196,7 @@
 
   function setPillDirect(stateClass, line1, line2){
     if(!statusPill) return;
-    statusPill.classList.remove("status-running","status-done","status-warn","status-error");
+    statusPill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
     if(stateClass) statusPill.classList.add(stateClass);
     statusPill.classList.add("is-two-line");
     statusPill.innerHTML = "<span class=\"pill-line1\"></span><span class=\"pill-line2\"></span>";
@@ -487,7 +487,7 @@
         const dry = isDryRun(job);
 
         function setPill(stateClass, line1, line2){
-          statusPill.classList.remove("status-running","status-done","status-warn","status-error");
+          statusPill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
           if(stateClass) statusPill.classList.add(stateClass);
           statusPill.classList.add("is-two-line");
           statusPill.innerHTML = "<span class=\"pill-line1\"></span><span class=\"pill-line2\"></span>";
@@ -514,7 +514,7 @@
             const info = preflightToPill(pf);
             setPill(info.cls, info.l1, info.l2);
           }else{
-            setPill(null, "Ready to Brew", "");
+            setPill("status-idle", "Ready to Brew", "");
           }
           lastJobStatus = null;
         }else if(job.status === "running"){
@@ -564,13 +564,13 @@
             setPill("status-error", "Error: " + failed + " failed", "See History for details");
           }else if(count > 0){
             if(dry){
-              setPill("status-done", "Test: " + count + " to " + noun, "");
+              setPill("status-test", "Test: " + count + " to " + noun, "");
             }else{
-              setPill("status-done", "Done: " + count + " " + past, "");
+              setPill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past, "");
             }
           }else{
             const l1 = dry ? ("Test: Nothing to " + noun) : ("Nothing to " + noun);
-            setPill("status-warn", l1, "");
+            setPill(dry ? "status-test" : (mode === "convert" ? "status-run1" : (mode === "correct" ? "status-run2" : (mode === "cleanup" ? "status-run3" : "status-warn"))), l1, "");
           }
         }else{
           setPill("status-warn", String(job.status || ""), "");
@@ -714,7 +714,7 @@
   if(!pill) return;
 
   function setPillError(line1, line2){
-    pill.classList.remove("status-running","status-done","status-warn","status-error");
+    pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
     pill.classList.add("status-error","is-two-line");
     pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
     pill.querySelector(".pill-line1").textContent = line1 || "";
@@ -796,7 +796,7 @@
   if(!pill) return;
 
   function setPillError(line1, line2){
-    pill.classList.remove("status-running","status-done","status-warn","status-error");
+    pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
     pill.classList.add("status-error","is-two-line");
     pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
     pill.querySelector(".pill-line1").textContent = line1 || "";
@@ -885,7 +885,7 @@
       if(code !== "folder_missing") return;
 
       // Make it orange + one-line (no second line)
-      pill.classList.remove("status-running","status-done","status-warn","status-error");
+      pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
       pill.classList.add("status-warn","is-two-line");
       pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
       pill.querySelector(".pill-line1").textContent = "Source folder does not exist";
@@ -922,7 +922,7 @@
             if(!pf || pf.ok !== false) return;
             if(String(pf.error_code || "") !== "folder_missing") return;
 
-            pill.classList.remove("status-running","status-done","status-warn","status-error");
+            pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
             pill.classList.add("status-warn","is-two-line");
             pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
             pill.querySelector(".pill-line1").textContent = "Source folder does not exist";

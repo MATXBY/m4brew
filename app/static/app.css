@@ -424,3 +424,51 @@ pre{
 .status-pill{
   transition: background-color 1s ease, border-color 1s ease, color 1s ease, box-shadow 1s ease;
 }
+
+/* --- M4Brew: brew bar state colors --- */
+
+/* Grey idle: "Ready to Brew" */
+.status-pill.status-idle{
+  background-color: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+
+/* Purple test: all successful "Test Complete ..." states */
+.status-pill.status-test{
+  background-color: rgba(99,102,241,.18);
+  border-color: rgba(99,102,241,.38);
+  color: rgba(255,255,255,.95);
+}
+
+/* --- M4Brew: Convert RUN complete pill (matches Step 1 Run vibe) --- */
+.status-pill.status-run1{
+  background-color: var(--run-1, #AD5DA3);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.95);
+  font-weight: 850;
+}
+
+/* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
+.status-pill.status-run2{
+  background-color: var(--run-2, #6b6fcf);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.95);
+  font-weight: 850;
+}
+
+/* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
+.status-pill.status-run2{
+  background-color: var(--run-2, #5b58c7);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.95);
+  font-weight: 850;
+}
+
+/* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
+.status-pill.status-run3{
+  background-color: var(--run-3, #27a9e6);
+  border-color: rgba(255,255,255,.14);
+  color: rgba(255,255,255,.95);
+  font-weight: 850;
+}
