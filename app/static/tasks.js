@@ -150,7 +150,35 @@
   // ---------- TASK PAGE LOGIC ----------
   const statusPill = document.getElementById("statusPill");
   let lastJobStatus = null;
-  const liveBtn = document.getElementById("liveBtn");
+  let _pillHold = null; /* {cls,l1,until} */
+  function holdPill(cls, l1, ms){
+    _pillHold = { cls: (cls||null), l1: (l1||""), until: Date.now() + (ms||2500) };
+  }
+  function holdActive(){
+    return _pillHold && Date.now() < _pillHold.until;
+  }
+  function clearHold(){
+    _pillHold = null;
+  }
+
+  
+  const DONE_KEY = "m4brew_last_done_pill";
+  const DONE_SEEN_KEY = "m4brew_seen_done_terminal";
+  const HOLD_SEEN_KEY = "m4brew_seen_hold_terminal";
+
+  const TEST_SEEN_KEY = "m4brew_seen_test_terminal";
+
+  function setDonePill(cls, l1, term){
+    try{ localStorage.setItem(DONE_KEY, JSON.stringify({cls:(cls||null), l1:(l1||""), term:(term||""), ts:Date.now()})); }catch(_){ }
+  }
+  function getDonePill(){
+    try{ const raw = localStorage.getItem(DONE_KEY); return raw ? JSON.parse(raw) : null; }catch(_){ return null; }
+  }
+  function clearDonePill(){
+    try{ localStorage.removeItem(DONE_KEY); }catch(_){ }
+  }
+
+const liveBtn = document.getElementById("liveBtn");
   const liveWrap = document.getElementById("liveWrap");
   const cancelForm = document.getElementById("cancelForm");
   const statusTop = document.getElementById("statusTop");
@@ -249,6 +277,7 @@
     }
 
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
+  let _nextPollMs = 5000;
 
   function pad2(n){ n = Number(n||0); return (n < 10 ? "0" : "") + n; }
   function fmtRuntime(seconds){
@@ -550,10 +579,20 @@
             const info = preflightToPill(pf);
             setPill(info.cls, info.l1, info.l2);
           }else{
-            setPill("status-idle", "Ready to Brew", "");
+            if(holdActive()){
+              setPill((_pillHold.cls||"status-idle"), _pillHold.l1, "");
+            }else{
+              const d = getDonePill();
+              if(d && d.l1 && d.term && (localStorage.getItem(DONE_SEEN_KEY) !== d.term)){
+                setPill((d.cls||"status-idle"), d.l1, "");
+                try{ localStorage.setItem(DONE_SEEN_KEY, d.term); }catch(_){ }
+              }else{
+                setPill("status-idle", "Ready to Brew", "");
+              }
+            }
           }
           lastJobStatus = null;
-        }else if(job.status === "running"){
+        }else if(job.status === "running"){ clearHold(); clearDonePill(); clearHold();
             setPulseForMode(mode, dry);
           const total = Number(job.total || 0);
           const current = Number(job.current || 0);
@@ -571,7 +610,53 @@
             if(total > 0) l1 += " " + current + "/" + total;
             setPill("status-running", l1, "");
           }
-        }else if(job.status === "finished"){
+        }else if(job.status === "finished" || job.status === "canceled"){
+          const _seenKey = "m4brew_seen_terminal";
+          const _termKey = String(job.started || "") + "|" + String(mode || "") + "|" + String(job.status || "") + "|" + String(job.exit_code || "");
+          const _alreadySeen = (localStorage.getItem(_seenKey) === _termKey);
+          const _seenTest = (localStorage.getItem(TEST_SEEN_KEY) === _termKey);
+          if(dry && _seenTest && !holdActive()){
+            const d = getDonePill();
+            if(d) setPill(d.cls, d.l1, "");
+            else setPill("status-idle", "Ready to Brew", "");
+            clearPulse();
+            return;
+          }
+
+          if(job.status === "canceled" && _alreadySeen && !holdActive()){
+            const pf2 = await fetchPreflight();
+            if(pf2 && pf2.ok === false){
+              const info2 = preflightToPill(pf2);
+              setPill(info2.cls, info2.l1, info2.l2);
+            }else{
+              setPill("status-idle", "Ready to Brew", "");
+            }
+            lastJobStatus = null;
+            clearPulse();
+            return;
+          }
+          if(job.status === "canceled" && !_alreadySeen){
+            localStorage.setItem(_seenKey, _termKey);
+          }
+
+          const seenKey = "m4brew_seen_finished_job";
+          const jid = String(job.id || "");
+          const alreadySeen = (job.status === "canceled") && (jid && (localStorage.getItem(seenKey) === jid));
+
+          if(alreadySeen){
+            const pf2 = await fetchPreflight();
+            if(pf2 && pf2.ok === false){
+              const info = preflightToPill(pf2);
+              setPill(info.cls, info.l1, info.l2);
+            }else{
+              if(holdActive()){ setPill((_pillHold.cls||"status-idle"), _pillHold.l1, ""); } else { setPill("status-idle", "Ready to Brew", ""); }
+            }
+            clearPulse();
+            if(cancelForm) cancelForm.style.display = "none";
+            if(statusTop) statusTop.classList.remove("has-cancel");
+            if(liveOn) updateLivePanel({status:"none"});
+            return;
+          }
           const s = (job && job.summary) ? job.summary : {};
           const failed = Number(s.failed ?? 0);
           const count = (mode === "convert") ? Number(s.created ?? 0)
@@ -589,10 +674,14 @@
 
           const cancelled = (job && job.cancel_requested === true) || (Number(job.exit_code || 0) === 130);
           if(cancelled){
-            setPill("status-warn", "Cancelled", "");
+            setPill("status-warn", "Cancelled", ""); if(!_alreadySeen) holdPill("status-warn","Cancelled",2500);
           }else if(failed > 0 && count > 0){
             if(dry){
               setPill("status-warn", "Test · " + count + " to " + noun + " · " + failed + " failed", "");
+            if(localStorage.getItem(TEST_SEEN_KEY) !== _termKey){
+              localStorage.setItem(TEST_SEEN_KEY, _termKey);
+              holdPill("status-warn", "Test · " + count + " to " + noun + " · " + failed + " failed", 2500);
+            }
             }else{
               setPill("status-warn", "Done: " + count + " " + past + " · " + failed + " failed", "");
             }
@@ -601,13 +690,32 @@
           }else if(count > 0){
             if(dry){
               setPill("status-test", "Test · " + count + " to " + noun, "");
+            if(localStorage.getItem(TEST_SEEN_KEY) !== _termKey){
+              localStorage.setItem(TEST_SEEN_KEY, _termKey);
+              holdPill("status-test", "Test · " + count + " to " + noun, 2500);
+            }
             }else{
               setPill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past, "");
-            }
+                        setDonePill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past);
+}
           }else{
             const l1 = dry ? ("Test · Nothing to " + noun) : ("Nothing to " + noun);
-            setPill(dry ? "status-test" : (mode === "convert" ? "status-run1" : (mode === "correct" ? "status-run2" : (mode === "cleanup" ? "status-run3" : "status-warn"))), l1, "");
+            const cls = dry ? "status-test" : (mode === "convert" ? "status-run1" : (mode === "correct" ? "status-run2" : (mode === "cleanup" ? "status-run3" : "status-warn")));
+            setPill(cls, l1, "");
+            if(dry){
+              if(localStorage.getItem(TEST_SEEN_KEY) !== _termKey){
+                localStorage.setItem(TEST_SEEN_KEY, _termKey);
+                holdPill(cls, l1, 2500);
+              }
+            }else{
+              if(localStorage.getItem(HOLD_SEEN_KEY) !== _termKey){
+                localStorage.setItem(HOLD_SEEN_KEY, _termKey);
+                holdPill(cls, l1, 2500);
+              }
+            }
+
           }
+          try{ if(jid) localStorage.setItem(seenKey, jid); }catch(_){ }
         }else{
           setPill("status-warn", String(job.status || ""), "");
         }
@@ -649,6 +757,8 @@
 
 
     // Block Test/Run submits if preflight fails (no folder creation, no job started)
+  document.addEventListener("submit", () => { try{ clearDonePill(); /* user action */ }catch(_){ } }, true);
+
     document.addEventListener("submit", async (e) => {
       const f = e.target;
       if(!f || f.tagName !== "FORM") return;
@@ -669,8 +779,10 @@
 
     setupLiveViews();
 
-    tick();
-  setInterval(tick, 1200);
+  function _pollLoop(){
+    tick().finally(() => { setTimeout(_pollLoop, _nextPollMs); });
+  }
+  _pollLoop();
 })();
 
 
@@ -694,6 +806,8 @@
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch(_){}
 
     // Any form submit on this page = in-page action (Test/Run/settings), so preserve scroll
+  document.addEventListener("submit", () => { try{ clearDonePill(); /* user action */ }catch(_){ } }, true);
+
     document.addEventListener("submit", () => {
       try{
         sessionStorage.setItem(KEY_KEEP, "1");
@@ -766,6 +880,8 @@
 
   // Intercept Step buttons (convert/correct/cleanup) and only allow submit if preflight is OK.
   // If blocked: show a human message instead of “nothing happens”.
+  document.addEventListener("submit", () => { try{ clearDonePill(); /* user action */ }catch(_){ } }, true);
+
   document.addEventListener("submit", async (e) => {
     const form = e.target;
     if(!form || form.tagName !== "FORM") return;
@@ -847,6 +963,8 @@
   }
 
   // Guard ONLY the Step forms (POST to "/") and only in the browser.
+  document.addEventListener("submit", () => { try{ clearDonePill(); /* user action */ }catch(_){ } }, true);
+
   document.addEventListener("submit", async (e) => {
     const form = e.target;
     if(!form || form.tagName !== "FORM") return;
