@@ -150,6 +150,27 @@
   // ---------- TASK PAGE LOGIC ----------
   const statusPill = document.getElementById("statusPill");
   let lastJobStatus = null;
+  let _dismissRunTerminal = false; /* user has "seen" last RUN terminal */
+  let _navReload = false; /* page load was a reload */
+  try{
+    const n = performance.getEntriesByType && performance.getEntriesByType("navigation");
+    _navReload = !!(n && n[0] && n[0].type === "reload");
+  }catch(_){ _navReload = false; }
+
+  /* Any settings tweak counts as "seen" */
+  document.addEventListener("input", (e) => {
+    try{ if(e && e.target && e.target.closest && e.target.closest("#settingsForm")) _dismissRunTerminal = true; }catch(_){ }
+  }, true);
+  document.addEventListener("change", (e) => {
+    try{ if(e && e.target && e.target.closest && e.target.closest("#settingsForm")) _dismissRunTerminal = true; }catch(_){ }
+  }, true);
+
+  /* Any Test/Run submit counts as "seen" */
+  document.addEventListener("submit", () => {
+    _dismissRunTerminal = true;
+    try{ clearDonePill && clearDonePill(); }catch(_){ }
+  }, true);
+
   let _pillHold = null; /* {cls,l1,until} */
   function holdPill(cls, l1, ms){
     _pillHold = { cls: (cls||null), l1: (l1||""), until: Date.now() + (ms||2500) };
@@ -174,9 +195,57 @@
   function getDonePill(){
     try{ const raw = localStorage.getItem(DONE_KEY); return raw ? JSON.parse(raw) : null; }catch(_){ return null; }
   }
-  function clearDonePill(){
+  
+function clearDonePill(){
     try{ localStorage.removeItem(DONE_KEY); }catch(_){ }
   }
+
+  function dismissDone(){
+    try{
+      const raw = localStorage.getItem(DONE_KEY);
+      if(raw){
+        const d = JSON.parse(raw);
+        if(d && d.term) localStorage.setItem(DONE_SEEN_KEY, String(d.term));
+      }
+      localStorage.removeItem(DONE_KEY);
+    }catch(_){}
+  }
+
+  function navType(){
+    try{
+      const n = performance.getEntriesByType("navigation");
+      return (n && n[0] && n[0].type) ? n[0].type : null;
+    }catch(_){ return null; }
+  }
+
+  // Hard refresh = user has seen the last DONE -> dismiss it.
+  if(navType() === "reload"){ dismissDone(); }
+  try{
+    if(sessionStorage.getItem("m4brew_tasks_left") === "1"){
+      dismissDone();
+      sessionStorage.removeItem("m4brew_tasks_left");
+    }
+  }catch(_){ }
+
+
+  // Any user submit action (Test/Run/settings) = user has seen DONE -> dismiss it.
+  document.addEventListener("submit", dismissDone, true);
+
+  // Leaving the Tasks page (including BFCache) = user has seen DONE -> mark for dismiss on return
+  window.addEventListener("pagehide", () => {
+    try{ sessionStorage.setItem("m4brew_tasks_left","1"); }catch(_){ }
+  });
+
+  // Returning to Tasks via back/forward (BFCache restore) = dismiss DONE before polling repaints it
+  window.addEventListener("pageshow", () => {
+    try{
+      if(sessionStorage.getItem("m4brew_tasks_left") === "1"){
+        dismissDone();
+        sessionStorage.removeItem("m4brew_tasks_left");
+      }
+    }catch(_){ }
+  });
+
 
 const liveBtn = document.getElementById("liveBtn");
   const liveWrap = document.getElementById("liveWrap");
@@ -463,6 +532,15 @@ const liveBtn = document.getElementById("liveBtn");
     }
 
   async function tick(){
+
+    // If we left Tasks and came back (BFCache), dismiss persisted DONE before painting.
+    try{
+      if(sessionStorage.getItem("m4brew_tasks_left") === "1"){
+        dismissDone();
+        sessionStorage.removeItem("m4brew_tasks_left");
+      }
+    }catch(_){ }
+
     try{
       const r = await fetch("/api/job", {cache:"no-store"});
       const job = await r.json();
@@ -592,7 +670,7 @@ const liveBtn = document.getElementById("liveBtn");
             }
           }
           lastJobStatus = null;
-        }else if(job.status === "running"){ clearHold(); clearDonePill(); clearHold();
+        }else if(job.status === "running"){ _dismissRunTerminal = false; clearHold(); clearDonePill(); clearHold();
             setPulseForMode(mode, dry);
           const total = Number(job.total || 0);
           const current = Number(job.current || 0);
@@ -615,6 +693,19 @@ const liveBtn = document.getElementById("liveBtn");
           const _termKey = String(job.started || "") + "|" + String(mode || "") + "|" + String(job.status || "") + "|" + String(job.exit_code || "");
           const _alreadySeen = (localStorage.getItem(_seenKey) === _termKey);
           const _seenTest = (localStorage.getItem(TEST_SEEN_KEY) === _termKey);
+
+          if(job.status === "finished" && !dry && (_navReload || _dismissRunTerminal)){
+            const pf2 = await fetchPreflight();
+            if(pf2 && pf2.ok === false){
+              const info2 = preflightToPill(pf2);
+              setPill(info2.cls, info2.l1, info2.l2);
+            }else{
+              setPill("status-idle", "Ready to Brew", "");
+            }
+            clearPulse();
+            return;
+          }
+
           if(dry && _seenTest && !holdActive()){
             const d = getDonePill();
             if(d) setPill(d.cls, d.l1, "");
@@ -657,13 +748,29 @@ const liveBtn = document.getElementById("liveBtn");
             if(liveOn) updateLivePanel({status:"none"});
             return;
           }
-          const s = (job && job.summary) ? job.summary : {};
+          
+const s = (job && job.summary) ? job.summary : {};
           const failed = Number(s.failed ?? 0);
           const count = (mode === "convert") ? Number(s.created ?? 0)
                        : (mode === "correct") ? Number(s.renamed ?? 0)
                        : (mode === "cleanup") ? Number(s.deleted ?? 0)
                        : 0;
-          const noun = (mode === "convert") ? "convert"
+
+          // If DONE was dismissed (refresh/submit), do NOT repaint it forever.
+          if(!dry && count > 0 && (localStorage.getItem(DONE_SEEN_KEY) === _termKey)){
+            setPill("status-idle", "Ready to Brew", "");
+            clearPulse();
+            return;
+          }
+
+          // If a RUN "Nothing to ..." was already held once, do NOT repaint it on revisit.
+          if(!dry && count === 0 && (localStorage.getItem(HOLD_SEEN_KEY) === _termKey) && !holdActive()){
+            setPill("status-idle", "Ready to Brew", "");
+            clearPulse();
+            return;
+          }
+
+const noun = (mode === "convert") ? "convert"
                      : (mode === "correct") ? "rename"
                      : (mode === "cleanup") ? "delete"
                      : "run";
@@ -696,7 +803,7 @@ const liveBtn = document.getElementById("liveBtn");
             }
             }else{
               setPill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past, "");
-                        setDonePill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past);
+                        setDonePill((mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done", "Done: " + count + " " + past, _termKey);
 }
           }else{
             const l1 = dry ? ("Test · Nothing to " + noun) : ("Nothing to " + noun);
@@ -817,6 +924,8 @@ const liveBtn = document.getElementById("liveBtn");
 
     // Mark "left the page" only if it wasn't a form submit
     window.addEventListener("pagehide", () => {
+    try{ sessionStorage.setItem("m4brew_tasks_left","1"); }catch(_){ }
+
       try{
         if (sessionStorage.getItem(KEY_KEEP) === "1") return;
         sessionStorage.setItem(KEY_FORCE, "1");
