@@ -27,24 +27,24 @@
 .about-panel{
   border-radius: 18px;
   padding: 22px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
+  border: 1px solid var(--panel-border);
+  background: var(--panel-bg);
 }
 
 /* Welcome gradient */
 .about-panel--primary{
   background: linear-gradient(
     135deg,
-    rgba(173,93,163,.38),
-    rgba(82,80,161,.34),
-    rgba(38,169,224,.30)
+    rgb(var(--run-2-rgb) / .38),
+    rgb(var(--run-3-rgb) / .34),
+    rgb(var(--run-1-rgb) / .30)
   );
-  border-color: rgba(255,255,255,.14);
+  border-color: var(--line);
 }
 
 /* Coming soon */
 .about-panel--secondary{
-  background: rgba(255,255,255,.04);
+  background: var(--panel-bg);
 }
 
 /* Headings inside panels */

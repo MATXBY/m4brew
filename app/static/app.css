@@ -14,6 +14,43 @@
   --accent-border: rgba(120,115,180,0.55);
   --danger: #ff5c7a;
 
+  /* Semantic colours */
+  --success: #7dffbf;
+
+  /* Shared surfaces/lines/text (use everywhere) */
+  --line: rgba(255,255,255,.14);
+  --panel-border: rgba(255,255,255,.12);
+  --panel-bg: rgba(255,255,255,.04);
+  --panel-bg-2: rgba(255,255,255,.06);
+  --text-weak: rgba(233,237,243,.70);
+  --text-strong: rgba(233,237,243,.92);
+  --text-strong-2: rgba(233,237,243,.95);
+  --text-mid: rgba(233,237,243,.90);
+
+  /* Shared UI tones (single source) */
+  --panel-bg-03: rgba(255,255,255,.03);
+  --panel-bg-05: rgba(255,255,255,.05);
+  --overlay-dim: rgba(0,0,0,.55);
+  --modal-bg: rgba(20,22,28,.96);
+  --shadow-soft: rgba(0,0,0,.12);
+  --shadow-strong: rgba(0,0,0,.55);
+  --shadow-inset: rgba(33,28,61,.18);
+  --line-soft: rgba(255,255,255,.10);
+  --white: #fff;
+  --white-95: rgba(255,255,255,.95);
+
+
+
+  /* Run button colours */
+  --run-1: #27A9E6; /* Convert */
+  --run-2: #AD5DA3; /* Rename */
+  --run-3: #5250A1; /* Delete */
+  --run-1-rgb: 39 169 230;  /* Convert */
+  --run-2-rgb: 173 93 163;  /* Rename */
+  --run-3-rgb: 82 80 161; /* Delete */
+
+
+
   --radius: 18px;
   --radius-pill: 999px;
   --shadow: 0 18px 40px rgba(0,0,0,.38);
@@ -60,8 +97,9 @@ body::before{
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(900px 520px at 20% 0%, rgba(33,28,61,.45), rgba(33,28,61,0) 60%),
-    radial-gradient(900px 520px at 80% 0%, rgba(30,210,255,.18), rgba(30,210,255,0) 60%),
+    radial-gradient(900px 520px at 12% 0%, rgb(var(--run-1-rgb) / .22), rgb(var(--run-1-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 50% 0%, rgb(var(--run-2-rgb) / .22), rgb(var(--run-2-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 88% 0%, rgb(var(--run-3-rgb) / .20), rgb(var(--run-3-rgb) / 0) 60%),
     linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
 }
 
@@ -443,7 +481,7 @@ pre{
 
     b
 .status-pill.status-run1{
-  background-color: var(--run-1, #AD5DA3);
+  background-color: var(--run-1, #27A9E6);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -453,7 +491,7 @@ pre{
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--run-2, #5250A1);
+  background-color: var(--run-2, #AD5DA3);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -461,7 +499,7 @@ pre{
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
-  background-color: var(--run-3, #27a9e6);
+  background-color: var(--run-3, #5250A1);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -503,3 +541,6 @@ pre{
 .status-pill .pill-line2{
   display: none !important;
 }
+
+/* UI version label comes from theme.css */
+.version::before{ content: var(--ui-version, ""); }

@@ -6,11 +6,6 @@
    - Clean 1px dividers
 ========================= */
 
-:root{
-  --history-pad: 22px;
-  --history-inset: 24px;
-  --history-line: rgba(255,255,255,.14);
-}
 
 /* Kill the default 16px card padding for this page only */
 .card.card--history{
@@ -35,7 +30,7 @@
 .history-empty{
   padding: var(--history-pad) 0;
   text-align: center;
-  color: rgba(233,237,243,.70);
+  color: var(--text-weak);
 }
 
 /* Table wrapper */
@@ -55,14 +50,14 @@
   text-align: left;
   font-weight: 700;
   padding: 14px 12px var(--history-pad);
-  border-bottom: 1px solid var(--history-line);
+  border-bottom: 1px solid var(--line);
   white-space: nowrap;
 }
 
 /* Body rows */
 .history-table tbody td{
   padding: var(--history-pad) 12px;
-  border-top: 1px solid var(--history-line);
+  border-top: 1px solid var(--line);
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -73,8 +68,8 @@
   font-size: 14pt;
   width: 70px;
 }
-.status.ok{ color: #7dffbf; }
-.status.bad{ color: #ff5c7a; }
+.status.ok{ color: var(--success); }
+.status.bad{ color: var(--danger); }
 
 /* Small mono numbers */
 .mono-small{
@@ -115,9 +110,9 @@
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: rgba(233,237,243,.92);
+  border: 1px solid var(--line);
+  background: var(--panel-bg-2);
+  color: var(--text-strong);
   font-size: 26px;
   line-height: 1;
   display: inline-flex;
@@ -145,7 +140,7 @@
 
 .run-detail-chip{
   margin: 0;
-  background: rgba(255,255,255,.03);
+  background: var(--panel-bg-03);
 }
 
 .run-detail-value{

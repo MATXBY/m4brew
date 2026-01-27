@@ -1,0 +1,17 @@
+/* =========================
+   m4brew — THEME TOKENS
+   Single source of truth for cosmetic variables:
+   spacing, colours, etc.
+========================= */
+
+:root{
+  --ui-version: "1.3.7";
+  /* --- Spacing --- */
+  --task-pad: 22px;
+  --task-inset: 24px;
+
+  --history-pad: 22px;
+  --history-inset: 24px;
+
+  --settings-gap: 18px;
+}

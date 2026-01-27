@@ -4,9 +4,6 @@
    - Clean 2-column rows
 ========================= */
 
-:root{
-  --settings-gap: 18px;
-}
 
 /* When embedded, DO NOT add its own inset/padding */
 .stack{
