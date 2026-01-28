@@ -489,3 +489,11 @@ pre{
   content: none !important;
   display: none !important;
 }
+
+/* --- running status pill: no outline (keep pulse only) --- */
+.status-pill.status-running{
+  border-color: transparent !important;
+}
+.status-pill.status-running.status-pill--outlined{
+  box-shadow: none !important;
+}

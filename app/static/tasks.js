@@ -582,32 +582,35 @@ const liveBtn = document.getElementById("liveBtn");
 
         // ----- Status pill (2-line, stateful) -----
 
-                    function setPulseForMode(mode, dry){
+          function setPulseForMode(mode, dry){
             const m = String(mode || "").toLowerCase();
-            let v = "rgba(99,102,241,.22)"; /* test = purple pulse */
-            if(!dry){
-              v = (m === "convert") ? "rgba(173,93,163,.22)"
-                : (m === "correct") ? "rgba(82,80,161,.22)"
-                : (m === "cleanup") ? "rgba(38,169,224,.22)"
-                : "rgba(58,52,112,.22)";
+
+            // Dry-run stays purple
+            if(dry){
+              try{ statusPill.style.setProperty("--pulse-color", "rgba(99,102,241,.22)"); }catch(_){ }
+              try{ statusPill.style.setProperty("--running-bg",  "rgba(99,102,241,.18)"); }catch(_){ }
+              try{ statusPill.style.setProperty("--running-border", "rgba(99,102,241,.38)"); }catch(_){ }
+              return;
             }
-            try{ statusPill.style.setProperty("--pulse-color", v); }catch(_){ }
-            let bg = "rgba(99,102,241,.18)";
-            let br = "rgba(99,102,241,.38)";
-            if(!dry){
-              bg = (m === "convert") ? "rgba(173,93,163,.18)"
-                 : (m === "correct") ? "rgba(82,80,161,.18)"
-                 : (m === "cleanup") ? "rgba(38,169,224,.18)"
-                 : "rgba(58,52,112,.18)";
-              br = (m === "convert") ? "rgba(173,93,163,.38)"
-                 : (m === "correct") ? "rgba(82,80,161,.38)"
-                 : (m === "cleanup") ? "rgba(38,169,224,.38)"
-                 : "rgba(58,52,112,.38)";
-            }
+
+            // LIVE run mapping: run1=convert(blue), run2=rename(pink), run3=delete(indigo)
+            const pulse = (m === "convert") ? "rgb(var(--task-convert-rgb) / .22)"
+                        : (m === "correct") ? "rgb(var(--task-rename-rgb) / .22)"
+                        : (m === "cleanup") ? "rgb(var(--task-delete-rgb) / .22)"
+                        : "rgb(var(--task-convert-rgb) / .22)";
+
+            const bg = (m === "convert") ? "rgb(var(--task-convert-rgb) / .18)"
+                     : (m === "correct") ? "rgb(var(--task-rename-rgb) / .18)"
+                     : (m === "cleanup") ? "rgb(var(--task-delete-rgb) / .18)"
+                     : "rgb(var(--task-convert-rgb) / .18)";
+
+            // Remove outline on RUN (pulsing) pills
+            const br = "transparent";
+
+            try{ statusPill.style.setProperty("--pulse-color", pulse); }catch(_){ }
             try{ statusPill.style.setProperty("--running-bg", bg); }catch(_){ }
             try{ statusPill.style.setProperty("--running-border", br); }catch(_){ }
           }
-
           function setTestOutlineForMode(mode){
   const m = String(mode || "").toLowerCase();
   const v = (m === "convert") ? "var(--task-convert)"
