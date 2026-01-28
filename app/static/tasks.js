@@ -296,6 +296,11 @@ const liveBtn = document.getElementById("liveBtn");
     statusPill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
     if(stateClass) statusPill.classList.add(stateClass);
     statusPill.classList.add("is-two-line");
+            if(stateClass === "status-running" && !dry){
+              if(mode === "convert") statusPill.classList.add("status-run1");
+              else if(mode === "correct") statusPill.classList.add("status-run2");
+              else if(mode === "cleanup") statusPill.classList.add("status-run3");
+            }
     statusPill.innerHTML = "<span class=\"pill-line1\"></span><span class=\"pill-line2\"></span>";
     statusPill.querySelector(".pill-line1").textContent = line1 || "";
     const el2 = statusPill.querySelector(".pill-line2");
@@ -604,13 +609,15 @@ const liveBtn = document.getElementById("liveBtn");
           }
 
           function setTestOutlineForMode(mode){
-            const m = String(mode || "").toLowerCase();
-            const v = (m === "convert") ? "var(--run-1, #AD5DA3)"
-                    : (m === "correct") ? "var(--run-2, #5250A1)"
-                    : (m === "cleanup") ? "var(--run-3, #26A9E0)"
-                    : "rgba(99,102,241,.38)";
-            try{ statusPill.style.setProperty("--test-outline", v); }catch(_){ }
-          }
+  const m = String(mode || "").toLowerCase();
+  const v = (m === "convert") ? "var(--task-convert)"
+          : (m === "correct") ? "var(--task-rename)"
+          : (m === "cleanup") ? "var(--task-delete)"
+          : "var(--line)";
+  try{ statusPill.style.setProperty("--test-outline", v); }catch(_){ }
+}
+
+
 
           function clearTestOutline(){
             try{ statusPill.style.removeProperty("--test-outline"); }catch(_){ }

@@ -7,39 +7,51 @@
 
 {% block content %}
 <div class="card card--about">
-  <div class="about-grid">
 
-    <!-- LEFT PANEL -->
-    <div class="about-panel about-panel--primary">
-      <h2>Welcome to M4Brew</h2>
+  <h2 class="about-h">Welcome</h2>
 
-      <p>
-        M4Brew is a simple tool for converting audiobooks to M4B with AAC audio
-        for easier media player management.
-      </p>
+  <p>
+    M4Brew is a simple tool for converting and organising audiobooks into clean, chapterised M4B files with AAC audio,
+    making them easier to manage and more reliable for media players like Plex, Jellyfin, Audiobookshelf, and similar tools.
+  </p>
 
-      <p>
-        Select your audiobook folder, choose your quality settings,
-        then sit back and grab a brew while the app does all the work.
-      </p>
-    </div>
+  <p>
+    It’s designed to remove the fiddly parts of audiobook housekeeping while staying safe, predictable, and transparent.
+  </p>
 
-    <!-- RIGHT PANEL -->
-    <div class="about-panel about-panel--secondary">
-      <h2>Coming soon</h2>
-      <ul class="about-list">
-        <li>More file types</li>
-        <li>Light and dark mode</li>
-        <li>Notifications</li>
-        <li>Match bitrate</li>
-      </ul>
-    </div>
+  <h3 class="about-h">Folder structure (important)</h3>
 
-  </div>
+  <pre class="about-tree">Audiobooks/
+└── Author Name/
+    └── Book Title/
+        └── audio files</pre>
+
+  <p>
+    This structure is essential. It allows M4Brew to name output files consistently, generate reliable chapter titles,
+    and help media managers correctly identify books and authors.
+  </p>
+
+  <h3 class="about-h">Supported input formats</h3>
+  <ul class="about-list">
+    <li>MP3 (single or multiple files)</li>
+    <li>M4A (single or multiple files)</li>
+    <li>Existing M4B (merged into one)</li>
+  </ul>
+
+  <p>Output is always a single, chapterised <code>.m4b</code> (AAC) file.</p>
+
+  <h3 class="about-h">Safety first</h3>
+  <ul class="about-list">
+    <li>Original audio files are never deleted automatically</li>
+    <li>Converted files are created alongside your existing structure</li>
+    <li>Cleanup is a separate, explicit step</li>
+    <li>Jobs can be safely cancelled — no half-written files are left behind</li>
+  </ul>
+
 </div>
 
 <p class="donate-line">
-  <span class="muted">If you enjoy using M4Brew, please consider </span>
-  <a href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
+  <span class="donate-faint">If you enjoy using M4Brew, please consider </span>
+  <a class="donate-link" href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
 </p>
 {% endblock %}

@@ -1,72 +1,6 @@
 /* =========================
    m4brew — BASE STYLES (LEAN)
 ========================= */
-
-:root{
-  --bg: #111318;
-  --text: #e9edf3;
-  --muted: rgba(233,237,243,.68);
-  --border: rgba(233,237,243,.10);
-
-  /* ✅ Primary purple (your chosen colour) */
-  --accent: #3a3470;
-  --accent-soft: rgba(58,52,112,0.28);
-  --accent-border: rgba(120,115,180,0.55);
-  --danger: #ff5c7a;
-
-  /* Semantic colours */
-  --success: #7dffbf;
-
-  /* Shared surfaces/lines/text (use everywhere) */
-  --line: rgba(255,255,255,.14);
-  --panel-border: rgba(255,255,255,.12);
-  --panel-bg: rgba(255,255,255,.04);
-  --panel-bg-2: rgba(255,255,255,.06);
-  --text-weak: rgba(233,237,243,.70);
-  --text-strong: rgba(233,237,243,.92);
-  --text-strong-2: rgba(233,237,243,.95);
-  --text-mid: rgba(233,237,243,.90);
-
-  /* Shared UI tones (single source) */
-  --panel-bg-03: rgba(255,255,255,.03);
-  --panel-bg-05: rgba(255,255,255,.05);
-  --overlay-dim: rgba(0,0,0,.55);
-  --modal-bg: rgba(20,22,28,.96);
-  --shadow-soft: rgba(0,0,0,.12);
-  --shadow-strong: rgba(0,0,0,.55);
-  --shadow-inset: rgba(33,28,61,.18);
-  --line-soft: rgba(255,255,255,.10);
-  --white: #fff;
-  --white-95: rgba(255,255,255,.95);
-
-
-
-  /* Run button colours */
-  --run-1: #27A9E6; /* Convert */
-  --run-2: #AD5DA3; /* Rename */
-  --run-3: #5250A1; /* Delete */
-  --run-1-rgb: 39 169 230;  /* Convert */
-  --run-2-rgb: 173 93 163;  /* Rename */
-  --run-3-rgb: 82 80 161; /* Delete */
-
-
-
-  --radius: 18px;
-  --radius-pill: 999px;
-  --shadow: 0 18px 40px rgba(0,0,0,.38);
-
-  --font: 10pt;
-  --lh: 1.35;
-  --pill-h: 44px;
-  --pill-pad-x: 16px;
-
-  --card-bg-a: rgba(255,255,255,.04);
-  --card-bg-b: rgba(255,255,255,.03);
-
-  --stack-pad: 22px;
-  --stack-line: rgba(255,255,255,.14);
-}
-
 *{ box-sizing: border-box; }
 html{ background: var(--bg); min-height: 100%; }
 
@@ -76,7 +10,7 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
   font-size: var(--font);
   line-height: var(--lh);
-  color: var(--text);
+  color: var(--text-muted);
   background: transparent;
   position: relative;
 }
@@ -97,9 +31,9 @@ body::before{
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(900px 520px at 12% 0%, rgb(var(--run-1-rgb) / .22), rgb(var(--run-1-rgb) / 0) 60%),
-    radial-gradient(900px 520px at 50% 0%, rgb(var(--run-2-rgb) / .22), rgb(var(--run-2-rgb) / 0) 60%),
-    radial-gradient(900px 520px at 88% 0%, rgb(var(--run-3-rgb) / .20), rgb(var(--run-3-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 12% 0%, rgb(var(--task-convert-rgb) / .22), rgb(var(--task-convert-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 50% 0%, rgb(var(--task-rename-rgb) / .22), rgb(var(--task-rename-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 88% 0%, rgb(var(--task-delete-rgb) / .20), rgb(var(--task-delete-rgb) / 0) 60%),
     linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
 }
 
@@ -158,15 +92,16 @@ h1.title{
 
 .subtitle{
   margin: 0;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 /* ✅ Single source of truth: version is dark grey */
 .version{
   margin: 10px 0 0;
-  color: #2b2438;
-  opacity: 0.95;
+  color: var(--version-color);
+  opacity: 1;
   font-weight: 600;
+  color: var(--text-muted);
 }
 
 /* Nav pills */
@@ -272,7 +207,7 @@ input::placeholder{ color: rgba(233,237,243,.35); }
   font-weight: 650;
 }
 
-.btn.danger{ background: rgba(255,92,122,.14); border-color: var(--test-outline, rgba(99,102,241,.38)); }
+.btn.danger{ background: rgba(255,92,122,.14); border-color: var(--warn-outline); }
 .btn:disabled{ opacity: .55; cursor: not-allowed; transform:none; }
 
 /* Label pill */
@@ -332,7 +267,7 @@ pre{
   color: rgba(233,237,243,.55);
 }
 .donate-line a{
-  color: var(--text);
+  color: var(--text-muted);
   text-decoration: none;
 }
 .donate-line a:hover{
@@ -409,14 +344,14 @@ pre{
 /* Warn = orange (nothing to do, cancelled, partial failure) */
 .status-pill.status-warn{
   background: rgba(245,158,11,.14);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+    border-color: var(--warn-outline);
   font-weight: 850;
 }
 
 /* Error = red (write denied, folder not mounted, hard failures) */
 .status-pill.status-error{
   background: rgba(239,68,68,.14);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+    border-color: var(--warn-outline);
   font-weight: 850;
 }
 
@@ -481,7 +416,7 @@ pre{
 
     b
 .status-pill.status-run1{
-  background-color: var(--run-1, #27A9E6);
+  background-color: var(--task-convert);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -491,7 +426,7 @@ pre{
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--run-2, #AD5DA3);
+  background-color: var(--task-rename);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -499,7 +434,7 @@ pre{
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
-  background-color: var(--run-3, #5250A1);
+  background-color: var(--task-delete);
   border-color: rgba(255,255,255,.14);
   color: rgba(255,255,255,.95);
   font-weight: 850;
@@ -526,7 +461,7 @@ pre{
 /* --- FINAL OVERRIDE: make TEST status clearly purple --- */
 .status-pill.status-test{
   background-color: rgba(99,102,241,.30) !important;  /* stronger purple fill */
-  border-color: var(--test-outline, rgba(99,102,241,.55)) !important;
+  border-color: var(--test-outline, var(--line)) !important;
   border-width: 2px !important;
   border-style: solid !important;
   color: rgba(255,255,255,.95) !important;
@@ -543,4 +478,14 @@ pre{
 }
 
 /* UI version label comes from theme.css */
-.version::before{ content: var(--ui-version, ""); }
+.version::before{ content: var(--ui-version); }
+
+/* Force Step 2 TEST status pill outline to Run-2 (Rename) colour */
+
+/* Remove pulsing outline ring for REAL RUN modes (keep it for TEST if desired) */
+.status-pill.status-running.status-run1::after,
+.status-pill.status-running.status-run2::after,
+.status-pill.status-running.status-run3::after{
+  content: none !important;
+  display: none !important;
+}

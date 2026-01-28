@@ -1,62 +1,44 @@
-/* About page — LOCKED layout
-   Uses ONLY the classes present in app/templates/about.html:
-   card--about, about-grid, about-panel, about-panel--primary,
-   about-panel--secondary, about-list
+/* About page (single card layout)
+   Uses: card--about, about-h, about-tree, about-list, donate-line, donate-faint, donate-link
 */
 
-/* Outer card padding (fix "hugging the edges") */
 .card--about{
-  padding: 24px;
+  padding: var(--page-pad);
 }
 
-/* Two panels */
-.about-grid{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
-/* Mobile: stack */
-@media (max-width: 900px){
-  .about-grid{
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Panel base */
-.about-panel{
-  border-radius: 18px;
-  padding: 22px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
-}
-
-/* Welcome gradient */
-.about-panel--primary{
-  background: linear-gradient(
-    135deg,
-    rgb(var(--run-2-rgb) / .38),
-    rgb(var(--run-3-rgb) / .34),
-    rgb(var(--run-1-rgb) / .30)
-  );
-  border-color: var(--line);
-}
-
-/* Coming soon */
-.about-panel--secondary{
-  background: var(--panel-bg);
-}
-
-/* Headings inside panels */
-.about-panel h2{
+.about-h{
+  color: var(--text);        /* headings = white */
   margin: 0 0 14px 0;
 }
 
-/* List */
+.card--about p{
+  margin: 0 0 14px 0;
+}
+
+.about-tree{
+  margin: 10px 0 14px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);        /* tree block = white */
+  overflow: auto;
+}
+
 .about-list{
-  margin: 0;
-  padding-left: 18px;
+  margin: 0 0 14px 0;
+  padding-left: var(--list-indent);
 }
+
 .about-list li{
-  margin: 10px 0;
+  margin: 8px 0;
 }
+
+.donate-line{
+  margin: 18px 0 0;
+  text-align: center;
+}
+
+.donate-faint{ color: var(--text-faint); }
+.donate-link{ color: var(--text-muted); text-decoration: none; }
+.donate-link:hover{ text-decoration: underline; }

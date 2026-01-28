@@ -55,8 +55,8 @@
   justify-content: center;
   padding: 0 18px;
   border-radius: 999px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  background: var(--surface);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -73,16 +73,16 @@
 }
 
 /* Run buttons: brand colours */
-.task-run{ color:var(--white); border-color: var(--line); }
-.run-1{ background: var(--run-1); }
-.run-2{ background: var(--run-2); }
-.run-3{ background: var(--run-3); }
+.task-run{ color: var(--text); border-color: var(--line); }
+.run-1{ background: var(--task-convert); }
+.run-2{ background: var(--task-rename); }
+.run-3{ background: var(--task-delete); }
 
 .task-row .btn:hover{ transform: translateY(-1px); }
 .task-row .task-test:hover{ background: var(--accent-soft); border-color: var(--accent-border); }
-.task-row .run-1:hover{ background: var(--run-1); }
-.task-row .run-2:hover{ background: var(--run-2); }
-.task-row .run-3:hover{ background: var(--run-3); }
+.task-row .run-1:hover{ background: var(--task-convert); }
+.task-row .run-2:hover{ background: var(--task-rename); }
+.task-row .run-3:hover{ background: var(--task-delete); }
 
 /* --- STATUS --- */
 .status-wrap{
@@ -116,7 +116,6 @@
 
 /* stronger purple outline */
 .status-pill--outlined{
-  border-color: var(--accent-border);
   box-shadow: 0 0 0 1px var(--shadow-inset) inset;
 }
 
@@ -149,7 +148,7 @@ display: flex;
   margin: 0 auto;
   border-radius: 16px;
   background: var(--panel-bg-05);
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--border);
   box-shadow: 0 10px 26px var(--shadow-soft);
   padding: 16px;
   display: grid;
@@ -163,7 +162,7 @@ display: flex;
   align-items: baseline;
 }
 
-.live-k{ color: var(--muted); font-weight: 700; }
+.live-k{ color: var(--text-muted); font-weight: 700; }
 .live-v{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live-actions{ display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 0; margin-bottom: 14px; gap: 14px; }
@@ -219,7 +218,7 @@ display: flex;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--panel-bg-2);
-  color: var(--text-strong);
+  color: var(--text-main);
   font-size: 18pt;
   line-height: 1;
   display: inline-flex;
@@ -231,7 +230,7 @@ display: flex;
 
 .help-body p{
   margin: 10px 0;
-  color: var(--text-strong);
+  color: var(--text-main);
 }
 
 /* ---- HELP MODAL: highlighted info boxes ---- */
@@ -247,7 +246,7 @@ display: flex;
   font-weight: 850;
   letter-spacing: .2px;
   margin-bottom: 8px;
-  color: var(--text-strong-2);
+  color: var(--text-main);
 }
 
 .help-box p{
@@ -255,7 +254,7 @@ display: flex;
   overflow-wrap: anywhere;
 
   margin: 6px 0;
-  color: var(--text-mid);
+  color: var(--text-muted);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
@@ -267,17 +266,19 @@ display: flex;
 
 /* New explicit tones */
 .help-box--convert{
-  background: rgb(var(--run-2-rgb));
-  border-color: rgb(var(--run-2-rgb) / .40);
+  background: rgb(var(--task-convert-rgb));
+  border-color: rgb(var(--task-convert-rgb) / .40);
 }
 .help-box--rename{
-  background: rgb(var(--run-3-rgb));
-  border-color: rgb(var(--run-3-rgb) / .40);
+  background: rgb(var(--task-rename-rgb));
+  border-color: rgb(var(--task-rename-rgb) / .40);
 }
+
 .help-box--delete{
-  background: rgb(var(--run-1-rgb));
-  border-color: rgb(var(--run-1-rgb) / .40);
+  background: rgb(var(--task-delete-rgb));
+  border-color: rgb(var(--task-delete-rgb) / .40);
 }
+
 
 /* When Cancel is shown, make it fill its 20% column (prevents odd right-float padding feel) */
 .status-top.has-cancel #cancelBtn{
@@ -438,13 +439,13 @@ display: flex;
 /* Live panel: transparent card with outline */
 .live-panel{
   background: transparent !important;
-  border: 1px solid var(--panel-border) !important;
+  border: 1px solid var(--border) !important;
   box-shadow: none !important;
 }
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--run-2);
+  background-color: var(--task-rename);
   border-color: var(--line);
   color: var(--white-95);
   font-weight: 850;
@@ -454,7 +455,7 @@ display: flex;
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
-  background-color: var(--run-3);
+  background-color: var(--task-delete);
   border-color: var(--line);
   color: var(--white-95);
   font-weight: 850;
@@ -462,17 +463,17 @@ display: flex;
 
 /* --- M4Brew: Force status pills to match Run button solid colours --- */
 .status-pill.status-run1{
-  background: var(--run-1) !important;
+  background: var(--task-convert) !important;
   border-color: var(--line) !important;
   color: var(--white-95) !important;
 }
 .status-pill.status-run2{
-  background: var(--run-2) !important;
+  background: var(--task-rename) !important;
   border-color: var(--line) !important;
   color: var(--white-95) !important;
 }
 .status-pill.status-run3{
-  background: var(--run-3) !important;
+  background: var(--task-delete) !important;
   border-color: var(--line) !important;
   color: var(--white-95) !important;
 }

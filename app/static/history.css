@@ -30,7 +30,7 @@
 .history-empty{
   padding: var(--history-pad) 0;
   text-align: center;
-  color: var(--text-weak);
+  color: var(--text-muted);
 }
 
 /* Table wrapper */
@@ -112,7 +112,7 @@
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--panel-bg-2);
-  color: var(--text-strong);
+  color: var(--text-main);
   font-size: 26px;
   line-height: 1;
   display: inline-flex;
