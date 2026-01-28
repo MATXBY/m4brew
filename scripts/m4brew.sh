@@ -10,6 +10,19 @@ JOB_ID="${JOB_ID:-manual}"
 ROOT_DEFAULT="/audiobooks"
 ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
 
+# Map container /audiobooks paths to host paths for helper docker runs
+# (because "docker run -v ..." happens on the HOST, not inside this container)
+HOST_AUDIOBOOKS="$(docker inspect "${HOSTNAME:-}" --format '{{range .Mounts}}{{if eq .Destination "/audiobooks"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
+
+to_host_path() {
+  local p="$1"
+  if [[ -n "${HOST_AUDIOBOOKS}" && "$p" == /audiobooks* ]]; then
+    echo "${HOST_AUDIOBOOKS}${p#/audiobooks}"
+  else
+    echo "$p"
+  fi
+}
+
 # Operation mode (can be overridden via environment variable MODE):
 MODE="${MODE:-convert}"
 
@@ -96,7 +109,7 @@ detect_channels() {
 
   local ch
   ch=$(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
-      -v "$(dirname "$first_file"):/data" \
+      -v "$(to_host_path "$(dirname "$first_file")"):/data" \
       "$M4B_IMAGE" \
       ffprobe -v error -select_streams a:0 -show_entries stream=channels \
       -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
@@ -359,7 +372,7 @@ while IFS= read -r -d '' book_dir; do
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
     cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
-      -v "${book_dir}:/data"
+      -v "$(to_host_path "${book_dir}"):/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
       "${audio_args[@]}"
@@ -426,7 +439,7 @@ while IFS= read -r -d '' book_dir; do
     cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}"
       -e "PUID=${DOCKER_UID_GID%%:*}"
       -e "PGID=${DOCKER_UID_GID##*:}"
-      -v "${book_dir}:/data"
+      -v "$(to_host_path "${book_dir}"):/data"
       "${FFMPEG_IMAGE}" -v error -stats
       -i "/data/$(basename "$in_file")"
       -c copy -movflags +faststart
@@ -460,7 +473,7 @@ while IFS= read -r -d '' book_dir; do
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
 
     cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
-      -v "${book_dir}:/data"
+      -v "$(to_host_path "${book_dir}"):/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
       "${audio_args[@]}"

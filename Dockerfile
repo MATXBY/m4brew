@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 
 LABEL app.name="m4brew" \
-      app.version="1.2.0" \
+      app.version="1.4.1" \
       app.release_date="2026-01-20" \
       app.description="Audiobook source manager and M4B converter"
 
