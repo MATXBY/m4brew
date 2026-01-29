@@ -18,12 +18,18 @@ services:
       - PGID=100
 
     volumes:
+      # app + config
       - /mnt/cache/appdata/m4brew/scripts/m4brew.sh:/scripts/m4brew.sh:ro
-      - /mnt/remotes/192.168.4.4_media/Audiobooks:/mnt/remotes/192.168.4.4_media/Audiobooks:rw,slave
-      - /mnt/cache/media:/mnt/cache/media:rw
       - /mnt/cache/appdata/m4brew/config:/config
-      - /var/run/docker.sock:/var/run/docker.sock:rw
       - /mnt/cache/appdata/m4brew/app:/app
+
+      # docker socket (required for mount discovery + helper runs)
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+
+      # ONLY audiobook roots
+      - "/mnt/remotes/192.168.4.4_media/Audiobooks:/DSM Main:rw,slave"
+      - "/mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:rw,slave"
+      - "/mnt/cache/media/Audiobooks:/Test Folders:rw,slave"
 
     networks:
       - matt-net
