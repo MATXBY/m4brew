@@ -12,3 +12,7 @@ app/templates/*.BROKEN.*
 app/static/*.bak.*
 *.bak
 app/static/tasks.js.BROKEN.*
+
+# temp/scratch
+*.tmp
+docs/_junk_legacy/

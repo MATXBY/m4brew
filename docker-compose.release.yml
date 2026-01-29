@@ -1,6 +1,6 @@
 services:
   m4brew:
-    image: matxby/m4brew:1.4.8
+    image: matxby/m4brew:latest
     container_name: m4brew
     ports:
       - "8585:8080"
@@ -10,8 +10,9 @@ services:
       - PGID=100
       - DOCKER_NETWORK=matt-net
     volumes:
-      - /mnt/remotes/192.168.4.4_media/Audiobooks:/audiobooks_remote:rw,slave
-      - /mnt/cache/media/Audiobooks:/AudioBook Local:rw,slave
+      - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM Main:rw,slave
+      - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:rw,slave
+      - /mnt/cache/media/Audiobooks:/Test Folders:rw,slave
       - /mnt/cache/appdata/m4brew/config:/config:rw
       - /var/run/docker.sock:/var/run/docker.sock:rw
     networks:
