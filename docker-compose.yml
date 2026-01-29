@@ -12,6 +12,7 @@ services:
       - "8585:8080"
 
     environment:
+      - DOCKER_NETWORK=matt-net
       - TZ=Europe/London
       - PUID=1026
       - PGID=100

@@ -16,8 +16,22 @@ HOST_AUDIOBOOKS="$(docker inspect "${HOSTNAME:-}" --format '{{range .Mounts}}{{i
 
 to_host_path() {
   local p="$1"
-  if [[ -n "${HOST_AUDIOBOOKS}" && "$p" == /audiobooks* ]]; then
-    echo "${HOST_AUDIOBOOKS}${p#/audiobooks}"
+  local self="${M4BREW_CONTAINER_NAME:-m4brew}"
+
+  # Find the LONGEST matching mount destination prefix, then map to its source
+  local best_dst="" best_src=""
+  while IFS="|" read -r dst src; do
+    [ -z "$dst" ] && continue
+    if [[ "$p" == "$dst" || "$p" == "$dst/"* ]]; then
+      if (( ${#dst} > ${#best_dst} )); then
+        best_dst="$dst"
+        best_src="$src"
+      fi
+    fi
+  done < <(docker inspect "$self" --format '{{range .Mounts}}{{println .Destination "|" .Source}}{{end}}' 2>/dev/null)
+
+  if [ -n "$best_dst" ]; then
+    echo "${best_src}${p#${best_dst}}"
   else
     echo "$p"
   fi

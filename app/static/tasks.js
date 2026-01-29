@@ -317,6 +317,71 @@ const liveBtn = document.getElementById("liveBtn");
   const initialRoot = rootInput ? (rootInput.value || "") : "";
   let rootDirty = false;
 
+  // ---------- MOUNT DROPDOWN (pick from /api/mounts) ----------
+  async function initMountDropdown(){
+    try{
+      if(!rootInput) return;
+
+      const r = await fetch("/api/mounts?ts=" + Date.now(), {cache:"no-store"});
+      const j = await r.json();
+      const mounts = (j && j.mounts) ? j.mounts : [];
+
+      const filtered = mounts.filter(m =>
+        m && m.container && m.host &&
+        String(m.container).startsWith("/") &&
+        !["/config","/var/run/docker.sock"].includes(String(m.container))
+      );
+
+      if(!filtered.length) return;
+
+      const sel = document.createElement("select");
+      sel.className = "field";
+      sel.id = "root_mount_pick";
+      sel.setAttribute("aria-label","Pick from mounted folders");
+
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "Pick from mounted folders…";
+      sel.appendChild(ph);
+
+      for(const m of filtered){
+        const opt = document.createElement("option");
+        opt.value = String(m.container);
+        opt.textContent = `${m.container}  (${m.host})`;
+        sel.appendChild(opt);
+      }
+
+      // If current root matches either container path or host path, preselect
+      const cur = String((rootInput.value || "")).trim();
+      if(cur){
+        const hit = filtered.find(m => cur === String(m.container) || cur === String(m.host));
+        if(hit) sel.value = String(hit.container);
+      }
+
+      // Insert dropdown right after the text input
+      rootInput.insertAdjacentElement("afterend", sel);
+
+      sel.addEventListener("change", async () => {
+        if(!sel.value) return;
+
+        rootInput.value = sel.value;
+
+        // Trigger existing rootDirty + autosave machinery
+        rootInput.dispatchEvent(new Event("input", {bubbles:true}));
+        rootInput.dispatchEvent(new Event("change", {bubbles:true}));
+
+        // Force-refresh preflight cache and update pill immediately (best-effort)
+        _pf_cache = null; _pf_cache_ts = 0;
+        try{
+          const pf = await fetchPreflight(true);
+          const pill = (pf && pf.ok) ? {cls:"status-idle", l1:"Ready", l2:""} : preflightToPill(pf);
+          setPillDirect(pill.cls, pill.l1, pill.l2);
+        }catch(_){}
+      });
+
+    }catch(_){}
+  }
+
   function autosave() {
     if (!form) return;
     if (t) clearTimeout(t);
@@ -339,6 +404,8 @@ const liveBtn = document.getElementById("liveBtn");
   }
 
   if (rootInput) {
+      initMountDropdown();
+
     rootInput.addEventListener("input", () => {
       rootDirty = (rootInput.value || "") !== initialRoot;
     });

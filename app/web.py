@@ -642,47 +642,15 @@ def index_post():
         save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
         return redirect(url_for("settings_get"))
 
-    # Persist last selections (mode + dry_run only)
-
-    # --- M4Brew: Guard Test/Run with preflight (do NOT start jobs if setup is broken) ---
-    try:
-        puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
-        pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
-        uidgid = f"{puid}:{pgid}"
-
-        # 1) Check the host folder exists WITHOUT creating it
-        check_cmd = [
-            "docker","run","--rm",
-            "-v","/:/host:ro",
-            "busybox","sh","-lc",
-            f"test -d \"/host{root_folder}\""
-        ]
-        p = subprocess.run(check_cmd, capture_output=True, text=True, timeout=10)
-        if p.returncode != 0:
-            return redirect(url_for("index_get"))
-
-        # 2) Check Docker can write to it as PUID/PGID
-        write_cmd = [
-            "docker","run","--rm",
-            "-u", uidgid,
-            "-v", f"{root_folder}:/data:rw",
-            "busybox","sh","-lc",
-            "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test"
-        ]
-        p2 = subprocess.run(write_cmd, capture_output=True, text=True, timeout=20)
-        if p2.returncode != 0:
-            return redirect(url_for("index_get"))
-    except Exception:
-        return redirect(url_for("index_get"))
-
-    save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
+    # Persist last selections (mode + dry_run only)save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
 
     # Server-side guard: do not start jobs if preflight fails
-    pf = preflight_root(root_folder)
+    pf = preflight_root_mapped(root_folder)
     if not pf.get("ok"):
         return redirect(url_for("index_get"))
 
-    start_job(mode, dry_run, root_folder, audio_mode, bitrate)
+    root_for_job = pf.get("mapped_path") or root_folder
+    start_job(mode, dry_run, root_for_job, audio_mode, bitrate)
     return redirect(url_for("index_get"))
 
 
@@ -1019,6 +987,93 @@ def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]
     return (container_path, best_src)
 
 
+@app.get("/api/mounts")
+def api_mounts():
+    mounts = _docker_mount_map()
+    items = [{"host": src, "container": dst} for (src, dst) in mounts]
+    items.sort(key=lambda x: x["container"])
+    return jsonify({"ok": True, "mounts": items}), 200
+
+def preflight_root_mapped(root: str) -> dict:
+    """
+    Accept either:
+      - container path (e.g. /audiobooks)
+      - host path (e.g. /mnt/remotes/.../Audiobooks)
+    """
+    root = (root or "").strip()
+    if not root:
+        return {"ok": False, "error_code": "no_root", "message": "No root folder set"}
+
+    # Normalize: allow "audiobooks" -> "/audiobooks"
+    if root and not root.startswith("/"):
+        root = "/" + root
+
+    # Decide if root is a CONTAINER path or a HOST path
+    mounts = _docker_mount_map()
+    root_n = os.path.normpath(root)
+
+    container_path = None
+    matched_src = None
+
+    # container path case: root matches a destination mount (e.g. /audiobooks)
+    for src, dst in mounts:
+        dst_n = os.path.normpath(dst)
+        if root_n == dst_n or root_n.startswith(dst_n.rstrip("/") + "/"):
+            container_path = root_n
+            matched_src = src
+            break
+
+    # host path case: root matches a source mount (e.g. /mnt/remotes/...)
+    if not container_path:
+        container_path, matched_src = _map_host_to_container_path(root)
+
+    if not container_path:
+        return {
+            "ok": False,
+            "error_code": "not_mounted",
+            "message": "Folder not available to M4Brew (add it to the Docker template)",
+            "root_folder": root,
+        }
+
+    if not os.path.isdir(container_path):
+        return {
+            "ok": False,
+            "error_code": "folder_missing",
+            "message": "Folder does not exist (check the path)",
+            "root_folder": root,
+        }
+
+    test_file = os.path.join(container_path, ".m4brew_write_test")
+    try:
+        with open(test_file, "w", encoding="utf-8") as f:
+            f.write("ok\n")
+        try:
+            os.remove(test_file)
+        except Exception:
+            pass
+    except PermissionError:
+        return {
+            "ok": False,
+            "error_code": "write_denied",
+            "message": "Write access denied (check PUID/PGID + permissions)",
+            "root_folder": root,
+        }
+    except Exception as e:
+        return {
+            "ok": False,
+            "error_code": "unknown",
+            "message": str(e),
+            "root_folder": root,
+        }
+
+    return {
+        "ok": True,
+        "root_folder": root,
+        "mapped_path": container_path,
+        "matched_mount": matched_src,
+    }
+
+
 @app.route("/api/preflight")
 def api_preflight():
     settings_path = "/config/settings.json"
@@ -1029,6 +1084,8 @@ def api_preflight():
         with open(settings_path, "r") as f:
             s = json.load(f)
             root = str(s.get("root_folder", "") or "").strip()
+
+
     except Exception:
         root = ""
 
@@ -1036,7 +1093,20 @@ def api_preflight():
         return jsonify({"ok": False, "error_code": "no_root", "message": "No root folder set"}), 200
 
     # map host path -> container path (without creating anything)
-    container_path, matched_src = _map_host_to_container_path(root)
+    # Decide if root is a CONTAINER path (e.g. /audiobooks) or a HOST path (/mnt/...)
+    mounts = _docker_mount_map()
+    root_n = os.path.normpath(root)
+    container_path = None
+    matched_src = None
+    for src, dst in mounts:
+        dst_n = os.path.normpath(dst)
+        if root_n == dst_n or root_n.startswith(dst_n.rstrip("/") + "/"):
+            container_path = root_n
+            matched_src = src
+            break
+    if not container_path:
+        container_path, matched_src = _map_host_to_container_path(root)
+
     if not container_path:
         return jsonify(
             {
