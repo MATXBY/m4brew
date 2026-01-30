@@ -28,7 +28,7 @@ to_host_path() {
         best_src="$src"
       fi
     fi
-  done < <(docker inspect "$self" --format '{{range .Mounts}}{{println .Destination "|" .Source}}{{end}}' 2>/dev/null)
+  done < <(docker inspect "$self" --format '{{range .Mounts}}{{printf "%s|%s\n" .Destination .Source}}{{end}}' 2>/dev/null)
 
   if [ -n "$best_dst" ]; then
     echo "${best_src}${p#${best_dst}}"
