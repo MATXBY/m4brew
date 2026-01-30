@@ -1,15 +1,15 @@
 services:
-  m4brew:
+  m4brew-dev:
     image: matxby/m4brew:latest
-    container_name: m4brew
+    container_name: m4brew-dev
 
     labels:
-      - "net.unraid.docker.name=m4brew"
-      - "net.unraid.docker.webui=http://[IP]:8585/"
-      - "net.unraid.docker.icon=http://192.168.4.10:8585/static/images/m4brew-logo.png"
+      - "net.unraid.docker.name=m4brew-dev"
+      - "net.unraid.docker.webui=http://[IP]:8586/"
+      - "net.unraid.docker.icon=http://192.168.4.10:8586/static/images/m4brew-logo.png"
 
     ports:
-      - "8585:8080"
+      - "8586:8080"
 
     environment:
       - DOCKER_NETWORK=matt-net
@@ -18,13 +18,19 @@ services:
       - PGID=100
 
     volumes:
+      # dev mounts (live code / script)
+      - /mnt/cache/appdata/m4brew/app:/app
+      - /mnt/cache/appdata/m4brew/scripts/m4brew.sh:/scripts/m4brew.sh:ro
+
       # audiobook roots only
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM Main:rw,slave
       - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:rw,slave
       - /mnt/cache/media/Audiobooks:/Test Folders:rw,slave
 
-      # required internals
-      - /mnt/cache/appdata/m4brew/config:/config
+      # single config (your one-folder setup)
+      - /mnt/cache/appdata/m4brew/config:/config:rw
+
+      # needed for helper containers
       - /var/run/docker.sock:/var/run/docker.sock:rw
 
     networks:
