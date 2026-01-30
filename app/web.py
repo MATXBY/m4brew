@@ -969,6 +969,14 @@ def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]
     host_path = os.path.normpath(host_path)
 
     mounts = _docker_mount_map()
+    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
+    mounts = [(src, dst) for (src, dst) in mounts
+              if dst and dst.startswith("/")
+              and dst not in ("/app","/config","/var/run/docker.sock")
+              and not dst.startswith("/scripts")
+              and src != "/var/run/docker.sock"
+              and "/mnt/cache/appdata/m4brew" not in src]
+
     best_src = None
     best_dst = None
 
@@ -990,6 +998,14 @@ def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]
 @app.get("/api/mounts")
 def api_mounts():
     mounts = _docker_mount_map()
+    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
+    mounts = [(src, dst) for (src, dst) in mounts
+              if dst and dst.startswith("/")
+              and dst not in ("/app","/config","/var/run/docker.sock")
+              and not dst.startswith("/scripts")
+              and src != "/var/run/docker.sock"
+              and "/mnt/cache/appdata/m4brew" not in src]
+
     items = [{"host": src, "container": dst} for (src, dst) in mounts]
     items.sort(key=lambda x: x["container"])
     return jsonify({"ok": True, "mounts": items}), 200
@@ -1010,6 +1026,14 @@ def preflight_root_mapped(root: str) -> dict:
 
     # Decide if root is a CONTAINER path or a HOST path
     mounts = _docker_mount_map()
+    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
+    mounts = [(src, dst) for (src, dst) in mounts
+              if dst and dst.startswith("/")
+              and dst not in ("/app","/config","/var/run/docker.sock")
+              and not dst.startswith("/scripts")
+              and src != "/var/run/docker.sock"
+              and "/mnt/cache/appdata/m4brew" not in src]
+
     root_n = os.path.normpath(root)
 
     container_path = None
@@ -1095,6 +1119,14 @@ def api_preflight():
     # map host path -> container path (without creating anything)
     # Decide if root is a CONTAINER path (e.g. /audiobooks) or a HOST path (/mnt/...)
     mounts = _docker_mount_map()
+    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
+    mounts = [(src, dst) for (src, dst) in mounts
+              if dst and dst.startswith("/")
+              and dst not in ("/app","/config","/var/run/docker.sock")
+              and not dst.startswith("/scripts")
+              and src != "/var/run/docker.sock"
+              and "/mnt/cache/appdata/m4brew" not in src]
+
     root_n = os.path.normpath(root)
     container_path = None
     matched_src = None
