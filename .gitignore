@@ -16,3 +16,6 @@ app/static/tasks.js.BROKEN.*
 # temp/scratch
 *.tmp
 docs/_junk_legacy/
+
+# local config tar backups
+_config_backups/
