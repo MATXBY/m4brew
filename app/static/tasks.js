@@ -3,10 +3,17 @@
   const HELP = {
     "select-source": {
       title: "FOLDERS: LOCATION & STRUCTURE",
-      body: [
-        "Enter your Audiobooks root folder here.",
-        "IMPORTANT: That folder's structure must match this:"
-      ],
+        body: [
+          "Choose your *mapped folder* from the dropdown.",
+          "",
+          "Multiple root audiobook folders can be mapped into the container.",
+          "",
+          "The template provides 3 fields (Audiobooks 1–3).",
+          "",
+          "Set your host paths there… then pick one here.",
+          "",
+          "NOTE: Audiobook folder structure matters - See below"
+        ],
       boxes: [
         {
           title: "FOLDER STRUCTURE",
@@ -283,10 +290,10 @@ const liveBtn = document.getElementById("liveBtn");
     const code = pf && pf.error_code ? String(pf.error_code) : "unknown";
     const root = pf && pf.root_folder ? String(pf.root_folder) : "";
     const base = root ? ("Source: " + root) : "";
-    if(code === "folder_missing") return {cls:"status-warn", l1:"Source folder does not exist", l2:""};
+    if(code === "folder_missing") return {cls:"status-warn", l1:"Mapped folder does not exist", l2:""};
     if(code === "not_mounted")   return {cls:"status-warn", l1:"Add folder path to M4Brew template", l2:""};
     if(code === "write_denied")  return {cls:"status-error", l1:"Write denied", l2:"Fix PUID/PGID or permissions"};
-    if(code === "no_root")       return {cls:"status-warn", l1:"No source folder set", l2:"Set Source folder above"};
+    if(code === "no_root")       return {cls:"status-warn", l1:"No mapped folder set", l2:"Set Mapped folder above"};
     if(code === "preflight_exception") return {cls:"status-error", l1:"Preflight error", l2: String((pf && pf.message) ? pf.message : "")};
     return {cls:"status-error", l1:"Cannot start", l2: String((pf && (pf.message||pf.error_code)) ? (pf.message||pf.error_code) : "Unknown error")};
   }
@@ -337,11 +344,11 @@ const liveBtn = document.getElementById("liveBtn");
       const sel = document.createElement("select");
       sel.className = "field";
       sel.id = "root_mount_pick";
-      sel.setAttribute("aria-label","Pick from mounted folders");
+      sel.setAttribute("aria-label","Pick from mapped folders");
 
       const ph = document.createElement("option");
       ph.value = "";
-      ph.textContent = "Pick from mounted folders…";
+      ph.textContent = "Pick from mapped folders…";
       sel.appendChild(ph);
 
       for(const m of filtered){
@@ -393,7 +400,7 @@ const liveBtn = document.getElementById("liveBtn");
 
         await fetch("/settings", {
           method: "POST",
-          body: fd,
+        body: fd,
           headers: {
             "X-M4Brew-Autosave": "1",
             "X-M4Brew-Root-Dirty": rootDirty ? "1" : "0"
@@ -630,7 +637,7 @@ const liveBtn = document.getElementById("liveBtn");
         let msg  = String(pre.message || "Needs attention");
         let l1 = "Setup needs attention";
         if(code === "not_mounted"){ l1 = "Add folder path to M4Brew template"; msg = ""; }
-        else if(code === "folder_missing"){ l1 = "Source folder does not exist"; msg = ""; }
+        else if(code === "folder_missing"){ l1 = "Mapped folder does not exist"; msg = ""; }
         else if(code === "write_denied")   l1 = "Setup: No write access";
         else if(code === "no_root")        l1 = "Setup: Choose a source folder";
 
@@ -1099,13 +1106,13 @@ const noun = (mode === "convert") ? "convert"
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
       if(code === "folder_missing"){
-        setPillError("Source folder does not exist", "");
+        setPillError("Mapped folder does not exist", "");
         // After 1s, downgrade from red (action-block) to orange (setup warning)
         setTimeout(() => {
         const pill = document.getElementById("statusPill");
         if(!pill) return;
         const l1 = pill.querySelector(".pill-line1");
-        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Source folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
+        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Mapped folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
           pill.classList.remove("status-error");
           pill.classList.add("status-warn");
         }
@@ -1181,13 +1188,13 @@ const noun = (mode === "convert") ? "convert"
     const msg = (pf && pf.message) ? String(pf.message) : "Check the source folder path.";
       const code = (pf && pf.error_code) ? String(pf.error_code) : "";
       if(code === "folder_missing"){
-        setPillError("Source folder does not exist", "");
+        setPillError("Mapped folder does not exist", "");
         // After 1s, downgrade from red (action-block) to orange (setup warning)
         setTimeout(() => {
         const pill = document.getElementById("statusPill");
         if(!pill) return;
         const l1 = pill.querySelector(".pill-line1");
-        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Source folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
+        if(pill.classList.contains("status-error") && l1 && (l1.textContent === "Mapped folder does not exist" || l1.textContent === "Add folder path to M4Brew template")){
           pill.classList.remove("status-error");
           pill.classList.add("status-warn");
         }
@@ -1228,7 +1235,7 @@ const noun = (mode === "convert") ? "convert"
       pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
       pill.classList.add("status-warn","is-two-line");
       pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
-      pill.querySelector(".pill-line1").textContent = "Source folder does not exist";
+      pill.querySelector(".pill-line1").textContent = "Mapped folder does not exist";
       const el2 = pill.querySelector(".pill-line2");
       el2.textContent = "";
       el2.style.display = "none";
@@ -1265,7 +1272,7 @@ const noun = (mode === "convert") ? "convert"
             pill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
             pill.classList.add("status-warn","is-two-line");
             pill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
-            pill.querySelector(".pill-line1").textContent = "Source folder does not exist";
+            pill.querySelector(".pill-line1").textContent = "Mapped folder does not exist";
             const el2 = pill.querySelector(".pill-line2");
             el2.textContent = "";
             el2.style.display = "none";

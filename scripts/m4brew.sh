@@ -16,7 +16,7 @@ HOST_AUDIOBOOKS="$(docker inspect "${HOSTNAME:-}" --format '{{range .Mounts}}{{i
 
 to_host_path() {
   local p="$1"
-  local self="${M4BREW_CONTAINER_NAME:-m4brew}"
+  local self="${M4BREW_CONTAINER_NAME:-${HOSTNAME}}"
 
   # Find the LONGEST matching mount destination prefix, then map to its source
   local best_dst="" best_src=""

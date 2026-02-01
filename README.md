@@ -8,17 +8,11 @@ It’s designed to remove the fiddly parts of audiobook housekeeping while stayi
 
 ## 📸 Screenshots
 
-### Tasks – idle
-![Tasks idle](docs/screenshots/tasks-idle.png)
-
 ### Tasks – running
-![Tasks running](docs/screenshots/tasks-running.png)
+![Tasks running](docs/screenshots/tasks.png)
 
 ### History
 ![History](docs/screenshots/history.png)
-
-### Run detail
-![Run detail](docs/screenshots/history-detail.png)
 
 ---
 
