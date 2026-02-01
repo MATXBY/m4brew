@@ -8,10 +8,10 @@ It’s designed to remove the fiddly parts of audiobook housekeeping while stayi
 
 ## 📸 Screenshots
 
-### Tasks – running
+### Tasks Page
 ![Tasks running](docs/screenshots/tasks.png)
 
-### History
+### History Page
 ![History](docs/screenshots/history.png)
 
 ---
@@ -36,12 +36,30 @@ Each source file becomes a **chapter** in the final M4B, so chapter navigation r
 
 ## How it works
 
-1. Select your audiobook folder  
+1. Select a mapped audiobook folder  
 2. Choose your audio settings (channels and bitrate)  
 3. Run a **Test** to see what would happen  
 4. Run the conversion when you’re happy  
 
 Then grab a brew ☕ — everything runs in the background.
+
+---
+
+## Mapped folders (important for setup)
+
+M4Brew only works with folders that are **mapped into the container**.
+
+When installing via Community Applications, the template provides **three folder fields**:
+
+- Audiobooks 1  
+- Audiobooks 2  
+- Audiobooks 3  
+
+Set these to any audiobook locations on your system.
+
+These mapped folders will then appear in the **Mapped folder** dropdown inside M4Brew, where you choose which library to work on.
+
+You only need to set **one** — the others are optional.
 
 ---
 
