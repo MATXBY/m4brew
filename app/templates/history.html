@@ -39,8 +39,8 @@
           <tbody>
           {% for r in runs %}
             <tr>
-              <td class="status {{ 'ok' if r.success else 'bad' }}">
-                {{ '✓' if r.success else '×' }}
+                <td class="status {{ 'ok' if (r.failed|int) == 0 else ('warn' if ((r.completed|int) > 0 or (r.skipped|int) > 0) else 'bad') }}">
+                  {{ '✓' if (r.failed|int) == 0 else ('⚠' if ((r.completed|int) > 0 or (r.skipped|int) > 0) else '×') }}
               </td>
 
               <td>{{ r.ts_human }}</td>
