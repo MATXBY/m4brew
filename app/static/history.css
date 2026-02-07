@@ -69,6 +69,7 @@
   width: 70px;
 }
 .status.ok{ color: var(--success); }
+.status.warn{ color: var(--warning); }
 .status.bad{ color: var(--danger); }
 
 /* Small mono numbers */
