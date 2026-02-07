@@ -5,12 +5,11 @@ IFS=$'\n\t'
 # Job identifier (safe default)
 JOB_ID="${JOB_ID:-manual}"
 
-
 # Root of your audiobooks (Author/Book folders)
 ROOT_DEFAULT="/audiobooks"
 ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
 
-# Map container /audiobooks paths to host paths for helper docker runs
+# Map container paths to host paths for helper docker runs
 # (because "docker run -v ..." happens on the HOST, not inside this container)
 HOST_AUDIOBOOKS="$(docker inspect "${HOSTNAME:-}" --format '{{range .Mounts}}{{if eq .Destination "/audiobooks"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
 
@@ -86,6 +85,109 @@ safe_name() {
   echo "$1" | sed 's#/#-#g'
 }
 
+book_label() {
+  # "Author / Book" from ".../Author/Book"
+  local book_dir="$1"
+  local author_dir author book
+  author_dir="$(dirname "$book_dir")"
+  author="$(basename "$author_dir")"
+  book="$(basename "$book_dir")"
+  echo "${author} / ${book}"
+}
+
+json_escape() {
+  # minimal JSON string escape (quotes, backslash, tabs/newlines)
+  # shellcheck disable=SC2001
+  echo -n "$1" \
+    | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g; s/\r/\\r/g; s/\n/\\n/g'
+}
+
+# Extract a numeric order key from a filename (base name only).
+# We ONLY accept "clear" patterns:
+#   1) starts with digits: "01 Prologue"
+#   2) keyword+number: "Part 2", "Chapter 10", "Disc 1 Track 03", etc.
+#   3) separator+digits: "something - 03", "something_03", "something.03"
+extract_order_key() {
+  local base="$1"
+  local lc
+  lc="$(echo "$base" | tr '[:upper:]' '[:lower:]')"
+
+  local n=""
+
+  # 1) numeric prefix
+  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\).*/\1/p' | head -n 1)"
+  if [[ -n "$n" ]]; then
+    echo "$n"
+    return 0
+  fi
+
+  # 2) keyword + number
+  n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|book\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
+  if [[ -n "$n" ]]; then
+    echo "$n"
+    return 0
+  fi
+
+  # 3) separator + number (avoids grabbing years mid-sentence unless clearly separated)
+  n="$(echo "$lc" | sed -n 's/.*[-_.[:space:]]0*\([0-9]\{1,4\}\)\b.*/\1/p' | head -n 1)"
+  if [[ -n "$n" ]]; then
+    echo "$n"
+    return 0
+  fi
+
+  echo ""
+}
+
+# Decide if the part order is clear for a set of files.
+# Returns:
+#   0 (true)  = clear
+#   1 (false) = unclear
+order_is_clear() {
+  local -a files=("$@")
+  local n="${#files[@]}"
+
+  # 0/1 file is always clear
+  if (( n <= 1 )); then
+    return 0
+  fi
+
+  local -a keys=()
+  local f base k
+  for f in "${files[@]}"; do
+    base="$(basename "$f")"
+    base="${base%.*}" # drop extension
+    k="$(extract_order_key "$base")"
+    if [[ -z "$k" ]]; then
+      return 1
+    fi
+    keys+=("$k")
+  done
+
+  # ensure all keys are numeric
+  local x
+  for x in "${keys[@]}"; do
+    [[ "$x" =~ ^[0-9]+$ ]] || return 1
+  done
+
+  # uniqueness + contiguity: keys must be exactly 1..N (after sorting)
+  # (This avoids "cbx/xdr/wor" and avoids guessing when numbering is weird.)
+  local sorted uniq_count min max
+  sorted="$(printf "%s\n" "${keys[@]}" | sort -n)"
+  uniq_count="$(printf "%s\n" "${keys[@]}" | sort -n | uniq | wc -l | tr -d ' ')"
+  (( uniq_count == n )) || return 1
+
+  min="$(echo "$sorted" | head -n 1 | tr -d ' ')"
+  max="$(echo "$sorted" | tail -n 1 | tr -d ' ')"
+  [[ "$min" =~ ^[0-9]+$ ]] || return 1
+  [[ "$max" =~ ^[0-9]+$ ]] || return 1
+
+  # Require min=1 and max=N (strict, predictable)
+  (( min == 1 )) || return 1
+  (( max == n )) || return 1
+
+  return 0
+}
+
 # Emit the special summary line (must be ONE line, machine readable)
 emit_summary() {
   local success="$1"          # true|false
@@ -95,7 +197,9 @@ emit_summary() {
   local failed="$5"           # integer
   local renamed="$6"          # integer
   local deleted="$7"          # integer
-  local reason="${8:-""}"     # optional string
+  local warnings_count="${8:-0}"  # integer
+  local warnings_json="${9:-""}"  # json array string like: [{"code":"..."}]
+  local reason="${10:-""}"        # optional string
 
   # Parse BITRATE like "96k" → 96 (best effort)
   local bitrate_num
@@ -103,10 +207,16 @@ emit_summary() {
   [[ -z "${bitrate_num}" ]] && bitrate_num=0
 
   # Build compact JSON (no pretty-print, must be single line)
+  # warnings_json must be a valid JSON array (or empty string to omit)
+  local wfrag=""
+  if [[ -n "${warnings_json}" ]]; then
+    wfrag=",\"warnings_count\":${warnings_count},\"warnings\":${warnings_json}"
+  fi
+
   if [[ -n "${reason}" ]]; then
-    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted},\"reason\":\"${reason}\"}"
+    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted}${wfrag},\"reason\":\"${reason}\"}"
   else
-    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted}}"
+    echo "__M4B_SUMMARY_JSON__ {\"mode\":\"${MODE}\",\"dry_run\":${DRY_RUN},\"success\":${success},\"runtime_s\":${runtime_s},\"root\":\"${ROOT}\",\"audio_mode\":\"${AUDIO_MODE}\",\"bitrate_kbps\":${bitrate_num},\"created\":${created},\"skipped\":${skipped},\"failed\":${failed},\"renamed\":${renamed},\"deleted\":${deleted}${wfrag}}"
   fi
 }
 
@@ -151,7 +261,7 @@ resolve_channels() {
 ############################################
 START_EPOCH=$(date +%s)
 
-log "===== START MP3/M4A → M4B tool ====="
+log "===== START MP3/M4A/M4B → M4B tool ====="
 log "MODE=${MODE}"
 log "ROOT=${ROOT}"
 log "DRY_RUN=${DRY_RUN}"
@@ -164,7 +274,7 @@ if [[ ! -d "${ROOT}" ]]; then
   log "ERROR: ROOT does not exist: ${ROOT}"
   END_EPOCH=$(date +%s)
   RUNTIME=$((END_EPOCH - START_EPOCH))
-  emit_summary false "${RUNTIME}" 0 0 1 0 0 "root_missing"
+  emit_summary false "${RUNTIME}" 0 0 1 0 0 0 "" "root_missing"
   exit 1
 fi
 
@@ -176,20 +286,19 @@ if ! flock -n 9; then
   log "ERROR: Another run is already in progress. Exiting."
   END_EPOCH=$(date +%s)
   RUNTIME=$((END_EPOCH - START_EPOCH))
-  emit_summary false "${RUNTIME}" 0 0 1 0 0 "already_running"
+  emit_summary false "${RUNTIME}" 0 0 1 0 0 0 "" "already_running"
   exit 1
 fi
 
 # Cancel: exit immediately on SIGINT/SIGTERM (releases lock)
 on_cancel() {
   log "CANCEL: signal received, exiting."
-    END_EPOCH=$(date +%s)
-    RUNTIME=$((END_EPOCH - START_EPOCH))
-    emit_summary false "${RUNTIME}" 0 0 1 0 0 "canceled"
+  END_EPOCH=$(date +%s)
+  RUNTIME=$((END_EPOCH - START_EPOCH))
+  emit_summary false "${RUNTIME}" 0 0 1 0 0 0 "" "canceled"
   exit 130
 }
 trap on_cancel INT TERM
-
 
 ############################################
 # CLEANUP MODE: delete _backup_files only
@@ -208,7 +317,7 @@ if [[ "$MODE" == "cleanup" ]]; then
     log "===== END CLEANUP ====="
     END_EPOCH=$(date +%s)
     RUNTIME=$((END_EPOCH - START_EPOCH))
-    emit_summary true "${RUNTIME}" 0 0 0 0 0
+    emit_summary true "${RUNTIME}" 0 0 0 0 0 0 ""
     exit 0
   fi
 
@@ -229,12 +338,12 @@ if [[ "$MODE" == "cleanup" ]]; then
   log "===== END CLEANUP ====="
   END_EPOCH=$(date +%s)
   RUNTIME=$((END_EPOCH - START_EPOCH))
-  emit_summary true "${RUNTIME}" 0 0 0 0 "${deleted_count}"
+  emit_summary true "${RUNTIME}" 0 0 0 0 "${deleted_count}" 0 ""
   exit 0
 fi
 
 ############################################
-# CORRECT MODE: rename .m4b to Book.m4b
+# CORRECT MODE: rename .m4b to Book - Author.m4b
 ############################################
 if [[ "$MODE" == "correct" ]]; then
   log "===== CORRECT MODE: renaming .m4b files ====="
@@ -298,15 +407,19 @@ if [[ "$MODE" == "correct" ]]; then
   log "Skipped (multiple .m4b): ${skipped_multi_count}"
   log "===== END CORRECT MODE ====="
 
-  emit_summary true "${RUNTIME}" 0 0 0 "${renamed_count}" 0
+  emit_summary true "${RUNTIME}" 0 0 0 "${renamed_count}" 0 0 ""
   exit 0
 fi
 
 ############################################
-# CONVERT MODE: pull images & process folders
+# CONVERT MODE
 ############################################
 log "MODE=convert: converting + backing up sources → _backup_files/"
-log "Policy: MP3s re-encoded @ ${BITRATE}, M4As remuxed where possible"
+log "Policy:"
+log " - MP3s merged → re-encoded @ ${BITRATE}"
+log " - M4As: single file remux (stream copy), multi-file merge @ ${BITRATE}"
+log " - M4Bs: multi-file merge (no re-encode) when part order is clear"
+log "Safety: If multi-file order isn't clear, the book is skipped with a warning (does not stop the batch)."
 
 # Pull images once (skip in dry-run)
 if is_dry_run; then
@@ -321,8 +434,33 @@ fi
 created_count=0
 skipped_count=0
 failed_count=0
-declare -a created_files=()
+
+warnings_count=0
+declare -a warnings_json_items=()
+declare -a order_unclear_books=()   # "Author / Book" list for footer
 declare -a failed_books=()
+declare -a created_files=()
+
+# Common warning helper
+warn_order_unclear() {
+  local book_dir="$1"
+  local parts="$2"   # number of parts
+  local lbl
+  lbl="$(book_label "$book_dir")"
+  log "WARN: ORDER_UNCLEAR: BOOK=${lbl#* / } PATH=${book_dir} (parts=${parts})"
+  log "WARN: ORDER_UNCLEAR: Skipping merge. Rename parts with numeric prefixes (01, 02, 03...) then re-run."
+
+  warnings_count=$((warnings_count + 1))
+  order_unclear_books+=("$lbl")
+
+  # JSON warning object
+  local book_name author_name msg
+  author_name="${lbl%% / *}"
+  book_name="${lbl#* / }"
+  msg="Part order not clear. Rename parts with numeric prefixes (01, 02, 03...) then re-run."
+
+  warnings_json_items+=("{\"code\":\"order_unclear\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
+}
 
 while IFS= read -r -d '' book_dir; do
   author_dir="$(dirname "$book_dir")"
@@ -331,23 +469,33 @@ while IFS= read -r -d '' book_dir; do
 
   [[ "$author" == "#recycle" ]] && continue
 
-  if find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print -quit | grep -q .; then
-    log "SKIP (already has m4b): ${book_dir}"
+  # Gather source candidates
+  mapfile -d '' -t mp3s < <(find "$book_dir" -maxdepth 1 -type f -iname "*.mp3" -print0 2>/dev/null || true)
+  mapfile -d '' -t m4as < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4a" -print0 2>/dev/null || true)
+
+  # For m4b parts: EXCLUDE temp files
+  mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print0 2>/dev/null || true)
+
+  mp3_count=${#mp3s[@]}
+  m4a_count=${#m4as[@]}
+  m4b_count=${#m4bs[@]}
+
+  # Determine if this folder is "already done":
+  # - if it contains exactly ONE real .m4b and no mp3/m4a, we skip as already converted.
+  # - if it contains MULTIPLE .m4b, we treat as a merge candidate (new feature).
+  if (( m4b_count == 1 )) && (( mp3_count == 0 )) && (( m4a_count == 0 )); then
+    log "SKIP (already has single m4b): ${book_dir}"
     skipped_count=$((skipped_count + 1))
     continue
   fi
 
-  mapfile -d '' -t mp3s < <(find "$book_dir" -maxdepth 1 -type f -iname "*.mp3" -print0 2>/dev/null || true)
-  mapfile -d '' -t m4as < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4a" -print0 2>/dev/null || true)
-
-  mp3_count=${#mp3s[@]}
-  m4a_count=${#m4as[@]}
-
-  if [[ "$mp3_count" -eq 0 && "$m4a_count" -eq 0 ]]; then
+  # If nothing usable, ignore silently
+  if (( mp3_count == 0 )) && (( m4a_count == 0 )) && (( m4b_count == 0 )); then
     continue
   fi
 
-  if [[ "$mp3_count" -gt 0 && "$m4a_count" -gt 0 ]]; then
+  # If MP3 + M4A coexist, MP3 wins (as before)
+  if (( mp3_count > 0 )) && (( m4a_count > 0 )); then
     log "INFO: Both MP3 and M4A found, using MP3s only → ${book_dir}"
   fi
 
@@ -355,11 +503,11 @@ while IFS= read -r -d '' book_dir; do
   out_path="${book_dir}/${out_name}"
   tmp_stem="$(safe_name "$book")"
   tmp_path="${book_dir}/.tmp_${tmp_stem}.m4b"
-    # If a previous run was canceled/crashed, remove stale temp so we always re-encode
-    rm -f "${tmp_path}" >/dev/null 2>&1 || true
+  rm -f "${tmp_path}" >/dev/null 2>&1 || true
 
+  # If final output exists for some reason, skip
   if [[ -f "${out_path}" ]]; then
-    log "WARN: Unexpected existing .m4b without earlier detection, skipping: ${out_path}"
+    log "WARN: Unexpected existing output .m4b, skipping: ${out_path}"
     skipped_count=$((skipped_count + 1))
     continue
   fi
@@ -370,17 +518,28 @@ while IFS= read -r -d '' book_dir; do
   log "PATH:   ${book_dir}"
   log "MP3s:   ${mp3_count}"
   log "M4As:   ${m4a_count}"
+  log "M4Bs:   ${m4b_count}"
 
   ##########################################
   # Branch 1: MP3 → M4B
   ##########################################
-  if [[ "$mp3_count" -gt 0 ]]; then
+  if (( mp3_count > 0 )); then
+    # Safety: if multiple MP3s and order unclear, warn + fail this book only
+    if (( mp3_count > 1 )); then
+      if ! order_is_clear "${mp3s[@]}"; then
+        warn_order_unclear "$book_dir" "$mp3_count"
+        failed_count=$((failed_count + 1))
+        failed_books+=("${book_dir}")
+        continue
+      fi
+    fi
+
     first_mp3="${mp3s[0]}"
     detected="$(detect_channels "$first_mp3")"
     channels="$(resolve_channels "$detected")"
 
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
-    log "MODE:   ${mode_desc} @ ${BITRATE}"
+    log "MODE:   MP3 merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"
 
     audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
@@ -444,101 +603,190 @@ while IFS= read -r -d '' book_dir; do
   ##########################################
   # Branch 2: M4A → M4B
   ##########################################
-  if [[ "$m4a_count" -eq 1 ]]; then
-    in_file="${m4as[0]}"
-    log "MODE:   Single M4A (remux, stream copy)"
-    log "INPUT:  ${in_file}"
-    log "OUTPUT: ${out_path}"
+  if (( m4a_count > 0 )); then
+    if (( m4a_count == 1 )); then
+      in_file="${m4as[0]}"
+      log "MODE:   Single M4A (remux, stream copy)"
+      log "INPUT:  ${in_file}"
+      log "OUTPUT: ${out_path}"
 
-    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}"
-      -e "PUID=${DOCKER_UID_GID%%:*}"
-      -e "PGID=${DOCKER_UID_GID##*:}"
-      -v "$(to_host_path "${book_dir}"):/data"
-      "${FFMPEG_IMAGE}" -v error -stats
-      -i "/data/$(basename "$in_file")"
-      -c copy -movflags +faststart
-      "/data/$(basename "$tmp_path")"
-    )
+      cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}"
+        -e "PUID=${DOCKER_UID_GID%%:*}"
+        -e "PGID=${DOCKER_UID_GID##*:}"
+        -v "$(to_host_path "${book_dir}"):/data"
+        "${FFMPEG_IMAGE}" -v error -stats
+        -i "/data/$(basename "$in_file")"
+        -c copy -movflags +faststart
+        "/data/$(basename "$tmp_path")"
+      )
 
-    if is_dry_run; then
-      log "[DRY-RUN] ${cmd[*]}"
-      created_count=$((created_count + 1))
-      created_files+=("${out_path} (DRY-RUN, from single M4A)")
-      continue
+      if is_dry_run; then
+        log "[DRY-RUN] ${cmd[*]}"
+        created_count=$((created_count + 1))
+        created_files+=("${out_path} (DRY-RUN, from single M4A)")
+        continue
+      fi
+
+      if ! "${cmd[@]}"; then
+        log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
+        failed_count=$((failed_count + 1))
+        failed_books+=("${book_dir}")
+        rm -f "${tmp_path}" >/dev/null 2>&1 || true
+        continue
+      fi
+
+    else
+      # Safety: multi-M4A order must be clear
+      if ! order_is_clear "${m4as[@]}"; then
+        warn_order_unclear "$book_dir" "$m4a_count"
+        failed_count=$((failed_count + 1))
+        failed_books+=("${book_dir}")
+        continue
+      fi
+
+      first_m4a="${m4as[0]}"
+      detected="$(detect_channels "$first_m4a")"
+      channels="$(resolve_channels "$detected")"
+
+      [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
+      log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
+      log "OUTPUT: ${out_path}"
+
+      audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
+
+      cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
+        -v "$(to_host_path "${book_dir}"):/data"
+        "${M4B_IMAGE}" merge /data
+        --output-file "/data/$(basename "$tmp_path")"
+        "${audio_args[@]}"
+      )
+
+      if is_dry_run; then
+        log "[DRY-RUN] ${cmd[*]}"
+        created_count=$((created_count + 1))
+        created_files+=("${out_path} (DRY-RUN, from multi M4A)")
+        continue
+      fi
+
+      if ! "${cmd[@]}"; then
+        log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
+        failed_count=$((failed_count + 1))
+        failed_books+=("${book_dir}")
+        rm -f "${tmp_path}" >/dev/null 2>&1 || true
+        continue
+      fi
     fi
 
-    if ! "${cmd[@]}"; then
-      log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
+    if [[ ! -f "${tmp_path}" ]]; then
+      log "ERROR: temp m4b not created (M4A): ${tmp_path}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
-      rm -f "${tmp_path}" >/dev/null 2>&1 || true
       continue
     fi
 
-  else
-    first_m4a="${m4as[0]}"
-    detected="$(detect_channels "$first_m4a")"
-    channels="$(resolve_channels "$detected")"
+    size_bytes=$(stat -c%s "${tmp_path}" 2>/dev/null || echo 0)
+    if [[ "${size_bytes}" -lt "${MIN_BYTES}" ]]; then
+      log "ERROR: temp m4b too small (${size_bytes} bytes, M4A). Keeping M4As. Temp stays: ${tmp_path}"
+      failed_count=$((failed_count + 1))
+      failed_books+=("${book_dir}")
+      continue
+    fi
 
-    [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
-    log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
+    mv -f "${tmp_path}" "${out_path}"
+    log "OK: Created (from M4A) ${out_path}"
+    created_count=$((created_count + 1))
+    created_files+=("${out_path}")
+
+    backup_dir="${book_dir}/_backup_files"
+    if is_dry_run; then
+      log "[DRY-RUN] mkdir -p \"${backup_dir}\""
+      log "[DRY-RUN] move *.m4a → \"${backup_dir}/\""
+    else
+      mkdir -p "${backup_dir}"
+      find "${book_dir}" -maxdepth 1 -type f -iname "*.m4a" -print0 \
+        | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
+    fi
+    log "M4As moved to: ${backup_dir}/"
+
+    continue
+  fi
+
+  ##########################################
+  # Branch 3: Multi-M4B merge → single M4B
+  ##########################################
+  if (( m4b_count > 1 )); then
+    # Safety: multi-M4B order must be clear
+    if ! order_is_clear "${m4bs[@]}"; then
+      warn_order_unclear "$book_dir" "$m4b_count"
+      failed_count=$((failed_count + 1))
+      failed_books+=("${book_dir}")
+      continue
+    fi
+
+    log "MODE:   Multi-M4B merge (no re-encode)"
     log "OUTPUT: ${out_path}"
 
-    audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
-
+    # For M4B inputs, do not pass bitrate/channels (avoid re-encode).
     cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "$(to_host_path "${book_dir}"):/data"
       "${M4B_IMAGE}" merge /data
       --output-file "/data/$(basename "$tmp_path")"
-      "${audio_args[@]}"
     )
 
     if is_dry_run; then
       log "[DRY-RUN] ${cmd[*]}"
       created_count=$((created_count + 1))
-      created_files+=("${out_path} (DRY-RUN, from multi M4A)")
+      created_files+=("${out_path} (DRY-RUN, from multi M4B)")
       continue
     fi
 
     if ! "${cmd[@]}"; then
-      log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
+      log "ERROR: m4b-tool merge (M4B) failed for: ${book_dir}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
       rm -f "${tmp_path}" >/dev/null 2>&1 || true
       continue
     fi
-  fi
 
-  if [[ ! -f "${tmp_path}" ]]; then
-    log "ERROR: temp m4b not created (M4A): ${tmp_path}"
-    failed_count=$((failed_count + 1))
-    failed_books+=("${book_dir}")
+    if [[ ! -f "${tmp_path}" ]]; then
+      log "ERROR: temp m4b not created (M4B): ${tmp_path}"
+      failed_count=$((failed_count + 1))
+      failed_books+=("${book_dir}")
+      continue
+    fi
+
+    size_bytes=$(stat -c%s "${tmp_path}" 2>/dev/null || echo 0)
+    if [[ "${size_bytes}" -lt "${MIN_BYTES}" ]]; then
+      log "ERROR: temp m4b too small (${size_bytes} bytes, M4B). Keeping source M4Bs. Temp stays: ${tmp_path}"
+      failed_count=$((failed_count + 1))
+      failed_books+=("${book_dir}")
+      continue
+    fi
+
+    mv -f "${tmp_path}" "${out_path}"
+    log "OK: Created (from multi M4B) ${out_path}"
+    created_count=$((created_count + 1))
+    created_files+=("${out_path}")
+
+    backup_dir="${book_dir}/_backup_files"
+    if is_dry_run; then
+      log "[DRY-RUN] mkdir -p \"${backup_dir}\""
+      log "[DRY-RUN] move part *.m4b → \"${backup_dir}/\" (excluding output)"
+    else
+      mkdir -p "${backup_dir}"
+      # Move all .m4b except the newly created output file
+      find "${book_dir}" -maxdepth 1 -type f -iname "*.m4b" ! -iname "$(basename "$out_path")" -print0 \
+        | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
+    fi
+    log "M4B parts moved to: ${backup_dir}/"
+
     continue
   fi
 
-  size_bytes=$(stat -c%s "${tmp_path}" 2>/dev/null || echo 0)
-  if [[ "${size_bytes}" -lt "${MIN_BYTES}" ]]; then
-    log "ERROR: temp m4b too small (${size_bytes} bytes, M4A). Keeping M4As. Temp stays: ${tmp_path}"
-    failed_count=$((failed_count + 1))
-    failed_books+=("${book_dir}")
-    continue
-  fi
-
-  mv -f "${tmp_path}" "${out_path}"
-  log "OK: Created (from M4A) ${out_path}"
-  created_count=$((created_count + 1))
-  created_files+=("${out_path}")
-
-  backup_dir="${book_dir}/_backup_files"
-  if is_dry_run; then
-    log "[DRY-RUN] mkdir -p \"${backup_dir}\""
-    log "[DRY-RUN] move *.m4a → \"${backup_dir}/\""
-  else
-    mkdir -p "${backup_dir}"
-    find "${book_dir}" -maxdepth 1 -type f -iname "*.m4a" -print0 \
-      | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
-  fi
-  log "M4As moved to: ${backup_dir}/"
+  # If we get here and there is exactly 1 m4b but also other files, or odd cases:
+  # safest is to skip (we don't want to overwrite or double-handle)
+  log "SKIP (unsupported mix or already has m4b parts state): ${book_dir}"
+  skipped_count=$((skipped_count + 1))
 
 done < <(find "${ROOT}" -mindepth 2 -maxdepth 2 -type d -print0 2>/dev/null)
 
@@ -550,6 +798,7 @@ log "Runtime      : ${RUNTIME}s"
 log "Created M4Bs : ${created_count}"
 log "Skipped books: ${skipped_count}"
 log "Failed books : ${failed_count}"
+log "Warnings     : ${warnings_count}"
 
 if [[ "${#created_files[@]}" -gt 0 ]]; then
   log "Created files:"
@@ -567,10 +816,36 @@ if [[ "${#failed_books[@]}" -gt 0 ]]; then
   done
 fi
 
+# Human-friendly warning footer (so History is instantly useful)
+if (( warnings_count > 0 )); then
+  log "=================================================="
+  log "SUMMARY: WARNINGS"
+  log "=================================================="
+  log "Failed: ${failed_count}"
+  log ""
+  log "Order of book files unclear."
+  log "These books were skipped to avoid incorrect chapter order."
+  log "Please rename files with numeric prefixes (01, 02, 03...) and re-run."
+  log ""
+  log "Affected books:"
+  # de-dupe just in case
+  printf "%s\n" "${order_unclear_books[@]}" | awk '!seen[$0]++' | while IFS= read -r lbl; do
+    [ -n "$lbl" ] && log " - ${lbl}"
+  done
+  log "=================================================="
+fi
+
 log "===== END CONVERT MODE ====="
 
+# Build warnings JSON array (if any)
+warnings_json=""
+if (( warnings_count > 0 )); then
+  # join with commas
+  warnings_json="[$(IFS=,; echo "${warnings_json_items[*]}")]"
+fi
+
 if [[ "${failed_count}" -eq 0 ]]; then
-  emit_summary true "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0
+  emit_summary true "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0 "${warnings_count}" "${warnings_json}"
 else
-  emit_summary false "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0
+  emit_summary false "${RUNTIME}" "${created_count}" "${skipped_count}" "${failed_count}" 0 0 "${warnings_count}" "${warnings_json}"
 fi
