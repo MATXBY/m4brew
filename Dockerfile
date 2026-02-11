@@ -5,8 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 
 LABEL app.name="m4brew" \
-      app.version="1.5.0" \
-      app.release_date="2026-01-31" \
+      app.version="1.5.5" \
+      app.release_date="2026-02-11" \
       app.description="Audiobook source manager and M4B converter"
 
 # System deps (ffmpeg + tooling)
