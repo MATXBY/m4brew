@@ -226,9 +226,9 @@ def _scan_total(mode: str, root_folder: str) -> int:
     n = 0
     for book_dir in book_dirs:
         m4bs = [p for p in book_dir.glob("*.m4b") if not (p.name.startswith(".tmp_") or p.name.startswith("tmp_"))]
-        if m4bs:
-            continue
-        if list(book_dir.glob("*.mp3")) or list(book_dir.glob("*.m4a")):
+        if len(m4bs) == 1 and not list(book_dir.glob("*.mp3")) and not list(book_dir.glob("*.m4a")):
+            continue  # already has single m4b, skip
+        if list(book_dir.glob("*.mp3")) or list(book_dir.glob("*.m4a")) or len(m4bs) > 1:
             n += 1
     return n
 
@@ -503,7 +503,7 @@ def _run_script_background(job: Dict[str, Any], env: Dict[str, str]) -> None:
         write_line(f"\n[worker-error] {e}\n")
 
 
-def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate: int) -> Dict[str, Any]:
+def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitrate) -> Dict[str, Any]:
     root_folder = (root_folder or "").strip()
     if not root_folder:
         return {"status": "error", "error": "root_folder_not_set"}
@@ -571,10 +571,14 @@ def index_post():
     # Everything else comes from saved Settings
     root_folder = str(settings.get("root_folder") or "").strip()
     audio_mode = str(settings.get("audio_mode") or "match").strip().lower()
-    try:
-        bitrate = int(settings.get("bitrate") or 96)
-    except Exception:
-        bitrate = 96
+    bitrate_raw = settings.get("bitrate", 96)
+    if str(bitrate_raw).strip().lower() == "match":
+        bitrate = "match"
+    else:
+        try:
+            bitrate = int(bitrate_raw)
+        except Exception:
+            bitrate = 96
 
     # If user hasn't configured Settings yet, send them there
     if not root_folder:
@@ -758,7 +762,7 @@ def settings_post():
     updated = {
         "root_folder": root_folder,
         "audio_mode": request.form.get("audio_mode") or existing.get("audio_mode", "match"),
-        "bitrate": int(request.form.get("bitrate") or existing.get("bitrate", 96)),
+        "bitrate": "match" if str(request.form.get("bitrate") or "").strip().lower() == "match" else int(request.form.get("bitrate") or existing.get("bitrate", 96)),
         "mode": existing.get("mode", "convert"),
         "dry_run": existing.get("dry_run", "true"),
     }

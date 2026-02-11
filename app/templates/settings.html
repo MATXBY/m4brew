@@ -27,7 +27,7 @@
         <span class="label-pill"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
         <select class="field" id="audio_mode" name="audio_mode">
           {% set am = (settings.get("audio_mode") if settings else "match") %}
-          <option value="match" {% if am == "match" %}selected{% endif %}>match</option>
+          <option value="match" {% if am == "match" %}selected{% endif %}>Match source</option>
           <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
           <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
         </select>
@@ -35,10 +35,11 @@
 
       <div class="setting-row">
         <span class="label-pill"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
-        {% set br = (settings.get("bitrate", 96) if settings else 96) %}
+        {% set br = (settings.get("bitrate", 96) if settings else 96)|string %}
         <select class="field" id="bitrate" name="bitrate">
+          <option value="match" {% if br == "match" %}selected{% endif %}>Match source</option>
           {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
-            <option value="{{ v }}" {% if br == v %}selected{% endif %}>{{ v }}</option>
+            <option value="{{ v }}" {% if br|string == v|string %}selected{% endif %}>{{ v }}</option>
           {% endfor %}
         </select>
       </div>

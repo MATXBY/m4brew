@@ -66,7 +66,11 @@ FFMPEG_IMAGE="linuxserver/ffmpeg"
 
 # Target bitrate for all MP3→M4B outputs (numeric kbps from env → append "k")
 BITRATE_DEFAULT="64"
-BITRATE="${BITRATE:-$BITRATE_DEFAULT}k"
+BITRATE="${BITRATE:-$BITRATE_DEFAULT}"
+if [[ "$BITRATE" != "match" ]]; then
+  # Append "k" suffix for numeric bitrates
+  [[ "$BITRATE" != *k ]] && BITRATE="${BITRATE}k"
+fi
 
 # Minimum acceptable output size (5 MB) to consider conversion valid
 MIN_BYTES=$((5 * 1024 * 1024))
@@ -232,10 +236,10 @@ detect_channels() {
   fi
 
   local ch
-  ch=$(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
+  ch=$(docker run --rm --entrypoint ffprobe --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
       -v "$(to_host_path "$(dirname "$first_file")"):/data" \
-      "$M4B_IMAGE" \
-      ffprobe -v error -select_streams a:0 -show_entries stream=channels \
+      "$FFMPEG_IMAGE" \
+      -v error -select_streams a:0 -show_entries stream=channels \
       -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
 
   if [[ "$ch" == "1" ]]; then
@@ -254,6 +258,61 @@ resolve_channels() {
     stereo) echo "2" ;;
     match|*) echo "$detected" ;;
   esac
+}
+
+
+# Detect bitrate (kbps) of a single audio file using ffprobe
+detect_bitrate() {
+  local file="$1"
+  if is_dry_run; then
+    echo "0"
+    return 0
+  fi
+  local br
+  br=$(docker run --rm --entrypoint ffprobe --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
+      -v "$(to_host_path "$(dirname "$file")"):/data" \
+      "$FFMPEG_IMAGE" \
+      -v error -select_streams a:0 -show_entries stream=bit_rate \
+      -of default=nk=1:nw=1 "/data/$(basename "$file")" 2>/dev/null || echo "0")
+  # ffprobe returns bits/sec, convert to kbps
+  if [[ "$br" =~ ^[0-9]+$ ]] && (( br > 0 )); then
+    echo $(( br / 1000 ))
+  else
+    echo "0"
+  fi
+}
+
+# Detect highest bitrate across multiple files
+detect_max_bitrate() {
+  local max_br=0
+  local file br
+  for file in "$@"; do
+    br=$(detect_bitrate "$file")
+    if [[ "$br" =~ ^[0-9]+$ ]] && (( br > max_br )); then
+      max_br=$br
+    fi
+  done
+  echo "$max_br"
+}
+
+# Resolve bitrate: "match" detects from source, otherwise use fixed value
+resolve_bitrate() {
+  local bitrate_setting="$1"
+  shift
+  local -a files=("$@")
+  if [[ "$bitrate_setting" == "match" ]]; then
+    local detected
+    detected=$(detect_max_bitrate "${files[@]}")
+    if (( detected > 0 )); then
+      log "BITRATE: matched source -> ${detected}k" >&2
+      echo "${detected}k"
+    else
+      log "BITRATE: could not detect source, falling back to ${BITRATE_DEFAULT}k" >&2
+      echo "${BITRATE_DEFAULT}k"
+    fi
+  else
+    echo "${bitrate_setting}"
+  fi
 }
 
 ############################################
@@ -542,7 +601,8 @@ while IFS= read -r -d '' book_dir; do
     log "MODE:   MP3 merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"
 
-    audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
+    effective_bitrate=$(resolve_bitrate "${BITRATE}" "${mp3s[@]}")
+    audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
     cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
       -v "$(to_host_path "${book_dir}"):/data"
@@ -652,7 +712,8 @@ while IFS= read -r -d '' book_dir; do
       log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
       log "OUTPUT: ${out_path}"
 
-      audio_args=(--audio-bitrate="${BITRATE}" --audio-channels="${channels}")
+      effective_bitrate=$(resolve_bitrate "${BITRATE}" "${m4as[@]}")
+      audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
       cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
         -v "$(to_host_path "${book_dir}"):/data"
