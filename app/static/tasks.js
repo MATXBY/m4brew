@@ -165,7 +165,7 @@
   const lvErr = document.getElementById("lvErr");
 
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
-  let _nextPollMs = 5000;
+  let _nextPollMs = 1000;
 
   // DONE pill persistence (so it survives the redirect back to Tasks)
   const DONE_KEY = "m4brew_last_done_pill";
@@ -324,17 +324,26 @@
 
   function setPill(stateClass, line1, line2){
     if(!statusPill) return;
-    statusPill.classList.remove("status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3");
-    if(stateClass) statusPill.classList.add(stateClass);
+    const allStates = ["status-running","status-done","status-warn","status-error","status-test","status-idle","status-run1","status-run2","status-run3"];
+    const needsChange = stateClass && !statusPill.classList.contains(stateClass);
+    if(needsChange){
+      allStates.forEach(c => statusPill.classList.remove(c));
+      statusPill.classList.add(stateClass);
+    }
     if(line2){ statusPill.classList.add("is-two-line"); } else { statusPill.classList.remove("is-two-line"); }
-    statusPill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
-    statusPill.querySelector(".pill-line1").textContent = line1 || "";
+    const curL1 = statusPill.querySelector(".pill-line1");
+    const curL2 = statusPill.querySelector(".pill-line2");
+    if(!curL1 || !curL2){
+      statusPill.innerHTML = '<span class="pill-line1"></span><span class="pill-line2"></span>';
+    }
+    const el1 = statusPill.querySelector(".pill-line1");
     const el2 = statusPill.querySelector(".pill-line2");
+    if(el1.textContent !== (line1 || "")) el1.textContent = line1 || "";
     if(line2){
-      el2.textContent = line2;
+      if(el2.textContent !== line2) el2.textContent = line2;
       el2.style.display = "block";
     }else{
-      el2.textContent = "";
+      if(el2.textContent !== "") el2.textContent = "";
       el2.style.display = "none";
     }
   }
