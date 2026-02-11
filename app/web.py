@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import signal
 import threading
 import time
 from datetime import datetime, timezone
@@ -41,6 +42,7 @@ SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 4294967296  # 4GB upload limit
 
 
 # -------------------------
@@ -250,7 +252,6 @@ def _signal_proc_group(pid: Optional[int]) -> None:
     if not pid:
         return
     try:
-        import os, signal
 
         try:
             os.killpg(int(pid), signal.SIGINT)
@@ -549,69 +550,7 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
     t.start()
 
     return job
-
-
 # -------------------------
-
-# -------------------------
-# Preflight (server-side guard)
-# -------------------------
-def preflight_root(root: str) -> Dict[str, Any]:
-    root = (root or "").strip()
-
-    if not root:
-        return {"ok": False, "error_code": "no_root", "message": "No root folder set"}
-
-    # IMPORTANT: never create folders here; missing path is a clean warning state.
-    try:
-        if not Path(root).exists():
-            return {
-                "ok": False,
-                "error_code": "folder_missing",
-                "message": "Folder does not exist (check the path)",
-                "root_folder": root,
-            }
-    except Exception:
-        return {
-            "ok": False,
-            "error_code": "folder_missing",
-            "message": "Folder does not exist (check the path)",
-            "root_folder": root,
-        }
-
-    puid = os.environ.get("PUID") or os.environ.get("DOCKER_UID") or "1000"
-    pgid = os.environ.get("PGID") or os.environ.get("DOCKER_GID") or "1000"
-    uidgid = f"{puid}:{pgid}"
-
-    # Validate Docker visibility + write access (as target user)
-    cmd = [
-        "docker", "run", "--rm",
-        "-u", uidgid,
-        "-v", f"{root}:/data:rw",
-        "busybox",
-        "sh", "-lc",
-        "test -d /data && touch /data/.m4brew_write_test && rm -f /data/.m4brew_write_test",
-    ]
-
-    try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
-        ok = (p.returncode == 0)
-        out = (p.stdout or "").strip()
-        err = (p.stderr or "").strip()
-    except Exception as e:
-        return {"ok": False, "error_code": "preflight_exception", "message": str(e), "root_folder": root, "uidgid": uidgid}
-
-    if ok:
-        return {"ok": True, "root_folder": root, "uidgid": uidgid}
-
-    blob = (err + "\n" + out).lower()
-    if "permission denied" in blob:
-        return {"ok": False, "error_code": "write_denied", "message": "Write access denied (PUID/PGID)", "root_folder": root, "uidgid": uidgid}
-
-    if ("no such file or directory" in blob) or ("invalid mount config" in blob):
-        return {"ok": False, "error_code": "not_mounted", "message": "Folder not available to Docker (add it to the template)", "root_folder": root, "uidgid": uidgid}
-
-    return {"ok": False, "error_code": "unknown", "message": (err or out or "Unknown error"), "root_folder": root, "uidgid": uidgid}
 # Routes
 # -------------------------
 @app.get("/")
@@ -960,6 +899,15 @@ def _docker_mount_map() -> list[tuple[str, str]]:
     except Exception:
         return []
 
+def _filtered_mounts() -> list[tuple[str, str]]:
+    """Return mounts filtered to real audiobook roots (hides internal mounts)."""
+    return [(src, dst) for (src, dst) in _docker_mount_map()
+            if dst and dst.startswith("/")
+            and dst not in ("/app", "/config", "/var/run/docker.sock")
+            and not dst.startswith("/scripts")
+            and src != "/var/run/docker.sock"
+            and "/mnt/cache/appdata/m4brew" not in src]
+
 
 def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]:
     """
@@ -968,14 +916,7 @@ def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]
     """
     host_path = os.path.normpath(host_path)
 
-    mounts = _docker_mount_map()
-    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
-    mounts = [(src, dst) for (src, dst) in mounts
-              if dst and dst.startswith("/")
-              and dst not in ("/app","/config","/var/run/docker.sock")
-              and not dst.startswith("/scripts")
-              and src != "/var/run/docker.sock"
-              and "/mnt/cache/appdata/m4brew" not in src]
+    mounts = _filtered_mounts()
 
     best_src = None
     best_dst = None
@@ -997,14 +938,7 @@ def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]
 
 @app.get("/api/mounts")
 def api_mounts():
-    mounts = _docker_mount_map()
-    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
-    mounts = [(src, dst) for (src, dst) in mounts
-              if dst and dst.startswith("/")
-              and dst not in ("/app","/config","/var/run/docker.sock")
-              and not dst.startswith("/scripts")
-              and src != "/var/run/docker.sock"
-              and "/mnt/cache/appdata/m4brew" not in src]
+    mounts = _filtered_mounts()
 
     items = [{"host": src, "container": dst} for (src, dst) in mounts]
     items.sort(key=lambda x: x["container"])
@@ -1025,14 +959,7 @@ def preflight_root_mapped(root: str) -> dict:
         root = "/" + root
 
     # Decide if root is a CONTAINER path or a HOST path
-    mounts = _docker_mount_map()
-    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
-    mounts = [(src, dst) for (src, dst) in mounts
-              if dst and dst.startswith("/")
-              and dst not in ("/app","/config","/var/run/docker.sock")
-              and not dst.startswith("/scripts")
-              and src != "/var/run/docker.sock"
-              and "/mnt/cache/appdata/m4brew" not in src]
+    mounts = _filtered_mounts()
 
     root_n = os.path.normpath(root)
 
@@ -1097,105 +1024,14 @@ def preflight_root_mapped(root: str) -> dict:
         "matched_mount": matched_src,
     }
 
-
 @app.route("/api/preflight")
 def api_preflight():
-    settings_path = "/config/settings.json"
-
-    # read root folder from settings.json
-    root = ""
-    try:
-        with open(settings_path, "r") as f:
-            s = json.load(f)
-            root = str(s.get("root_folder", "") or "").strip()
-
-
-    except Exception:
-        root = ""
-
+    settings = load_settings()
+    root = str(settings.get("root_folder", "") or "").strip()
     if not root:
         return jsonify({"ok": False, "error_code": "no_root", "message": "No root folder set"}), 200
+    return jsonify(preflight_root_mapped(root)), 200
 
-    # map host path -> container path (without creating anything)
-    # Decide if root is a CONTAINER path (e.g. /audiobooks) or a HOST path (/mnt/...)
-    mounts = _docker_mount_map()
-    # Only show "real" audiobook roots (hide internal mounts like /app, /config, scripts, docker.sock)
-    mounts = [(src, dst) for (src, dst) in mounts
-              if dst and dst.startswith("/")
-              and dst not in ("/app","/config","/var/run/docker.sock")
-              and not dst.startswith("/scripts")
-              and src != "/var/run/docker.sock"
-              and "/mnt/cache/appdata/m4brew" not in src]
-
-    root_n = os.path.normpath(root)
-    container_path = None
-    matched_src = None
-    for src, dst in mounts:
-        dst_n = os.path.normpath(dst)
-        if root_n == dst_n or root_n.startswith(dst_n.rstrip("/") + "/"):
-            container_path = root_n
-            matched_src = src
-            break
-    if not container_path:
-        container_path, matched_src = _map_host_to_container_path(root)
-
-    if not container_path:
-        return jsonify(
-            {
-                "ok": False,
-                "error_code": "not_mounted",
-                "message": "Folder not available to M4Brew (add it to the Docker template)",
-                "root_folder": root,
-            }
-        ), 200
-
-    # must exist (again: non-destructive; no mkdir)
-    if not os.path.isdir(container_path):
-        return jsonify(
-            {
-                "ok": False,
-                "error_code": "folder_missing",
-                "message": "Folder does not exist (check the path)",
-                "root_folder": root,
-            }
-        ), 200
-
-    # write test (create + remove a tiny file INSIDE the existing folder)
-    test_file = os.path.join(container_path, ".m4brew_write_test")
-    try:
-        with open(test_file, "w", encoding="utf-8") as f:
-            f.write("ok\n")
-        try:
-            os.remove(test_file)
-        except Exception:
-            pass
-    except PermissionError:
-        return jsonify(
-            {
-                "ok": False,
-                "error_code": "write_denied",
-                "message": "Write access denied (check PUID/PGID + permissions)",
-                "root_folder": root,
-            }
-        ), 200
-    except Exception as e:
-        return jsonify(
-            {
-                "ok": False,
-                "error_code": "unknown",
-                "message": str(e),
-                "root_folder": root,
-            }
-        ), 200
-
-    return jsonify(
-        {
-            "ok": True,
-            "root_folder": root,
-            "mapped_path": container_path,
-            "matched_mount": matched_src,
-        }
-    ), 200
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8080"))
     app.run(host="0.0.0.0", port=port)
