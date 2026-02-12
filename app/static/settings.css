@@ -43,3 +43,8 @@
     white-space: normal;
   }
 }
+
+/* Standalone settings page padding */
+.card--settings {
+  padding: var(--page-pad);
+}

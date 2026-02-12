@@ -10,7 +10,7 @@ body{
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
   font-size: var(--font);
   line-height: var(--lh);
-  color: var(--text-muted);
+  color: var(--font1);
   background: transparent;
   position: relative;
 }
@@ -34,7 +34,7 @@ body::before{
     radial-gradient(900px 520px at 12% 0%, rgb(var(--task-convert-rgb) / .22), rgb(var(--task-convert-rgb) / 0) 60%),
     radial-gradient(900px 520px at 50% 0%, rgb(var(--task-rename-rgb) / .22), rgb(var(--task-rename-rgb) / 0) 60%),
     radial-gradient(900px 520px at 88% 0%, rgb(var(--task-delete-rgb) / .20), rgb(var(--task-delete-rgb) / 0) 60%),
-    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0));
+    linear-gradient(180deg, var(--gradient-overlay), rgba(0,0,0,0));
 }
 
 a{ color: inherit; text-decoration: none; }
@@ -92,7 +92,7 @@ h1.title{
 
 .subtitle{
   margin: 0;
-  color: var(--text-muted);
+  color: var(--font2);
 }
 
 /* ✅ Single source of truth: version is dark grey */
@@ -101,7 +101,7 @@ h1.title{
   color: var(--version-color);
   opacity: 1;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--font2);
 }
 
 /* Nav pills */
@@ -118,17 +118,17 @@ h1.title{
   align-items:center;
   gap: 8px;
   height: var(--pill-h);
-  padding: 0 var(--pill-pad-x);
+  padding: 0 16px;
   border-radius: var(--radius-pill);
-  background: rgba(255,255,255,.05);
+  background: var(--buttons2);
   border: 1px solid var(--border);
   transition: transform .06s ease, background .12s ease, border-color .12s ease;
   user-select: none;
 }
-.pill:hover{ transform: translateY(-1px); background: rgba(255,255,255,.07); }
+.pill:hover{ transform: translateY(-1px); background: var(--buttons2); }
 .pill.active{
-  background: var(--accent-soft);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+  background: var(--buttons1);
+  border-color: var(--taskcolour3);
 }
 
 /* ✅ Header pills same width (desktop/tablet). Mobile stays flexible. */
@@ -147,9 +147,9 @@ h1.title{
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: rgba(233,237,243,.35);
+  background: var(--font3);
 }
-.pill.active .dot{ background: var(--accent); }
+.pill.active .dot{ background: var(--taskcolour3); }
 
 /* Content */
 .content{ margin-top: 18px; padding: 0 2px; }
@@ -173,15 +173,16 @@ h1.title{
 
 /* Inputs */
 input[type="text"], input[type="number"], select{
+  color: var(--font1);
   width:100%;
   height: var(--pill-h);
   padding: 0 14px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.18);
+  border: 1px solid var(--outlines);
+  background: var(--empty);
   outline: none;
 }
-input::placeholder{ color: rgba(233,237,243,.35); }
+input::placeholder{ color: var(--font3); }
 
 /* Buttons */
 .btn{
@@ -190,24 +191,24 @@ input::placeholder{ color: rgba(233,237,243,.35); }
   justify-content:center;
   gap: 8px;
   height: var(--pill-h);
-  padding: 0 var(--pill-pad-x);
+  padding: 0 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: #fff;
+  border: 1px solid var(--taskcolour3);
+  background: var(--buttons1);
+  color: var(--font1);
   cursor: pointer;
   transition: transform .06s ease, background .12s ease, border-color .12s ease;
 }
-.btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+.btn:hover{ transform: translateY(-1px); background: var(--button-hover); }
 
 /* ✅ Primary purple everywhere (header active-ish buttons, live ON, etc.) */
 .btn.primary{
-  background: var(--accent-soft);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+  background: var(--buttons1);
+  border-color: var(--taskcolour3);
   font-weight: 650;
 }
 
-.btn.danger{ background: rgba(255,92,122,.14); border-color: var(--warn-outline); }
+.btn.danger{ background: var(--buttons1); border-color: var(--taskcolour3); }
 .btn:disabled{ opacity: .55; cursor: not-allowed; transform:none; }
 
 /* Label pill */
@@ -216,17 +217,17 @@ input::placeholder{ color: rgba(233,237,243,.35); }
   align-items:center;
   justify-content:center;
   height: var(--pill-h);
-  padding: 0 var(--pill-pad-x);
+  padding: 0 16px;
   border-radius: var(--radius-pill);
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
-  color: rgba(233,237,243,.92);
-  font-weight: 750;
+  color: var(--font1);
+  font-weight: 500;
   letter-spacing: .2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  box-shadow: 0 10px 22px var(--shadow);
 }
 
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
@@ -235,13 +236,13 @@ pre{
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
-  background: rgba(0,0,0,.20);
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--buttons2);
+  border: 1px solid var(--outlines);
   border-radius: 14px;
   padding: 12px;
   max-height: 45vh;
   overflow:auto;
-  color: rgba(233,237,243,.92);
+  color: var(--font1);
 }
 
 /* Page card alignment */
@@ -261,13 +262,16 @@ pre{
 
 /* Donate line – intro grey, link white (About + Tasks) */
 .donate-line{
+  margin-top: -10px;
   text-align: center;
 }
 .donate-line .muted{
-  color: rgba(233,237,243,.55);
+  color: var(--font2) !important;
+  color: var(--font2);
 }
 .donate-line a{
-  color: var(--text-muted);
+  color: var(--font1) !important;
+  color: var(--font2);
   text-decoration: none;
 }
 .donate-line a:hover{
@@ -282,7 +286,7 @@ pre{
 
 @keyframes m4brewStatusPulse{
   0%   { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px rgba(58,52,112,0.14); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px var(--pulse-shadow); }
   100% { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
 }
 
@@ -294,16 +298,28 @@ pre{
 
 /* Apply states by toggling these classes on #statusPill */
 .status-pill.status-running{
-  background-color: var(--running-bg, var(--accent-soft));
-  border-color: var(--running-border, var(--accent-border));
+  border-color: var(--empty);
+  background-color: var(--running-bg, var(--buttons1));
   font-weight: 750;
   animation: m4brewStatusPulse 1.2s ease-in-out infinite;
   will-change: transform, box-shadow;
+/* Task-specific colors override when running */
+}
+/* Task-specific colors override when running */
+.status-pill.status-running.status-run1 {
+  background-color: var(--task-convert) !important;
+}
+.status-pill.status-running.status-run2 {
+  background-color: var(--task-rename) !important;
+}
+.status-pill.status-running.status-run3 {
+  background-color: var(--task-delete) !important;
 }
 
 .status-pill.status-done{
-  background: rgba(60,220,130,.12);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+/* UNUSED:   background: rgba(60,220,130,.12);
+/* UNUSED:   border-color: var(--test-outline, rgba(99,102,241,.38));
+*/
   font-weight: 750;
   animation: m4brewStatusDone 900ms ease-out 1;
 }
@@ -343,15 +359,15 @@ pre{
 
 /* Warn = orange (nothing to do, cancelled, partial failure) */
 .status-pill.status-warn{
-  background: rgba(245,158,11,.14);
-    border-color: var(--warn-outline);
+  background: var(--warning);
+    border-color: var(--warning);
   font-weight: 850;
 }
 
 /* Error = red (write denied, folder not mounted, hard failures) */
 .status-pill.status-error{
-  background: rgba(239,68,68,.14);
-    border-color: var(--warn-outline);
+  background: var(--failed);
+    border-color: var(--taskcolour3);
   font-weight: 850;
 }
 
@@ -374,6 +390,16 @@ pre{
 .status-pill.status-running{
   position: relative;
   overflow: visible;
+}
+/* Task-specific colors override when running */
+.status-pill.status-running.status-run1 {
+  background-color: var(--task-convert) !important;
+}
+.status-pill.status-running.status-run2 {
+  background-color: var(--task-rename) !important;
+}
+.status-pill.status-running.status-run3 {
+  background-color: var(--task-delete) !important;
 }
 
 /* Animated outline sits on top of the pill border */
@@ -402,23 +428,23 @@ pre{
 
 /* Grey idle: "Ready to Brew" */
 .status-pill.status-idle{
-  background-color: rgba(255,255,255,.06);
-  border-color: var(--test-outline, rgba(99,102,241,.38));
-  color: rgba(255,255,255,.92);
+  background-color: var(--buttons2);
+  border-color: var(--outlines);
+  color: var(--font1);
 }
 
 /* Purple test: all successful "Test Complete ..." states */
-  border-color: var(--test-outline, rgba(99,102,241,.38));
+  border-color: var(--taskcolour3);
   border-width: 2px !important;
   border-style: solid !important;
-  color: rgba(255,255,255,.95);
+  color: var(--font1);
 }
 
     b
 .status-pill.status-run1{
-  background-color: var(--task-convert);
-  border-color: rgba(255,255,255,.14);
-  color: rgba(255,255,255,.95);
+  background-color: var(--task-convert) !important;
+  border-color: var(--outlines);
+  color: var(--font1);
   font-weight: 850;
 }
 
@@ -427,16 +453,16 @@ pre{
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
   background-color: var(--task-rename);
-  border-color: rgba(255,255,255,.14);
-  color: rgba(255,255,255,.95);
+  border-color: var(--outlines);
+  color: var(--font1);
   font-weight: 850;
 }
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
   background-color: var(--task-delete);
-  border-color: rgba(255,255,255,.14);
-  color: rgba(255,255,255,.95);
+  border-color: var(--outlines);
+  color: var(--font1);
   font-weight: 850;
 }
 
@@ -447,24 +473,34 @@ pre{
 
 /* Pulse uses the per-mode colour injected by JS */
 @keyframes m4brewStatusPulse2{
-  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(58,52,112,.14)); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, rgba(58,52,112,.14)); }
-  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(58,52,112,.14)); }
+  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, var(--pulse-shadow)); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, var(--pulse-shadow)); }
+  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, var(--pulse-shadow)); }
 }
 
 .status-pill.status-running{
   animation: m4brewStatusPulse2 1.2s ease-in-out infinite !important;
+}
+/* Task-specific colors override when running */
+.status-pill.status-running.status-run1 {
+  background-color: var(--task-convert) !important;
+}
+.status-pill.status-running.status-run2 {
+  background-color: var(--task-rename) !important;
+}
+.status-pill.status-running.status-run3 {
+  background-color: var(--task-delete) !important;
 }
 
 /* --- M4Brew: Test pill outline (purple fill, outline matches run1/run2/run3) --- */
 
 /* --- FINAL OVERRIDE: make TEST status clearly purple --- */
 .status-pill.status-test{
-  background-color: rgba(99,102,241,.30) !important;  /* stronger purple fill */
-  border-color: var(--test-outline, var(--line)) !important;
-  border-width: 2px !important;
+  background-color: var(--buttons1) !important;  /* stronger purple fill */
+  border-color: var(--taskcolour3) !important;
+  border-width: 1px !important;
   border-style: solid !important;
-  color: rgba(255,255,255,.95) !important;
+  color: var(--font1) !important;
 }
 
 /* --- M4Brew: Status pill one-line mode (keep line2 capability, but never grow taller) --- */
@@ -493,6 +529,16 @@ pre{
 /* --- running status pill: no outline (keep pulse only) --- */
 .status-pill.status-running{
   border-color: transparent !important;
+}
+/* Task-specific colors override when running */
+.status-pill.status-running.status-run1 {
+  background-color: var(--task-convert) !important;
+}
+.status-pill.status-running.status-run2 {
+  background-color: var(--task-rename) !important;
+}
+.status-pill.status-running.status-run3 {
+  background-color: var(--task-delete) !important;
 }
 .status-pill.status-running.status-pill--outlined{
   box-shadow: none !important;

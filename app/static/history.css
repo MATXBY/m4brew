@@ -30,7 +30,7 @@
 .history-empty{
   padding: var(--history-pad) 0;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--font2);
 }
 
 /* Table wrapper */

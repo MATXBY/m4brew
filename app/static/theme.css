@@ -1,108 +1,174 @@
 /* =========================
-   m4brew — THEME TOKENS
-   Single source of truth (COSMETIC ONLY)
-   Change values here; the rest of the CSS should only reference these tokens.
+   M4BREW — THEME SYSTEM
+   Clean, intuitive color labels for easy theming
 ========================= */
 
-:root{
+:root {
   /* =========================
-     Meta
+     VERSION
   ========================= */
-  --ui-version: "1.6.0";   /* shown under subtitle */
+  --ui-version: "1.7.0";
 
   /* =========================
-     Layout + spacing
+     LAYOUT & SPACING
+     (These stay the same across themes)
   ========================= */
-  --page-pad: 22px;        /* standard padding inside page cards */
-  --page-gap: 22px;        /* standard vertical gap between blocks */
-  --inset-pad: 24px;       /* inner inset for special layouts */
-  --list-indent: 18px;     /* ul/ol indentation */
+  --page-pad: 22px;
+  --page-gap: 22px;
+  --inset-pad: 24px;
+  --list-indent: 18px;
+  --radius: 18px;
+  --radius-pill: 999px;
+  --font-size: 10pt;
+  --line-height: 1.35;
+  --pill-h: 44px;
+  --pill-pad-x: 16px;
+  --stack-pad: 22px;
 
-  /* Page mappings (pages already reference these) */
+  /* Page-specific (legacy support) */
   --task-pad: var(--page-pad);
   --task-inset: var(--inset-pad);
-
   --history-pad: var(--page-pad);
   --history-inset: var(--inset-pad);
-
   --settings-gap: 18px;
 
   /* =========================
-     Global UI sizing (shared)
+     CORE COLOR PALETTE
+     Change these hex values to create new themes
   ========================= */
-  --radius: 18px;
-  --radius-pill: 999px;
-
-  --font: 10pt;
-  --lh: 1.35;
-
-  --pill-h: 44px;
-  --pill-pad-x: 16px;
-
-  --stack-pad: 22px;       /* used in stacked sections */
-  --shadow: 0 18px 40px rgba(0,0,0,.38);
+  
+  /* Task colors (3 steps) */
+  --taskcolour1: #0264BF;  /* Step 1: Convert - Blue */
+  --taskcolour2: #B958A7;  /* Step 2: Rename - Pink */
+  --taskcolour3: #5250A1;  /* Step 3: Delete - Purple */
+  
+  /* Background */
+  --background: #111318;   /* Main page background */
+  
+  /* Buttons */
+  --buttons1: #222043;     /* Primary/selected state */
+  --buttons2: #1F2128;     /* Secondary/unselected state */
+  --button-hover: #2A2B35;  /* Slightly lighter than buttons2 for hover */
+  
+  /* Panel backgrounds */
+  --panel-bg-2: var(--buttons2);   /* Status pill default */
+  
+  /* Text */
+  --font1: #FFFFFF;        /* Main text (white) */
+  --font2: #A6A7AE;        /* Muted text (grey) */
+  --font3: #6B6C72;     /* Very dim text - placeholders, disabled */
+  --shadow: rgba(0,0,0,.12);  /* Box shadows */
+  --pulse-test: rgba(82, 80, 161, 0.22);   /* Test mode pulse glow */
+  --pulse-shadow: rgba(82, 80, 161, 0.14); /* Test mode pulse shadow */
+  --gradient-overlay: rgba(0, 0, 0, 0.55); /* Header gradient overlay */
+  
+  /* UI Elements */
+  --outlines: #323539;     /* All borders/dividers/lines */
+  
+  /* Status */
+  --warning: #C26400;      /* Orange warning */
+  --failed: #FF4000;       /* Red error */
+  
+  /* Special */
+  --empty: transparent;    /* Transparent fills */
 
   /* =========================
-     Palette — Surfaces + lines
+     DERIVED COLORS
+     (Auto-generated from core palette)
   ========================= */
-  --bg: #111318;                          /* page background */
-
-  --surface: rgba(255,255,255,.04);       /* main panels/cards */
-  --surface-strong: rgba(255,255,255,.06);/* stronger surface */
-  --surface-soft: rgba(255,255,255,.03);  /* subtle chips */
-  --surface-lift: rgba(255,255,255,.05);  /* hover / lifted */
-
-  --border: rgba(233,237,243,.10);        /* generic border */
-  --line: rgba(255,255,255,.14);          /* dividers/strong outlines */
-  --stack-line: var(--line);              /* stack dividers */
-
-  /* overlays / modals */
-  --overlay-dim: rgba(0,0,0,.55);
-  --modal-bg: rgba(20,22,28,.96);
-
-  /* shadows */
-  --shadow-soft: rgba(0,0,0,.12);
-  --shadow-strong: rgba(0,0,0,.55);
-  --shadow-inset: rgba(33,28,61,.18);
+  
+  /* RGB values for alpha blending */
+  --taskcolour1-rgb: 2 100 191;
+  --taskcolour2-rgb: 185 88 167;
+  --taskcolour3-rgb: 82 80 161;
+  
+  /* Surfaces (subtle overlays on background) */
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.06);
+  --surface-soft: rgba(255, 255, 255, 0.03);
+  --surface-lift: rgba(255, 255, 255, 0.05);
+  
+  /* Shadows */
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.38);
+  --pulse-test: rgba(82, 80, 161, 0.22);   /* Test mode pulse glow */
+  --pulse-shadow: rgba(82, 80, 161, 0.14); /* Test mode pulse shadow */
+  --gradient-overlay: rgba(0, 0, 0, 0.55); /* Header gradient overlay */
+  --shadow-soft: rgba(0, 0, 0, 0.12);
+  --shadow-strong: rgba(0, 0, 0, 0.55);
+  
+  /* Overlays/modals */
+  --overlay-dim: rgba(0, 0, 0, 0.55);
+  --modal-bg: rgba(20, 22, 28, 0.96);
 
   /* =========================
-     Text (ONLY 3 levels)
-     rgba(..., .70) -> the .70 is alpha (opacity)
+     LEGACY ALIASES
+     (For backwards compatibility with existing CSS)
   ========================= */
-  --text: #e9edf3;                         /* near-white main */
-  --text-muted: rgba(233,237,243,.68);     /* light grey secondary */
-  --text-faint: rgba(233,237,243,.55);     /* dim helper/version */
-
-  /* =========================
-     Brand + status colours
-  ========================= */
-  --accent: #3a3470;
-  --accent-soft: rgba(58,52,112,.28);
-  --accent-border: rgba(120,115,180,.55);
-
-  --danger: #ff5c7a;
-  --success: #7dffbf;
-  --warn: #f59e0b;                      /* orange */
-  --warn-outline: rgba(245,158,11,.55); /* orange outline */
-  --warn-soft: rgba(245,158,11,.14);    /* soft orange fill */
-
-
-  /* =========================
-     Task colours (semantic)
-  ========================= */
-  --task-convert: #27A9E6;
-  --task-rename:  #AD5DA3;
-  --task-delete:  #5250A1;
-
-  /* RGB triples for rgb(var(--X) / a) usage */
-  --task-convert-rgb: 39 169 230;
-  --task-rename-rgb:  173 93 163;
-  --task-delete-rgb:  82 80 161;
+  --bg: var(--background);
+  --border: var(--outlines);
+  --line: var(--outlines);
+  --stack-line: var(--outlines);
+  --accent: var(--taskcolour3);
+  --accent-soft: rgba(82, 80, 161, 0.28);
+  --accent-border: rgba(82, 80, 161, 0.55);
+  --danger: var(--failed);
+  --warn: var(--warning);
+  --warn-outline: rgba(255, 157, 0, 0.55);
+  --warn-soft: rgba(255, 157, 0, 0.14);
+  --task-convert: var(--taskcolour1);
+  --task-rename: var(--taskcolour2);
+  --task-delete: var(--taskcolour3);
+  --task-convert-rgb: var(--taskcolour1-rgb);
+  --task-rename-rgb: var(--taskcolour2-rgb);
+  --task-delete-rgb: var(--taskcolour3-rgb);
+  --outline-brand: rgba(82, 80, 161, 0.38);
+  --test-outline: var(--outline-brand);
+  --outline-brand-strong: rgba(82, 80, 161, 0.55);
+  --font: var(--font-size);
+  --lh: var(--line-height);
 }
 
-/* --- Outlines (separate by intent) --- */
---outline-brand: rgba(99,102,241,.38);  /* purple outline (active pills etc.) */
---test-outline: var(--outline-brand);
-
---outline-brand-strong: rgba(99,102,241,.55);
---warn-outline: rgba(245,158,11,.55);   /* orange outline for warn/danger */
+/* =========================
+   LIGHT THEME
+   (Optional - can be removed if not needed)
+========================= */
+[data-theme="light"] {
+  /* Task colors stay the same */
+  --taskcolour1: #0264BF;
+  --taskcolour2: #B958A7;
+  --taskcolour3: #5250A1;
+  
+  /* Light theme overrides */
+  --background: #F5F0E8;
+  --buttons1: #E8E3DB;
+  --buttons2: #F0EBE3;
+  --button-hover: #2A2B35;  /* Slightly lighter than buttons2 for hover */
+  --font1: #1A1A1A;
+  --font2: #6B6B6B;
+  --outlines: #D0C5B8;
+  --warning: #E68A00;
+  --failed: #CC3300;
+  
+  /* Light theme surfaces */
+  --surface: rgba(0, 0, 0, 0.04);
+  --surface-strong: rgba(0, 0, 0, 0.07);
+  --surface-soft: rgba(0, 0, 0, 0.03);
+  --surface-lift: rgba(0, 0, 0, 0.06);
+  
+  /* Light theme shadows */
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.10);
+  --pulse-test: rgba(82, 80, 161, 0.22);   /* Test mode pulse glow */
+  --pulse-shadow: rgba(82, 80, 161, 0.14); /* Test mode pulse shadow */
+  --gradient-overlay: rgba(0, 0, 0, 0.55); /* Header gradient overlay */
+  --shadow-soft: rgba(0, 0, 0, 0.06);
+  --shadow-strong: rgba(0, 0, 0, 0.15);
+  
+  --overlay-dim: rgba(0, 0, 0, 0.30);
+  --modal-bg: rgba(245, 240, 232, 0.96);
+  
+  /* Update legacy aliases for light theme */
+  --bg: var(--background);
+  --border: var(--outlines);
+  --line: var(--outlines);
+  --stack-line: var(--outlines);
+}
