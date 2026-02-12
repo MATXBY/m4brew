@@ -672,7 +672,7 @@ def api_job():
 
 @app.get("/about")
 def about_get():
-    return render_template("about.html", active_page="about")
+    return render_template("about.html", settings=load_settings(), active_page="about")
 
 
 @app.get("/job/output")
@@ -763,6 +763,7 @@ def settings_post():
         "root_folder": root_folder,
         "audio_mode": request.form.get("audio_mode") or existing.get("audio_mode", "match"),
         "bitrate": "match" if str(request.form.get("bitrate") or "").strip().lower() == "match" else int(request.form.get("bitrate") or existing.get("bitrate", 96)),
+        "theme": request.form.get("theme") or existing.get("theme", "dark"),
         "mode": existing.get("mode", "convert"),
         "dry_run": existing.get("dry_run", "true"),
     }
@@ -832,7 +833,7 @@ def history_get():
             }
         )
 
-    return render_template("history.html", runs=enriched, count=len(enriched), active_page="history")
+    return render_template("history.html", runs=enriched, count=len(enriched), settings=load_settings(), active_page="history")
 
 
 @app.get("/history/<int:idx>")
@@ -843,7 +844,7 @@ def history_detail(idx: int):
     r = records[idx]
     ts = r.get("ts", "")
     r["ts_human"] = humanize_ts(ts) if ts else ""
-    return render_template("history_detail.html", detail=r, active_page="history")
+    return render_template("history_detail.html", detail=r, settings=load_settings(), active_page="history")
 
 
 @app.get("/history/download")
