@@ -357,9 +357,10 @@
     const m = String(mode || "").toLowerCase();
 
     if(dry){
-      try{ statusPill.style.setProperty("--pulse-color", "rgba(99,102,241,.22)"); }catch(_){ }
-      try{ statusPill.style.setProperty("--running-bg",  "rgba(99,102,241,.18)"); }catch(_){ }
-      try{ statusPill.style.setProperty("--running-border", "rgba(99,102,241,.38)"); }catch(_){ }
+      const root = getComputedStyle(document.documentElement);
+      try{ statusPill.style.setProperty("--pulse-color", root.getPropertyValue("--pulse-test").trim() || "rgba(82,80,161,0.22)"); }catch(_){ }
+      try{ statusPill.style.setProperty("--running-bg", root.getPropertyValue("--buttons1").trim() || "rgba(82,80,161,0.18)"); }catch(_){ }
+      try{ statusPill.style.setProperty("--running-border", root.getPropertyValue("--taskcolour3").trim() || "rgba(82,80,161,0.38)"); }catch(_){ }
       return;
     }
 

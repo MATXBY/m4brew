@@ -33,8 +33,7 @@ body::before{
   background:
     radial-gradient(900px 520px at 12% 0%, rgb(var(--task-convert-rgb) / .22), rgb(var(--task-convert-rgb) / 0) 60%),
     radial-gradient(900px 520px at 50% 0%, rgb(var(--task-rename-rgb) / .22), rgb(var(--task-rename-rgb) / 0) 60%),
-    radial-gradient(900px 520px at 88% 0%, rgb(var(--task-delete-rgb) / .20), rgb(var(--task-delete-rgb) / 0) 60%),
-    linear-gradient(180deg, var(--gradient-overlay), rgba(0,0,0,0));
+    radial-gradient(900px 520px at 88% 0%, rgb(var(--task-delete-rgb) / .20), rgb(var(--task-delete-rgb) / 0) 60%);
 }
 
 a{ color: inherit; text-decoration: none; }
@@ -199,7 +198,7 @@ input::placeholder{ color: var(--font3); }
   cursor: pointer;
   transition: transform .06s ease, background .12s ease, border-color .12s ease;
 }
-.btn:hover{ transform: translateY(-1px); background: var(--button-hover); }
+.btn:hover{ transform: translateY(-1px); }
 
 /* ✅ Primary purple everywhere (header active-ish buttons, live ON, etc.) */
 .btn.primary{
@@ -286,7 +285,7 @@ pre{
 
 @keyframes m4brewStatusPulse{
   0%   { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px var(--pulse-shadow); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px rgba(var(--taskcolour3-rgb), 0.14); }
   100% { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
 }
 
@@ -473,9 +472,9 @@ pre{
 
 /* Pulse uses the per-mode colour injected by JS */
 @keyframes m4brewStatusPulse2{
-  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, var(--pulse-shadow)); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, var(--pulse-shadow)); }
-  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, var(--pulse-shadow)); }
+  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
 }
 
 .status-pill.status-running{
