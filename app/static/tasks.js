@@ -41,7 +41,7 @@
       title: "BITRATE",
       body: ["Choose your preferred audio bitrate."],
       boxes: [
-        { title: "", lines: ["Bitrate range: 32kbps – 320kbps.", "Match source coming soon"] }
+        { title: "", lines: ["MATCH SOURCE — detects the highest source bitrate and matches it", "FIXED — choose a specific bitrate (32–320 kbps)"] }
       ]
     },
 
@@ -838,7 +838,7 @@
         // Line2: "Part order unclear. Check History"
         if(dry){
           setPill("status-warn", `Test · ${count} to ${verb.toLowerCase()} • ${failed} failed • Check Logs`, "");
-          holdPill("status-warn", `${count} to ${verb} / ${failed} failed • Check Logs`, 2500);
+          if(!holdActive()) holdPill("status-warn", `${count} to ${verb} / ${failed} failed • Check Logs`, 2500);
         }else{
           // RUN version (same format, but you could switch to "Done: X converted / Y failed" later if you prefer)
           setPill("status-warn", `Done: ${count} ${past} • ${failed} failed • Check Logs`, "");
@@ -853,7 +853,7 @@
       if(failed > 0 && count > 0){
         if(dry){
           setPill("status-warn", `${count} to ${verb} / ${failed} failed • Check Logs`, "Check History");
-          holdPill("status-warn", `${count} to ${verb} / ${failed} failed • Check Logs`, 2500);
+          if(!holdActive()) holdPill("status-warn", `${count} to ${verb} / ${failed} failed • Check Logs`, 2500);
         }else{
           setPill("status-warn", `Done: ${count} ${past} / ${failed} failed • Check Logs`, "Check History");
           setDonePill("status-warn", `Done: ${count} ${past} / ${failed} failed • Check Logs`, _termKey);
@@ -863,7 +863,7 @@
       }else if(count > 0){
         if(dry){
           setPill("status-test", `Test · ${count} to ${verb}`, "");
-          holdPill("status-test", `Test · ${count} to ${verb}`, 2500);
+          if(!holdActive()) holdPill("status-test", `Test · ${count} to ${verb}`, 2500);
         }else{
           const cls = (mode === "convert") ? "status-run1" : (mode === "correct") ? "status-run2" : (mode === "cleanup") ? "status-run3" : "status-done";
           setPill(cls, `Done: ${count} ${past}`, "");
@@ -879,7 +879,7 @@
             holdPill(cls, l1, 2500);
           }
         }else{
-          holdPill(cls, l1, 2500);
+          if(!holdActive()) holdPill(cls, l1, 2500);
         }
       }
 

@@ -6,52 +6,41 @@
 {% endblock %}
 
 {% block content %}
-<div class="card card--about">
-
-  <h2 class="about-h">Welcome</h2>
-
-  <p>
-    M4Brew is a simple tool for converting and organising audiobooks into clean, chapterised M4B files with AAC audio,
-    making them easier to manage and more reliable for media players like Plex, Jellyfin, Audiobookshelf, and similar tools.
-  </p>
-
-  <p>
-    It’s designed to remove the fiddly parts of audiobook housekeeping while staying safe, predictable, and transparent.
-  </p>
-
-  <h3 class="about-h">Folder structure (important)</h3>
-
-  <pre class="about-tree">Audiobooks/
+<div class="about-grid">
+  <div class="card card--about">
+    <h2 class="about-h">Welcome</h2>
+    <p>
+      M4Brew is a simple tool for converting and organising audiobooks into clean, chapterised M4B files with AAC audio,
+      making them easier to manage and more reliable for media players like Plex, Jellyfin, and Audiobookshelf.
+    </p>
+    <p>
+      It’s designed to handle the fiddly parts of audiobook housekeeping while staying safe, predictable, and transparent.
+    </p>
+    <h3 class="about-h">Folder structure (important)</h3>
+    <pre class="about-tree">Audiobooks/
 └── Author Name/
     └── Book Title/
         └── audio files</pre>
-
-  <p>
-    This structure is essential. It allows M4Brew to name output files consistently, generate reliable chapter titles,
-    and help media managers correctly identify books and authors.
-  </p>
-
-  <h3 class="about-h">Supported input formats</h3>
-  <ul class="about-list">
-    <li>MP3 (single or multiple files)</li>
-    <li>M4A (single or multiple files)</li>
-    <li>Existing M4B (merged into one)</li>
-  </ul>
-
-  <p>Output is always a single, chapterised <code>.m4b</code> (AAC) file.</p>
-
-  <h3 class="about-h">Safety first</h3>
-  <ul class="about-list">
-    <li>Original audio files are never deleted automatically</li>
-    <li>Converted files are created alongside your existing structure</li>
-    <li>Cleanup is a separate, explicit step</li>
-    <li>Jobs can be safely cancelled — no half-written files are left behind</li>
-  </ul>
-
+    <p>
+      M4Brew expects this structure. It allows output files to be named consistently, generates reliable chapter titles,
+      and helps media servers correctly identify books and authors.
+    </p>
+  </div>
+  <div class="card card--about">
+    <h3 class="about-h">Supported input formats</h3>
+    <ul class="about-list">
+      <li>MP3 (single or multiple files)</li>
+      <li>M4A (single or multiple files)</li>
+      <li>Existing M4B (merged into one)</li>
+    </ul>
+    <p>Output is always a single, chapterised <code>.m4b</code> (AAC) file.</p>
+    <h3 class="about-h">Safety first</h3>
+    <ul class="about-list">
+      <li>Original audio files are never deleted automatically</li>
+      <li>Converted files are created alongside your existing structure</li>
+      <li>Cleanup is a separate, explicit step</li>
+      <li>Jobs can be safely cancelled — no half-written files are left behind</li>
+    </ul>
+  </div>
 </div>
-
-<p class="donate-line">
-  <span class="donate-faint">If you enjoy using M4Brew, please consider </span>
-  <a class="donate-link" href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
-</p>
 {% endblock %}

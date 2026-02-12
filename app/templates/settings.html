@@ -3,6 +3,7 @@
 {% block title %}M4Brew • Settings{% endblock %}
 
 {% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='tasks.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='settings.css') }}">
 {% endblock %}
 
@@ -12,19 +13,23 @@
     <div class="stack">
 
       <div class="setting-row">
-        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Mapped folder</span>
-        <input
-          class="field"
-          id="root_folder"
-          type="text"
-          name="root_folder"
-          placeholder="/mnt/remotes/.../Audiobooks"
-          value="{{ settings.get('root_folder','') if settings else '' }}"
-        >
+        <span class="label-pill step-label" data-help="select-theme" role="button" tabindex="0" aria-label="More info: Theme"><strong>SELECT:</strong>&nbsp;Theme</span>
+        {% set th = (settings.get("theme", "dark") if settings else "dark") %}
+        <select class="field" id="theme" name="theme" onchange="applyTheme(this.value)">
+          <option value="dark" {% if th == "dark" %}selected{% endif %}>Modern Dark</option>
+          <option value="light" {% if th == "light" %}selected{% endif %}>Latte (light)</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <span class="label-pill step-label" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder"><strong>SELECT:</strong>&nbsp;Mapped folder</span>
+        <input type="hidden" id="root_folder" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
+        <select class="field" id="root_mount_pick" aria-label="Pick from mapped folders">
+          <option value="">Loading folders…</option>
+        </select>
       </div>
 
       <div class="setting-row">
-        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
+        <span class="label-pill step-label" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
         <select class="field" id="audio_mode" name="audio_mode">
           {% set am = (settings.get("audio_mode") if settings else "match") %}
           <option value="match" {% if am == "match" %}selected{% endif %}>Match source</option>
@@ -34,7 +39,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
+        <span class="label-pill step-label" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
         {% set br = (settings.get("bitrate", 96) if settings else 96)|string %}
         <select class="field" id="bitrate" name="bitrate">
           <option value="match" {% if br == "match" %}selected{% endif %}>Match source</option>
@@ -47,23 +52,33 @@
     </div>
   </form>
 </div>
+<div class="help-overlay" id="helpOverlay" role="dialog" aria-hidden="true" aria-modal="true">
+  <div class="help-modal">
+    <div class="help-head">
+      <div class="help-title" id="helpTitle">Help</div>
+      <button class="help-x" id="helpCloseBtn" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="help-body" id="helpBody"></div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-  // Auto-save (no save button / no "saved" pill)
+  // Auto-save
   const form = document.getElementById("settingsForm");
-  let t = null;
-
+  let _autosaveTimer = null;
   const rootInput = document.getElementById("root_folder");
-  const initialRoot = rootInput ? (rootInput.value || "") : "";
+  const mountPick = document.getElementById("root_mount_pick");
   let rootDirty = false;
 
   function autosave() {
-    if (t) clearTimeout(t);
-    t = setTimeout(async () => {
+    if (!form) return;
+    if (_autosaveTimer) clearTimeout(_autosaveTimer);
+    _autosaveTimer = setTimeout(async () => {
       try {
         const fd = new FormData(form);
+        if (!rootDirty) fd.delete("root_folder");
         await fetch("/settings", {
           method: "POST",
           body: fd,
@@ -76,13 +91,146 @@
     }, 250);
   }
 
-  if (rootInput) {
-    rootInput.addEventListener("input", () => {
-      rootDirty = (rootInput.value || "") !== initialRoot;
-    });
+  async function initMountDropdown() {
+    if (!mountPick || !rootInput) return;
+    try {
+      const r = await fetch("/api/mounts?ts=" + Date.now(), {cache: "no-store"});
+      const j = await r.json();
+      const mounts = (j && j.mounts) ? j.mounts : [];
+      const filtered = mounts.filter(m =>
+        m && m.container && m.host &&
+        String(m.container).startsWith("/") &&
+        !["/config", "/var/run/docker.sock"].includes(String(m.container))
+      );
+      mountPick.innerHTML = "";
+      const ph = document.createElement("option");
+      ph.value = "";
+      ph.textContent = "Pick from mapped folders\u2026";
+      mountPick.appendChild(ph);
+      for (const m of filtered) {
+        const opt = document.createElement("option");
+        opt.value = String(m.container);
+        opt.textContent = m.container + "  (" + m.host + ")";
+        mountPick.appendChild(opt);
+      }
+      const cur = String(rootInput.value || "").trim();
+      if (cur) {
+        const hit = filtered.find(m => cur === String(m.container) || cur === String(m.host));
+        if (hit) mountPick.value = String(hit.container);
+      }
+      mountPick.addEventListener("change", () => {
+        if (!mountPick.value) return;
+        rootInput.value = mountPick.value;
+        rootDirty = true;
+        autosave();
+      });
+    } catch (e) {
+      mountPick.innerHTML = "<option value=''>Could not load folders</option>";
+    }
   }
 
   form.addEventListener("input", autosave);
   form.addEventListener("change", autosave);
+  initMountDropdown();
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    try { localStorage.setItem("m4brew_theme", t); } catch(e) {}
+  }
+
+  // Help modal
+  const HELP = {
+    "select-theme": {
+      title: "BREW IT YOUR WAY",
+      body: [
+        "Choose how M4Brew looks.",
+        "",
+        "Your preference is saved and remembered between sessions."
+      ],
+      boxes: [
+        { title: "", lines: ["ESPRESSO — dark roast, easy on the eyes", "LATTE — light and creamy, for the daytime brewer"] }
+      ]
+    },
+    "select-source": {
+      title: "FOLDERS: LOCATION & STRUCTURE",
+      body: [
+        "Choose your mapped folder from the dropdown.",
+        "",
+        "Multiple root audiobook folders can be mapped into the container.",
+        "",
+        "The template provides 3 fields (Audiobooks 1\u20133).",
+        "",
+        "Set your host paths there\u2026 then pick one here."
+      ],
+      boxes: [
+        { title: "FOLDER STRUCTURE", lines: ["Audiobooks/", "\u2514\u2500\u2500 Author Name/", "    \u2514\u2500\u2500 Book Title/", "        \u2514\u2500\u2500 audio files"] }
+      ]
+    },
+    "select-audio": {
+      title: "AUDIO CHANNELS",
+      body: ["Choose audio channel behaviour:"],
+      boxes: [
+        { title: "", lines: ["MATCH \u2014 keep what the source uses", "MONO \u2014 force mono", "STEREO \u2014 force stereo"] }
+      ]
+    },
+    "select-bitrate": {
+      title: "BITRATE",
+      body: ["Choose your preferred audio bitrate."],
+      boxes: [
+        { title: "", lines: ["MATCH SOURCE \u2014 detects the highest source bitrate and matches it", "FIXED \u2014 choose a specific bitrate (32\u2013320 kbps)"] }
+      ]
+    }
+  };
+
+  const overlay = document.getElementById("helpOverlay");
+  const titleEl = document.getElementById("helpTitle");
+  const bodyEl = document.getElementById("helpBody");
+  const closeBtn = document.getElementById("helpCloseBtn");
+
+  function openHelp(key) {
+    const d = HELP[key];
+    if (!d || !overlay || !bodyEl || !titleEl) return;
+    titleEl.textContent = d.title || "Help";
+    bodyEl.innerHTML = (d.body || []).map(t => "<p>" + String(t) + "</p>").join("");
+    if (d.boxes && Array.isArray(d.boxes)) {
+      d.boxes.forEach(b => {
+        const wrap = document.createElement("div");
+        wrap.className = "help-box" + (b.tone ? (" help-box--" + b.tone) : "");
+        const h = document.createElement("div");
+        h.className = "help-box-title";
+        h.textContent = b.title || "";
+        wrap.appendChild(h);
+        (b.lines || []).forEach(l => {
+          const p = document.createElement("p");
+          p.textContent = l;
+          wrap.appendChild(p);
+        });
+        bodyEl.appendChild(wrap);
+      });
+    }
+    overlay.classList.add("open");
+    overlay.setAttribute("aria-hidden", "false");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeHelp() {
+    if (!overlay) return;
+    overlay.classList.remove("open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  document.querySelectorAll("[data-help]").forEach(el => {
+    el.addEventListener("click", () => openHelp(el.getAttribute("data-help")));
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openHelp(el.getAttribute("data-help"));
+      }
+    });
+  });
+
+  if (closeBtn) closeBtn.addEventListener("click", closeHelp);
+  if (overlay) overlay.addEventListener("click", (e) => { if (e.target === overlay) closeHelp(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeHelp(); });
 </script>
 {% endblock %}

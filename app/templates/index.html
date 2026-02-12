@@ -23,56 +23,10 @@ Do NOT assume this file is standalone.
 <div class="card card--tasks">
   <div class="task-stack">
 
-    <!-- SELECT / SETTINGS (embedded) -->
-    <form method="post" action="/settings" id="settingsForm">
-      <div class="stack">
-
-        <div class="setting-row">
-          <div class="step-label is-select" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder">
-            <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Mapped folder</span>
-          </div>
-
-          <input
-            class="field"
-            id="root_folder"
-            type="hidden"
-            name="root_folder"
-            placeholder="/mnt/remotes/.../Audiobooks"
-            value="{{ settings.get('root_folder','') if settings else '' }}"
-          >
-        </div>
-
-        <div class="setting-row">
-          <div class="step-label is-select" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks">
-            <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Audio tracks</span>
-          </div>
-
-          <select class="field" id="audio_mode" name="audio_mode">
-            {% set am = (settings.get("audio_mode") if settings else "match") %}
-            <option value="match" {% if am == "match" %}selected{% endif %}>Match source</option>
-            <option value="mono" {% if am == "mono" %}selected{% endif %}>mono</option>
-            <option value="stereo" {% if am == "stereo" %}selected{% endif %}>stereo</option>
-          </select>
-        </div>
-
-        <div class="setting-row">
-          <div class="step-label is-select" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate">
-            <span class="step-strong">SELECT:</span>&nbsp;<span class="step-rest">Bitrate (kbps)</span>
-          </div>
-
-          {% set br = (settings.get("bitrate", 96) if settings else 96)|string %}
-          <select class="field" id="bitrate" name="bitrate">
-            <option value="match" {% if br == "match" %}selected{% endif %}>Match source</option>
-            {% for v in [32,48,64,80,96,112,128,160,192,224,256,320] %}
-              <option value="{{ v }}" {% if br|string == v|string %}selected{% endif %}>{{ v }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-      </div>
+    <!-- Hidden settings form (values managed on Settings page) -->
+    <form id="settingsForm" style="display:none;">
+      <input type="hidden" id="root_folder" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
     </form>
-
-    <div class="section-divider"></div>
 
     <!-- STEPS -->
     <div class="steps-block">
@@ -178,10 +132,6 @@ Do NOT assume this file is standalone.
   </div>
 </div>
 
-<p class="donate-line">
-  <span class="muted">If you enjoy using M4Brew, please consider </span>
-  <a href="https://buymeacoffee.com/m4brew" target="_blank" rel="noopener">buying me a coffee ☕</a>
-</p>
 
 <!-- HELP MODAL (Tasks page only) -->
 <div class="help-overlay" id="helpOverlay" aria-hidden="true">
