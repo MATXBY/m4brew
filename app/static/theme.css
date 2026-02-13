@@ -1,18 +1,14 @@
 /* =========================
-   M4BREW — THEME SYSTEM
-   Clean, intuitive color labels for easy theming
+   M4BREW THEME SYSTEM
+   Minimal 15-variable palette per theme
 ========================= */
 
+/* =========================
+   MODERN DARK (DEFAULT)
+========================= */
 :root {
-  /* =========================
-     VERSION
-  ========================= */
+  /* UI Constants (never change) */
   --ui-version: "1.7.0";
-
-  /* =========================
-     LAYOUT & SPACING
-     (These stay the same across themes)
-  ========================= */
   --page-pad: 22px;
   --page-gap: 22px;
   --inset-pad: 24px;
@@ -24,200 +20,100 @@
   --pill-h: 44px;
   --pill-pad-x: 16px;
   --stack-pad: 22px;
-
-  /* Page-specific (legacy support) */
   --task-pad: var(--page-pad);
   --task-inset: var(--inset-pad);
   --history-pad: var(--page-pad);
   --history-inset: var(--inset-pad);
   --settings-gap: 18px;
 
-  /* =========================
-     CORE COLOR PALETTE
-     Change these hex values to create new themes
-  ========================= */
+  /* 12 Core Colors */
+  --taskcolour1: #0264BF;
+  --taskcolour2: #B958A7;
+  --taskcolour3: #5250A1;
   
-  /* Task colors (3 steps) */
-  --taskcolour1: #0264BF;  /* Step 1: Convert - Blue */
-  --taskcolour2: #B958A7;  /* Step 2: Rename - Pink */
-  --taskcolour3: #5250A1;  /* Step 3: Delete - Purple */
+  --background: #111318;
   
-  /* Background */
-  --background: #111318;   /* Main page background */
+  --buttons1: #222043;
+  --buttons2: #1F2128;
   
-  /* Buttons */
-  --buttons1: #222043;     /* Primary/selected state */
-  --buttons1-rgb: 34 32 67;   /* buttons1 in RGB for transparency */
-  --buttons2: #1F2128;     /* Secondary/unselected state */
+  --font1: #FFFFFF;
+  --font2: #A6A7AE;
+  --font3: #6B6C72;
   
-  /* Panel backgrounds */
-  --panel-bg-2: var(--buttons2);   /* Status pill default */
+  --outlines: #323539;
   
-  /* Text */
-  --font1: #FFFFFF;        /* Main text (white) */
-  --font2: #A6A7AE;        /* Muted text (grey) */
-  --font3: #6B6C72;     /* Very dim text - placeholders, disabled */
-  --shadow: rgba(0,0,0,.08);  /* Box shadows */
-  
-  /* UI Elements */
-  --outlines: #323539;     /* All borders/dividers/lines */
-  
-  /* Status */
-  --warning: #C26400;      /* Orange warning */
-  --failed: #FF4000;       /* Red error */
-  
-  /* Special */
-  --empty: transparent;    /* Transparent fills */
+  --warning: #C26400;
+  --failed: #FF4000;
 
-  /* =========================
-     DERIVED COLORS
-     (Auto-generated from core palette)
-  ========================= */
-  
-  /* RGB values for alpha blending */
+  /* Universal */
+  --empty: transparent;
+  --shadow: rgba(0,0,0,.08);
+
+  /* RGB values */
   --taskcolour1-rgb: 2 100 191;
   --taskcolour2-rgb: 185 88 167;
   --taskcolour3-rgb: 82 80 161;
-  
-  /* Surfaces (subtle overlays on background) */
-  --surface: rgba(255, 255, 255, 0.04);
-  --surface-strong: rgba(255, 255, 255, 0.06);
-  --surface-soft: rgba(255, 255, 255, 0.03);
-  --surface-lift: rgba(255, 255, 255, 0.05);
-  
-  /* Shadows */
-  
-  /* Overlays/modals */
-  --overlay-dim: rgba(0, 0, 0, 0.55);
-  --modal-bg: rgba(20, 22, 28, 0.96);
-
-  /* =========================
-     LEGACY ALIASES
-     (For backwards compatibility with existing CSS)
-  ========================= */
-  --bg: var(--background);
-  --border: var(--outlines);
-  --line: var(--outlines);
-  --stack-line: var(--outlines);
-  --accent: var(--taskcolour3);
-  --accent-soft: rgba(82, 80, 161, 0.28);
-  --accent-border: rgba(82, 80, 161, 0.55);
-  --danger: var(--failed);
-  --warn: var(--warning);
-  --warn-outline: rgba(255, 157, 0, 0.55);
-  --warn-soft: rgba(255, 157, 0, 0.14);
-  --task-convert: var(--taskcolour1);
-  --task-rename: var(--taskcolour2);
-  --task-delete: var(--taskcolour3);
-  --task-convert-rgb: var(--taskcolour1-rgb);
-  --task-rename-rgb: var(--taskcolour2-rgb);
-  --task-delete-rgb: var(--taskcolour3-rgb);
-  --outline-brand: rgba(82, 80, 161, 0.38);
-  --test-outline: var(--outline-brand);
-  --outline-brand-strong: rgba(82, 80, 161, 0.55);
-  --font: var(--font-size);
-  --lh: var(--line-height);
+  --buttons1-rgb: 34 32 67;
 }
 
 /* =========================
-   LIGHT THEME
-   (Optional - can be removed if not needed)
-========================= */
-
-/* =========================
    LATTE THEME
-   Warm, creamy, coffee-inspired palette
 ========================= */
 [data-theme="latte"] {
-  /* Task colors */
-  --taskcolour1: #E39C4C;  /* Convert - Warm orange */
-  --taskcolour2: #BB9C7D;  /* Rename - Tan */
-  --taskcolour3: #CF8C68;  /* Delete - Terracotta */
+  --taskcolour1: #E39C4C;
+  --taskcolour2: #BB9C7D;
+  --taskcolour3: #CF8C68;
   
-  /* Background */
-  --background: #FEF9F3;   /* Cream */
+  --background: #FEF9F3;
   
-  /* Buttons */
   --buttons1: #D6C1A4;
-  --buttons1-rgb: 214 193 164;     /* Light cream */
-  --buttons2: #F4EBD6;     /* Darker cream */
+  --buttons2: #F4EBD6;
   
-  /* Text */
-  --font1: #6F5B57;        /* Dark brown */
-  --font2: #B5A097;        /* Medium grey */
-  --font3: #A6A7AE;        /* Light grey */
+  --font1: #6F5B57;
+  --font2: #B5A097;
+  --font3: #A6A7AE;
   
-  /* UI Elements */
-  --outlines: #BB9C7D;     /* Tan borders */
+  --outlines: #BB9C7D;
   
-  /* Status */
-  --warning: #C26400;      /* Orange warning */
-  --failed: #FF4000;       /* Red error */
-  
-  /* Special */
+  --warning: #C26400;
+  --failed: #FF4000;
+
   --empty: transparent;
   --shadow: rgba(0,0,0,.08);
-  
-  /* Panel backgrounds */
-  --panel-bg-2: var(--buttons2);
-  
-  /* RGB values */
+
   --taskcolour1-rgb: 227 156 76;
   --taskcolour2-rgb: 187 156 125;
   --taskcolour3-rgb: 207 140 104;
-  
-  /* Aliases (for compatibility) */
-  --bg: var(--background);
-  --border: var(--outlines);
-  --line: var(--outlines);
-  --stack-line: var(--outlines);
+  --buttons1-rgb: 214 193 164;
 }
 
 /* =========================
    ESPRESSO THEME
-   Rich, dark, coffee-inspired palette
 ========================= */
 [data-theme="espresso"] {
-  /* Task colors */
-  --taskcolour1: #E39C4C;  /* Convert - Warm orange */
-  --taskcolour2: #BB9C7D;  /* Rename - Tan */
-  --taskcolour3: #CF8C68;  /* Delete - Terracotta */
+  --taskcolour1: #E39C4C;
+  --taskcolour2: #BB9C7D;
+  --taskcolour3: #CF8C68;
   
-  /* Background */
-  --background: #1F1505;   /* Dark brown */
+  --background: #1F1505;
   
-  /* Buttons */
-  --buttons1: #352306;
-  --buttons1-rgb: 53 35 6;     /* Darker brown - selected */
-  --buttons2: #4F3102;     /* Medium brown - unselected */
+  --buttons1: #4F3102;
+  --buttons2: #352306;
   
-  /* Text */
-  --font1: #F4EBD6;        /* Cream text */
-  --font2: #AAA089;        /* Tan muted */
-  --font3: #706958;        /* Brown dim */
+  --font1: #F4EBD6;
+  --font2: #AAA089;
+  --font3: #706958;
   
-  /* UI Elements */
-  --outlines: #7D552D;     /* Brown borders */
+  --outlines: #7D552D;
   
-  /* Status */
-  --warning: #C26400;      /* Orange warning */
-  --failed: #FF4000;       /* Red error */
-  
-  /* Special */
+  --warning: #C26400;
+  --failed: #FF4000;
+
   --empty: transparent;
   --shadow: rgba(0,0,0,.08);
-  
-  /* Panel backgrounds */
-  --panel-bg-2: var(--buttons2);
-  
-  /* RGB values */
+
   --taskcolour1-rgb: 227 156 76;
   --taskcolour2-rgb: 187 156 125;
   --taskcolour3-rgb: 207 140 104;
-  
-  /* Aliases */
-  --bg: var(--background);
-  --border: var(--outlines);
-  --line: var(--outlines);
-  --stack-line: var(--outlines);
+  --buttons1-rgb: 79 49 2;
 }

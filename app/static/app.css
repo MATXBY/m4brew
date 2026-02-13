@@ -2,7 +2,7 @@
    m4brew — BASE STYLES (LEAN)
 ========================= */
 *{ box-sizing: border-box; }
-html{ background: var(--bg); min-height: 100%; }
+html{ background: var(--background); min-height: 100%; }
 
 body{
   margin: 0;
@@ -121,7 +121,7 @@ h1.title{
   padding: 0 16px;
   border-radius: var(--radius-pill);
   background: var(--buttons2);
-  border: 1px solid var(--border);
+  border: 1px solid var(--outlines);
   transition: transform .06s ease, background .12s ease, border-color .12s ease;
   user-select: none;
 }
@@ -159,9 +159,8 @@ h1.title{
 
 .card{
   background: transparent; /* 👈 remove fill */
-  border: 1px solid var(--border); /* keep outline */
+  border: 1px solid var(--outlines); /* keep outline */
   border-radius: var(--radius);
-  box-shadow: var(--shadow); /* optional, keep for lift */
   padding: 16px;
 }
 
@@ -230,7 +229,6 @@ input::placeholder{ color: var(--font3); }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  box-shadow: 0 10px 22px var(--shadow);
 }
 
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
@@ -362,13 +360,13 @@ pre{
 
 /* Task-specific colors override when running */
 .status-pill.status-running.status-run1 {
-  background-color: var(--task-convert) !important;
+  background-color: var(--taskcolour1) !important;
 }
 .status-pill.status-running.status-run2 {
-  background-color: var(--task-rename) !important;
+  background-color: var(--taskcolour2) !important;
 }
 .status-pill.status-running.status-run3 {
-  background-color: var(--task-delete) !important;
+  background-color: var(--taskcolour3) !important;
 }
 
 /* Grey idle: "Ready to Brew" */
@@ -389,7 +387,7 @@ pre{
 
 /* --- M4Brew: Convert RUN complete pill (matches Step 1 Run button) --- */
 .status-pill.status-run1{
-  background-color: var(--task-convert) !important;
+  background-color: var(--taskcolour1) !important;
   border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;
@@ -397,7 +395,7 @@ pre{
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--task-rename);
+  background-color: var(--taskcolour2);
   border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;
@@ -405,7 +403,7 @@ pre{
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
-  background-color: var(--task-delete);
+  background-color: var(--taskcolour3);
   border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;

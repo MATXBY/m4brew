@@ -10,7 +10,7 @@
 /* ONLY dividers we explicitly place in HTML */
 .section-divider{
   height: 1px;
-  background: var(--line);
+  background: var(--outlines);
   margin: 0;
 }
 
@@ -55,7 +55,7 @@
   justify-content: center;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--outlines);
   background: var(--empty);
   white-space: nowrap;
   overflow: hidden;
@@ -73,16 +73,16 @@
 }
 
 /* Run buttons: brand colours */
-.task-run{ color: var(--font1); border-color: var(--line); }
-.run-1{ background: var(--task-convert); }
-.run-2{ background: var(--task-rename); }
-.run-3{ background: var(--task-delete); }
+.task-run{ color: var(--font1); border-color: var(--outlines); }
+.run-1{ background: var(--taskcolour1); }
+.run-2{ background: var(--taskcolour2); }
+.run-3{ background: var(--taskcolour3); }
 
 .task-row .btn:hover{ transform: translateY(-1px); }
 .task-row .task-test:hover{ background: var(--buttons1); border-color: var(--taskcolour3); }
-.task-row .run-1:hover{ background: var(--task-convert); }
-.task-row .run-2:hover{ background: var(--task-rename); }
-.task-row .run-3:hover{ background: var(--task-delete); }
+.task-row .run-1:hover{ background: var(--taskcolour1); }
+.task-row .run-2:hover{ background: var(--taskcolour2); }
+.task-row .run-3:hover{ background: var(--taskcolour3); }
 
 /* --- STATUS --- */
 .status-wrap{
@@ -108,8 +108,8 @@
   height: var(--pill-h);
   padding: 0 16px;
   border-radius: 999px;
-  background: var(--panel-bg-2);
-  border: 1px solid var(--border);
+  background: var(--buttons2);
+  border: 1px solid var(--outlines);
   font-weight: normal;
   letter-spacing: .2px;
 }
@@ -129,7 +129,7 @@
 
 /* live btn - when OFF we want purple outline */
 .live-btn.is-off{
-  border-color: var(--accent-border);
+  border-color: rgba(var(--taskcolour3-rgb), 0.55);
 }
 
 /* Cancel spans full width under the row (only visible when needed) */
@@ -147,8 +147,8 @@ display: flex;
   max-width: 920px;
   margin: 0 auto;
   border-radius: 16px;
-  background: var(--panel-bg-05);
-  border: 1px solid var(--border);
+  background: var(--buttons2);
+  border: 1px solid var(--outlines);
   box-shadow: 0 10px 26px var(--shadow);
   padding: 16px;
   display: grid;
@@ -181,7 +181,7 @@ display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: var(--overlay-dim);
+  background: rgba(0,0,0,0.7);
   z-index: 9999;
 }
 .help-overlay.open{ display: flex; }
@@ -190,9 +190,9 @@ display: flex;
   width: 100%;
   max-width: 560px;
   border-radius: 18px;
-  background: var(--modal-bg);
-  border: 1px solid var(--line);
-  box-shadow: 0 18px 50px var(--overlay-dim);
+  background: var(--background);
+  border: 1px solid var(--outlines);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.7);
   padding: 16px;
 }
 
@@ -202,7 +202,7 @@ display: flex;
   justify-content: space-between;
   gap: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--outlines);
   margin-bottom: 10px;
 }
 
@@ -216,9 +216,9 @@ display: flex;
   width: 38px;
   height: 38px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--panel-bg-2);
-  color: var(--text-main);
+  border: 1px solid var(--outlines);
+  background: var(--buttons2);
+  color: var(--font1);
   font-size: 18pt;
   line-height: 1;
   display: inline-flex;
@@ -230,15 +230,15 @@ display: flex;
 
 .help-body p{
   margin: 10px 0;
-  color: var(--text-main);
+  color: var(--font1);
 }
 
 /* ---- HELP MODAL: highlighted info boxes ---- */
 .help-box{
   margin-top: 14px;
   border-radius: 14px;
-  border: 1px solid var(--line);
-  background: var(--panel-bg-05);
+  border: 1px solid var(--outlines);
+  background: var(--background);
   padding: 12px 14px;
 }
 
@@ -246,7 +246,7 @@ display: flex;
   font-weight: normal;
   letter-spacing: .2px;
   margin-bottom: 8px;
-  color: var(--text-main);
+  color: var(--font1);
 }
 
 .help-box p{
@@ -254,29 +254,29 @@ display: flex;
   overflow-wrap: anywhere;
 
   margin: 6px 0;
-  color: var(--font2);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color: var(--font1);
+  
 }
 
 /* ---- HELP MODAL: toned info boxes (match Test/Run pills) ---- */
 .help-box--test{
-  background: var(--accent-soft);
-  border-color: var(--accent-border);
+  background: var(--buttons1);
+  border-color: var(--outlines);
 }
 
 /* New explicit tones */
 .help-box--convert{
-  background: rgb(var(--task-convert-rgb));
-  border-color: rgb(var(--task-convert-rgb) / .40);
+  background: var(--taskcolour1);
+  border-color: var(--taskcolour1);
 }
 .help-box--rename{
-  background: rgb(var(--task-rename-rgb));
-  border-color: rgb(var(--task-rename-rgb) / .40);
+  background: var(--taskcolour2);
+  border-color: var(--taskcolour2);
 }
 
 .help-box--delete{
-  background: rgb(var(--task-delete-rgb));
-  border-color: rgb(var(--task-delete-rgb) / .40);
+  background: var(--taskcolour3);
+  border-color: var(--taskcolour3);
 }
 
 
@@ -439,14 +439,14 @@ display: flex;
 /* Live panel: transparent card with outline */
 .live-panel{
   background: transparent !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--outlines) !important;
   box-shadow: none !important;
 }
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
-  background-color: var(--task-rename);
-  border-color: var(--line);
+  background-color: var(--taskcolour2);
+  border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;
 }
@@ -455,25 +455,25 @@ display: flex;
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
 .status-pill.status-run3{
-  background-color: var(--task-delete);
-  border-color: var(--line);
+  background-color: var(--taskcolour3);
+  border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;
 }
 
 /* --- M4Brew: Force status pills to match Run button solid colours --- */
 .status-pill.status-run1{
-  background: var(--task-convert) !important;
-  border-color: var(--line) !important;
+  background: var(--taskcolour1) !important;
+  border-color: var(--outlines) !important;
   color: var(--font1) !important;
 }
 .status-pill.status-run2{
-  background: var(--task-rename) !important;
-  border-color: var(--line) !important;
+  background: var(--taskcolour2) !important;
+  border-color: var(--outlines) !important;
   color: var(--font1) !important;
 }
 .status-pill.status-run3{
-  background: var(--task-delete) !important;
-  border-color: var(--line) !important;
+  background: var(--taskcolour3) !important;
+  border-color: var(--outlines) !important;
   color: var(--font1) !important;
 }

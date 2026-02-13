@@ -50,14 +50,14 @@
   text-align: left;
   font-weight: normal;
   padding: 14px 12px var(--history-pad);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--outlines);
   white-space: nowrap;
 }
 
 /* Body rows */
 .history-table tbody td{
   padding: var(--history-pad) 12px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--outlines);
   vertical-align: middle;
   white-space: nowrap;
 }
@@ -111,7 +111,7 @@
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--outlines);
   background: var(--panel-bg-2);
   color: var(--text-main);
   font-size: 26px;
