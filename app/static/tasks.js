@@ -710,7 +710,7 @@
 
         if(dry){
           const l1 = (total > 0) ? ("Test · Checking " + current + "/" + total) : "Test · Checking…";
-          setPill("status-running", l1, "");
+          setPill("status-test", l1, "");
         }else{
           let seconds = null;
           if (job.runtime_s != null) seconds = Number(job.runtime_s);
@@ -718,7 +718,7 @@
           const rt = (seconds != null) ? fmtRuntime(seconds) : "00:00:00";
           let l1 = rt + " · " + (mode === "convert" ? "Converting" : mode === "correct" ? "Renaming" : mode === "cleanup" ? "Deleting" : "Running");
           if(total > 0) l1 += " " + current + "/" + total;
-          setPill("status-running", l1, "");
+          setPill((mode === "convert" ? "status-run1" : mode === "correct" ? "status-run2" : mode === "cleanup" ? "status-run3" : "status-running"), l1, "");
         }
 
         if(liveOn) updateLivePanel(job);
