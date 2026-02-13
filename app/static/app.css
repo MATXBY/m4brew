@@ -83,6 +83,7 @@ a{ color: inherit; text-decoration: none; }
 
 /* Only exception: big app title */
 h1.title{
+  font-weight: 700;
   margin: 0;
   line-height: 1.1;
   font-size: 30pt;
@@ -99,7 +100,7 @@ h1.title{
   margin: 10px 0 0;
   color: var(--version-color);
   opacity: 1;
-  font-weight: 600;
+  font-weight: normal;
   color: var(--font2);
 }
 
@@ -142,13 +143,13 @@ h1.title{
   }
 }
 
-.dot{
+.dot{ display: none; }
   width: 9px;
   height: 9px;
   border-radius: 999px;
   background: var(--font3);
 }
-.pill.active .dot{ background: var(--taskcolour3); }
+.pill.active .dot{ display: block; background: var(--taskcolour3); }
 
 /* Content */
 .content{ margin-top: 18px; padding: 0 2px; }
@@ -204,7 +205,7 @@ input::placeholder{ color: var(--font3); }
 .btn.primary{
   background: var(--buttons1);
   border-color: var(--taskcolour3);
-  font-weight: 650;
+  font-weight: normal;
 }
 
 .btn.danger{ background: var(--buttons1); border-color: var(--taskcolour3); }
@@ -221,7 +222,7 @@ input::placeholder{ color: var(--font3); }
   background: var(--accent-soft);
   border: 1px solid var(--accent-border);
   color: var(--font1);
-  font-weight: 500;
+  font-weight: normal;
   letter-spacing: .2px;
   white-space: nowrap;
   overflow: hidden;
@@ -268,6 +269,7 @@ pre{
   color: var(--font2) !important;
   color: var(--font2);
 }
+  font-weight: 700;
 .donate-line a{
   color: var(--font1) !important;
   color: var(--font2);
@@ -299,8 +301,8 @@ pre{
 .status-pill.status-running{
   border-color: var(--empty);
   background-color: var(--running-bg, var(--buttons1));
-  font-weight: 750;
-  animation: m4brewStatusPulse 1.2s ease-in-out infinite;
+  font-weight: normal;
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
   will-change: transform, box-shadow;
 /* Task-specific colors override when running */
 }
@@ -319,7 +321,7 @@ pre{
 /* UNUSED:   background: rgba(60,220,130,.12);
 /* UNUSED:   border-color: var(--test-outline, rgba(99,102,241,.38));
 */
-  font-weight: 750;
+  font-weight: normal;
   animation: m4brewStatusDone 900ms ease-out 1;
 }
 
@@ -339,7 +341,7 @@ pre{
 .status-pill .pill-line1{
   display: block;
   line-height: 1.15;
-  font-weight: 800;
+  font-weight: normal;
 }
 
 .status-pill .pill-line2{
@@ -360,14 +362,14 @@ pre{
 .status-pill.status-warn{
   background: var(--warning);
     border-color: var(--warning);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* Error = red (write denied, folder not mounted, hard failures) */
 .status-pill.status-error{
   background: var(--failed);
     border-color: var(--taskcolour3);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* M4Brew: Force 2-line status pill to STACK (not side-by-side) */
@@ -444,7 +446,7 @@ pre{
   background-color: var(--task-convert) !important;
   border-color: var(--outlines);
   color: var(--font1);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 
@@ -454,7 +456,7 @@ pre{
   background-color: var(--task-rename);
   border-color: var(--outlines);
   color: var(--font1);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
@@ -462,7 +464,7 @@ pre{
   background-color: var(--task-delete);
   border-color: var(--outlines);
   color: var(--font1);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* --- M4Brew: Pulse v2 (no outline ring, pulse uses --pulse-color) --- */
@@ -495,11 +497,13 @@ pre{
 
 /* --- FINAL OVERRIDE: make TEST status clearly purple --- */
 .status-pill.status-test{
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
   background-color: var(--buttons1) !important;  /* stronger purple fill */
   border-color: var(--taskcolour3) !important;
   border-width: 1px !important;
   border-style: solid !important;
   color: var(--font1) !important;
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
 }
 
 /* --- M4Brew: Status pill one-line mode (keep line2 capability, but never grow taller) --- */
@@ -527,6 +531,7 @@ pre{
 
 /* --- running status pill: no outline (keep pulse only) --- */
 .status-pill.status-running{
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
   border-color: transparent !important;
 }
 /* Task-specific colors override when running */

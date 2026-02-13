@@ -47,6 +47,7 @@
   
   /* Buttons */
   --buttons1: #222043;     /* Primary/selected state */
+  --buttons1-rgb: 34 32 67;   /* buttons1 in RGB for transparency */
   --buttons2: #1F2128;     /* Secondary/unselected state */
   
   /* Panel backgrounds */
@@ -122,34 +123,99 @@
    LIGHT THEME
    (Optional - can be removed if not needed)
 ========================= */
-[data-theme="light"] {
-  /* Task colors stay the same */
-  --taskcolour1: #0264BF;
-  --taskcolour2: #B958A7;
-  --taskcolour3: #5250A1;
+
+/* =========================
+   LATTE THEME
+   Warm, creamy, coffee-inspired palette
+========================= */
+[data-theme="latte"] {
+  /* Task colors */
+  --taskcolour1: #E39C4C;  /* Convert - Warm orange */
+  --taskcolour2: #BB9C7D;  /* Rename - Tan */
+  --taskcolour3: #CF8C68;  /* Delete - Terracotta */
   
-  /* Light theme overrides */
-  --background: #F5F0E8;
-  --buttons1: #E8E3DB;
-  --buttons2: #F0EBE3;
-  --font1: #1A1A1A;
-  --font2: #6B6B6B;
-  --outlines: #D0C5B8;
-  --warning: #E68A00;
-  --failed: #CC3300;
+  /* Background */
+  --background: #FEF9F3;   /* Cream */
   
-  /* Light theme surfaces */
-  --surface: rgba(0, 0, 0, 0.04);
-  --surface-strong: rgba(0, 0, 0, 0.07);
-  --surface-soft: rgba(0, 0, 0, 0.03);
-  --surface-lift: rgba(0, 0, 0, 0.06);
+  /* Buttons */
+  --buttons1: #D6C1A4;
+  --buttons1-rgb: 214 193 164;     /* Light cream */
+  --buttons2: #F4EBD6;     /* Darker cream */
   
-  /* Light theme shadows */
+  /* Text */
+  --font1: #6F5B57;        /* Dark brown */
+  --font2: #B5A097;        /* Medium grey */
+  --font3: #A6A7AE;        /* Light grey */
   
-  --overlay-dim: rgba(0, 0, 0, 0.30);
-  --modal-bg: rgba(245, 240, 232, 0.96);
+  /* UI Elements */
+  --outlines: #BB9C7D;     /* Tan borders */
   
-  /* Update legacy aliases for light theme */
+  /* Status */
+  --warning: #C26400;      /* Orange warning */
+  --failed: #FF4000;       /* Red error */
+  
+  /* Special */
+  --empty: transparent;
+  --shadow: rgba(0,0,0,.08);
+  
+  /* Panel backgrounds */
+  --panel-bg-2: var(--buttons2);
+  
+  /* RGB values */
+  --taskcolour1-rgb: 227 156 76;
+  --taskcolour2-rgb: 187 156 125;
+  --taskcolour3-rgb: 207 140 104;
+  
+  /* Aliases (for compatibility) */
+  --bg: var(--background);
+  --border: var(--outlines);
+  --line: var(--outlines);
+  --stack-line: var(--outlines);
+}
+
+/* =========================
+   ESPRESSO THEME
+   Rich, dark, coffee-inspired palette
+========================= */
+[data-theme="espresso"] {
+  /* Task colors */
+  --taskcolour1: #E39C4C;  /* Convert - Warm orange */
+  --taskcolour2: #BB9C7D;  /* Rename - Tan */
+  --taskcolour3: #CF8C68;  /* Delete - Terracotta */
+  
+  /* Background */
+  --background: #1F1505;   /* Dark brown */
+  
+  /* Buttons */
+  --buttons1: #352306;
+  --buttons1-rgb: 53 35 6;     /* Darker brown - selected */
+  --buttons2: #4F3102;     /* Medium brown - unselected */
+  
+  /* Text */
+  --font1: #F4EBD6;        /* Cream text */
+  --font2: #AAA089;        /* Tan muted */
+  --font3: #706958;        /* Brown dim */
+  
+  /* UI Elements */
+  --outlines: #7D552D;     /* Brown borders */
+  
+  /* Status */
+  --warning: #C26400;      /* Orange warning */
+  --failed: #FF4000;       /* Red error */
+  
+  /* Special */
+  --empty: transparent;
+  --shadow: rgba(0,0,0,.08);
+  
+  /* Panel backgrounds */
+  --panel-bg-2: var(--buttons2);
+  
+  /* RGB values */
+  --taskcolour1-rgb: 227 156 76;
+  --taskcolour2-rgb: 187 156 125;
+  --taskcolour3-rgb: 207 140 104;
+  
+  /* Aliases */
   --bg: var(--background);
   --border: var(--outlines);
   --line: var(--outlines);

@@ -13,15 +13,16 @@
     <div class="stack">
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-theme" role="button" tabindex="0" aria-label="More info: Theme"><strong>SELECT:</strong>&nbsp;Theme</span>
+        <span class="label-pill step-label" data-help="select-theme" role="button" tabindex="0" aria-label="More info: Theme">SELECT:&nbsp;Theme</span>
         {% set th = (settings.get("theme", "dark") if settings else "dark") %}
         <select class="field" id="theme" name="theme" onchange="applyTheme(this.value)">
           <option value="dark" {% if th == "dark" %}selected{% endif %}>Modern Dark</option>
-          <option value="light" {% if th == "light" %}selected{% endif %}>Latte (light)</option>
+          <option value="latte" {% if th == "latte" %}selected{% endif %}>Latte</option>
+          <option value="espresso" {% if th == "espresso" %}selected{% endif %}>Espresso</option>
         </select>
       </div>
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder"><strong>SELECT:</strong>&nbsp;Mapped folder</span>
+        <span class="label-pill step-label" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder">SELECT:&nbsp;Mapped folder</span>
         <input type="hidden" id="root_folder" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
         <select class="field" id="root_mount_pick" aria-label="Pick from mapped folders">
           <option value="">Loading folders…</option>
@@ -29,7 +30,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks"><strong>SELECT:</strong>&nbsp;Audio tracks</span>
+        <span class="label-pill step-label" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks">SELECT:&nbsp;Audio tracks</span>
         <select class="field" id="audio_mode" name="audio_mode">
           {% set am = (settings.get("audio_mode") if settings else "match") %}
           <option value="match" {% if am == "match" %}selected{% endif %}>Match source</option>
@@ -39,7 +40,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate"><strong>SELECT:</strong>&nbsp;Bitrate (kbps)</span>
+        <span class="label-pill step-label" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate">SELECT:&nbsp;Bitrate (kbps)</span>
         {% set br = (settings.get("bitrate", 96) if settings else 96)|string %}
         <select class="field" id="bitrate" name="bitrate">
           <option value="match" {% if br == "match" %}selected{% endif %}>Match source</option>

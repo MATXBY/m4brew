@@ -63,8 +63,8 @@
   cursor: pointer;
 }
 
-.step-strong{ font-weight: 850; }
-.step-rest{ font-weight: 500; opacity: .98; }
+.step-strong{ font-weight: normal; }
+.step-rest{ font-weight: normal; opacity: .98; }
 
 /* Test button: purple */
 .task-test{
@@ -110,7 +110,7 @@
   border-radius: 999px;
   background: var(--panel-bg-2);
   border: 1px solid var(--border);
-  font-weight: 650;
+  font-weight: normal;
   letter-spacing: .2px;
 }
 
@@ -124,7 +124,7 @@
   width: 100%;
   justify-content: center;
   text-align: center;
-  font-weight: 600;
+  font-weight: normal;
 }
 
 /* live btn - when OFF we want purple outline */
@@ -162,7 +162,7 @@ display: flex;
   align-items: baseline;
 }
 
-.live-k{ color: var(--font2); font-weight: 700; }
+.live-k{ color: var(--font2); font-weight: normal; }
 .live-v{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .live-actions{ display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-top: 0; margin-bottom: 14px; gap: 14px; }
@@ -207,7 +207,7 @@ display: flex;
 }
 
 .help-title{
-  font-weight: 850;
+  font-weight: normal;
   letter-spacing: .2px;
 }
 
@@ -243,7 +243,7 @@ display: flex;
 }
 
 .help-box-title{
-  font-weight: 850;
+  font-weight: normal;
   letter-spacing: .2px;
   margin-bottom: 8px;
   color: var(--text-main);
@@ -448,7 +448,7 @@ display: flex;
   background-color: var(--task-rename);
   border-color: var(--line);
   color: var(--font1);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
@@ -458,7 +458,7 @@ display: flex;
   background-color: var(--task-delete);
   border-color: var(--line);
   color: var(--font1);
-  font-weight: 850;
+  font-weight: normal;
 }
 
 /* --- M4Brew: Force status pills to match Run button solid colours --- */

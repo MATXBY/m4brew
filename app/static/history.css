@@ -48,7 +48,7 @@
 /* Header row */
 .history-table thead th{
   text-align: left;
-  font-weight: 700;
+  font-weight: normal;
   padding: 14px 12px var(--history-pad);
   border-bottom: 1px solid var(--line);
   white-space: nowrap;
@@ -64,13 +64,13 @@
 
 /* Status tick/cross */
 .status{
-  font-weight: 900;
+  font-weight: normal;
   font-size: 14pt;
   width: 70px;
 }
-.status.ok{ color: var(--success); }
-.status.warn{ color: var(--warning); }
-.status.bad{ color: var(--danger); }
+.status.ok{ color: var(--font1); }
+.status.warn{ color: var(--font1); }
+.status.bad{ color: var(--font1); }
 
 /* Small mono numbers */
 .mono-small{
