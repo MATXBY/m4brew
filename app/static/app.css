@@ -143,13 +143,16 @@ h1.title{
   }
 }
 
-.dot{ display: none; }
+.dot{
+  display: none;
+}
+.pill.active .dot{
+  display: block;
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: var(--font3);
+  background: var(--taskcolour3);
 }
-.pill.active .dot{ display: block; background: var(--taskcolour3); }
 
 /* Content */
 .content{ margin-top: 18px; padding: 0 2px; }
@@ -269,8 +272,8 @@ pre{
   color: var(--font2) !important;
   color: var(--font2);
 }
-  font-weight: 700;
 .donate-line a{
+  font-weight: 700;
   color: var(--font1) !important;
   color: var(--font2);
   text-decoration: none;
@@ -285,42 +288,19 @@ pre{
    - done: quick confirmation flash
 ========================= */
 
-@keyframes m4brewStatusPulse{
-  0%   { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 6px rgba(var(--taskcolour3-rgb), 0.14); }
-  100% { transform: translateY(0);   box-shadow: 0 0 0 rgba(0,0,0,0); }
-}
-
 @keyframes m4brewStatusDone{
   0%   { box-shadow: 0 0 0 0 rgba(60,220,130,0.0); }
   35%  { box-shadow: 0 0 0 8px rgba(60,220,130,0.18); }
   100% { box-shadow: 0 0 0 0 rgba(60,220,130,0.0); }
 }
 
-/* Apply states by toggling these classes on #statusPill */
-.status-pill.status-running{
-  border-color: var(--empty);
-  background-color: var(--running-bg, var(--buttons1));
-  font-weight: normal;
-  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
-  will-change: transform, box-shadow;
-/* Task-specific colors override when running */
-}
-/* Task-specific colors override when running */
-.status-pill.status-running.status-run1 {
-  background-color: var(--task-convert) !important;
-}
-.status-pill.status-running.status-run2 {
-  background-color: var(--task-rename) !important;
-}
-.status-pill.status-running.status-run3 {
-  background-color: var(--task-delete) !important;
+@keyframes m4brewStatusPulse2{
+  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
 }
 
 .status-pill.status-done{
-/* UNUSED:   background: rgba(60,220,130,.12);
-/* UNUSED:   border-color: var(--test-outline, rgba(99,102,241,.38));
-*/
   font-weight: normal;
   animation: m4brewStatusDone 900ms ease-out 1;
 }
@@ -352,46 +332,34 @@ pre{
 }
 
 /* keep pill height consistent even when line2 is empty */
-.status-pill.is-two-line{
-  padding-top: 22px;
-  padding-bottom: 22px;
-  min-height: 88px;
-}
-
-/* Warn = orange (nothing to do, cancelled, partial failure) */
 .status-pill.status-warn{
   background: var(--warning);
-    border-color: var(--warning);
+  border-color: var(--warning);
   font-weight: normal;
 }
 
 /* Error = red (write denied, folder not mounted, hard failures) */
 .status-pill.status-error{
   background: var(--failed);
-    border-color: var(--taskcolour3);
+  border-color: var(--taskcolour3);
   font-weight: normal;
 }
 
 /* M4Brew: Force 2-line status pill to STACK (not side-by-side) */
-.status-pill.is-two-line{
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   text-align: center;
 }
 
-.status-pill.is-two-line .pill-line1,
-.status-pill.is-two-line .pill-line2{
-  width: 100%;
-  text-align: center;
-}
-
-/* --- M4Brew: status pill pulse uses task colour --- */
+/* --- M4Brew: status pill running states --- */
 .status-pill.status-running{
+  border-color: var(--empty);
+  background-color: var(--running-bg, var(--buttons1));
+  font-weight: normal;
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
+  will-change: transform, box-shadow;
   position: relative;
   overflow: visible;
 }
+
 /* Task-specific colors override when running */
 .status-pill.status-running.status-run1 {
   background-color: var(--task-convert) !important;
@@ -403,30 +371,6 @@ pre{
   background-color: var(--task-delete) !important;
 }
 
-/* Animated outline sits on top of the pill border */
-.status-pill.status-running::after{
-  content: "";
-  position: absolute;
-  inset: -2px;
-  border-radius: 999px;
-  border: 2px solid var(--pulse-border, var(--accent-border));
-  opacity: .35;
-  pointer-events: none;
-  animation: m4brewPulseOutline 1.2s ease-in-out infinite;
-}
-
-@keyframes m4brewPulseOutline{
-  0%,100%{ transform: scale(0.992); opacity: .25; }
-  50%    { transform: scale(1.02);  opacity: .80; }
-}
-
-/* --- M4Brew: brew bar smooth colour transitions (red -> orange fade) --- */
-.status-pill{
-  transition: background-color 1s ease, border-color 1s ease, color 1s ease, box-shadow 1s ease;
-}
-
-/* --- M4Brew: brew bar state colors --- */
-
 /* Grey idle: "Ready to Brew" */
 .status-pill.status-idle{
   background-color: var(--buttons2);
@@ -435,21 +379,21 @@ pre{
 }
 
 /* Purple test: all successful "Test Complete ..." states */
-  border-color: var(--taskcolour3);
-  border-width: 2px !important;
+.status-pill.status-test{
+  background-color: var(--buttons1) !important;
+  border-color: var(--taskcolour3) !important;
+  border-width: 1px !important;
   border-style: solid !important;
-  color: var(--font1);
+  color: var(--font1) !important;
 }
 
-    b
+/* --- M4Brew: Convert RUN complete pill (matches Step 1 Run button) --- */
 .status-pill.status-run1{
   background-color: var(--task-convert) !important;
   border-color: var(--outlines);
   color: var(--font1);
   font-weight: normal;
 }
-
-
 
 /* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
 .status-pill.status-run2{
@@ -467,45 +411,6 @@ pre{
   font-weight: normal;
 }
 
-/* --- M4Brew: Pulse v2 (no outline ring, pulse uses --pulse-color) --- */
-
-/* Disable the animated outline ring entirely */
-.status-pill.status-running::after{ content: none !important; display:none !important; }
-
-/* Pulse uses the per-mode colour injected by JS */
-@keyframes m4brewStatusPulse2{
-  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
-  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
-  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
-}
-
-.status-pill.status-running{
-  animation: m4brewStatusPulse2 1.2s ease-in-out infinite !important;
-}
-/* Task-specific colors override when running */
-.status-pill.status-running.status-run1 {
-  background-color: var(--task-convert) !important;
-}
-.status-pill.status-running.status-run2 {
-  background-color: var(--task-rename) !important;
-}
-.status-pill.status-running.status-run3 {
-  background-color: var(--task-delete) !important;
-}
-
-/* --- M4Brew: Test pill outline (purple fill, outline matches run1/run2/run3) --- */
-
-/* --- FINAL OVERRIDE: make TEST status clearly purple --- */
-.status-pill.status-test{
-  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
-  background-color: var(--buttons1) !important;  /* stronger purple fill */
-  border-color: var(--taskcolour3) !important;
-  border-width: 1px !important;
-  border-style: solid !important;
-  color: var(--font1) !important;
-  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
-}
-
 /* --- M4Brew: Status pill one-line mode (keep line2 capability, but never grow taller) --- */
 .status-pill.is-two-line{
   padding-top: 0 !important;
@@ -518,32 +423,3 @@ pre{
 
 /* UI version label comes from theme.css */
 .version::before{ content: var(--ui-version); }
-
-/* Force Step 2 TEST status pill outline to Run-2 (Rename) colour */
-
-/* Remove pulsing outline ring for REAL RUN modes (keep it for TEST if desired) */
-.status-pill.status-running.status-run1::after,
-.status-pill.status-running.status-run2::after,
-.status-pill.status-running.status-run3::after{
-  content: none !important;
-  display: none !important;
-}
-
-/* --- running status pill: no outline (keep pulse only) --- */
-.status-pill.status-running{
-  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
-  border-color: transparent !important;
-}
-/* Task-specific colors override when running */
-.status-pill.status-running.status-run1 {
-  background-color: var(--task-convert) !important;
-}
-.status-pill.status-running.status-run2 {
-  background-color: var(--task-rename) !important;
-}
-.status-pill.status-running.status-run3 {
-  background-color: var(--task-delete) !important;
-}
-.status-pill.status-running.status-pill--outlined{
-  box-shadow: none !important;
-}

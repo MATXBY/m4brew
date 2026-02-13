@@ -193,7 +193,7 @@
     }catch(_){}
   }
 
-  // If we navigated away and came back, dismiss DONE so it doesn’t repaint forever
+  // If we navigated away and came back, dismiss DONE so it doesn't repaint forever
   window.addEventListener("pagehide", () => {
     try{ sessionStorage.setItem("m4brew_tasks_left","1"); }catch(_){ }
   });
@@ -206,7 +206,7 @@
     }catch(_){}
   });
 
-  // Any user submit action = they’ve “seen” the DONE state
+  // Any user submit action = they've "seen" the DONE state
   document.addEventListener("submit", dismissDone, true);
 
   // -------------------------
@@ -350,39 +350,6 @@
 
   function setPillDirect(stateClass, line1, line2){
     setPill(stateClass, line1, line2);
-  }
-
-  function setPulseForMode(mode, dry){
-    if(!statusPill) return;
-    const m = String(mode || "").toLowerCase();
-
-    if(dry){
-      const root = getComputedStyle(document.documentElement);
-      try{ statusPill.style.setProperty("--pulse-color", root.getPropertyValue("--pulse-test").trim() || "rgba(82,80,161,0.22)"); }catch(_){ }
-      try{ statusPill.style.setProperty("--running-bg", root.getPropertyValue("--buttons1").trim() || "rgba(82,80,161,0.18)"); }catch(_){ }
-      try{ statusPill.style.setProperty("--running-border", root.getPropertyValue("--taskcolour3").trim() || "rgba(82,80,161,0.38)"); }catch(_){ }
-      return;
-    }
-
-    const pulse = (m === "convert") ? "rgb(var(--task-convert-rgb) / .22)"
-                : (m === "correct") ? "rgb(var(--task-rename-rgb) / .22)"
-                : (m === "cleanup") ? "rgb(var(--task-delete-rgb) / .22)"
-                : "rgb(var(--task-convert-rgb) / .22)";
-
-    const bg = (m === "convert") ? "rgb(var(--task-convert-rgb) / .18)"
-             : (m === "correct") ? "rgb(var(--task-rename-rgb) / .18)"
-             : (m === "cleanup") ? "rgb(var(--task-delete-rgb) / .18)"
-             : "rgb(var(--task-convert-rgb) / .18)";
-
-    const br = "transparent";
-    try{ statusPill.style.setProperty("--pulse-color", pulse); }catch(_){ }
-    try{ statusPill.style.setProperty("--running-bg", bg); }catch(_){ }
-    try{ statusPill.style.setProperty("--running-border", br); }catch(_){ }
-  }
-
-  function clearPulse(){
-    if(!statusPill) return;
-    try{ statusPill.style.removeProperty("--pulse-border"); }catch(_){ }
   }
 
   // -------------------------
@@ -698,7 +665,6 @@
         if(pf && pf.ok === false){
           const info = preflightToPill(pf);
           setPill(info.cls, info.l1, info.l2);
-          clearPulse();
 
           if(cancelForm) cancelForm.style.display = "none";
           if(statusTop) statusTop.classList.remove("has-cancel");
@@ -724,7 +690,6 @@
             setPill("status-idle", "Ready to Brew", "");
           }
         }
-        clearPulse();
         if(liveOn) updateLivePanel(job);
         return;
       }
@@ -739,8 +704,6 @@
       if(job.status === "running" || job.status === "canceling"){
         clearHold();
         clearDonePill();
-
-        setPulseForMode(mode, dry);
 
         const total = Number(job.total || 0);
         const current = Number(job.current || 0);
@@ -763,8 +726,6 @@
       }
 
       // Finished/canceled/failed
-      clearPulse();
-
       const started = String(job.started || "");
       const _termKey = started + "|" + mode + "|" + String(job.status || "") + "|" + String(job.exit_code || "");
       const _seenKey = "m4brew_seen_terminal";
@@ -778,7 +739,7 @@
         return;
       }
 
-      // If TEST already seen and no hold active, go idle (but allow “done pill” persistence once)
+      // If TEST already seen and no hold active, go idle (but allow "done pill" persistence once)
       if(dry && _seenTest && !holdActive()){
         const d = getDonePill();
         if(d) setPill(d.cls, d.l1, "");
@@ -806,7 +767,7 @@
                    : (mode === "cleanup") ? Number(sum.deleted ?? 0)
                    : 0;
 
-      // Terminal “seen” gating (prevents repaint loops)
+      // Terminal "seen" gating (prevents repaint loops)
       if(dry){
         if(localStorage.getItem(TEST_SEEN_KEY) !== _termKey){
           localStorage.setItem(TEST_SEEN_KEY, _termKey);
@@ -819,7 +780,7 @@
           return;
         }
 
-        // If RUN "Nothing to ..." already held once, don’t repaint on revisit
+        // If RUN "Nothing to ..." already held once, don't repaint on revisit
         if(count === 0 && (localStorage.getItem(HOLD_SEEN_KEY) === _termKey) && !holdActive()){
           setPill("status-idle", "Ready to Brew", "");
           if(liveOn) updateLivePanel(job);
