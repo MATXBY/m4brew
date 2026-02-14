@@ -216,6 +216,7 @@ input::placeholder{ color: var(--font3); }
 
 /* Label pill */
 .label-pill{
+  position: relative;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -313,6 +314,7 @@ pre{
 ========================= */
 
 .status-wrap .status-pill{
+  position: relative;
   width: 100%;
   text-align: left;
 }
@@ -422,3 +424,42 @@ pre{
 
 /* UI version label comes from theme.css */
 .version::before{ content: var(--ui-version); }
+
+.step-label:hover::before,
+.status-pill:hover::before {
+  opacity: 1;
+}
+
+/* Adjust text to make room for icon */
+
+/* Hover info icon for clickable elements */
+.step-label::before,
+.status-pill::before {
+  content: "ⓘ";
+  position: absolute;
+  left: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--font2);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.step-label:hover::before,
+.status-pill:hover::before {
+  opacity: 1;
+}
+
+.step-label {
+  position: relative;
+}
+
+/* Reserve space for hover icon so text doesn't shift */
+
+
+/* Permanent space for hover icon - no text shift */
+.step-label,
+.status-pill,
+.label-pill {
+  padding-left: 36px;
+}
