@@ -26,6 +26,10 @@
   --history-inset: var(--inset-pad);
   --settings-gap: 18px;
 
+  /* Fonts */
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Orbitron", sans-serif;
+
   /* 12 Core Colors */
   --taskcolour1: #0264BF;
   --taskcolour2: #B958A7;
@@ -47,7 +51,6 @@
 
   /* Universal */
   --empty: transparent;
-  --shadow: rgba(0,0,0,.08);
 
   /* RGB values */
   --taskcolour1-rgb: 2 100 191;
@@ -60,6 +63,8 @@
    LATTE THEME
 ========================= */
 [data-theme="latte"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Domine", serif;
   --taskcolour1: #E39C4C;
   --taskcolour2: #BB9C7D;
   --taskcolour3: #CF8C68;
@@ -79,7 +84,6 @@
   --failed: #FF4000;
 
   --empty: transparent;
-  --shadow: rgba(0,0,0,.08);
 
   --taskcolour1-rgb: 227 156 76;
   --taskcolour2-rgb: 187 156 125;
@@ -91,6 +95,8 @@
    ESPRESSO THEME
 ========================= */
 [data-theme="espresso"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Domine", serif;
   --taskcolour1: #E39C4C;
   --taskcolour2: #BB9C7D;
   --taskcolour3: #CF8C68;
@@ -110,7 +116,6 @@
   --failed: #FF4000;
 
   --empty: transparent;
-  --shadow: rgba(0,0,0,.08);
 
   --taskcolour1-rgb: 227 156 76;
   --taskcolour2-rgb: 187 156 125;

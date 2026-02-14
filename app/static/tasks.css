@@ -149,7 +149,6 @@ display: flex;
   border-radius: 16px;
   background: var(--buttons2);
   border: 1px solid var(--outlines);
-  box-shadow: 0 10px 26px var(--shadow);
   padding: 16px;
   display: grid;
   gap: 10px;

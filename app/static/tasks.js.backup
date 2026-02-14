@@ -402,7 +402,6 @@
     if (job.runtime_s != null) seconds = Number(job.runtime_s);
     else if (job.started) seconds = runtimeFromStarted(job.started);
     const rt = (seconds != null) ? fmtRuntime(seconds) : "—";
-    const isAnalyzing = (total === 0);
 
     const st = (job.status === "running")
       ? (mode === "convert" ? "Converting"
@@ -716,9 +715,8 @@
           let seconds = null;
           if (job.runtime_s != null) seconds = Number(job.runtime_s);
           else if (job.started) seconds = runtimeFromStarted(job.started);
-          const isAnalyzing = (total === 0);
           const rt = (seconds != null) ? fmtRuntime(seconds) : "00:00:00";
-          let l1 = rt + " · " + (isAnalyzing ? "Checking..." : mode === "convert" ? "Converting" : mode === "correct" ? "Renaming" : mode === "cleanup" ? "Deleting" : "Running");
+          let l1 = rt + " · " + (mode === "convert" ? "Converting" : mode === "correct" ? "Renaming" : mode === "cleanup" ? "Deleting" : "Running");
           if(total > 0) l1 += " " + current + "/" + total;
           setPill((mode === "convert" ? "status-run1" : mode === "correct" ? "status-run2" : mode === "cleanup" ? "status-run3" : "status-running"), l1, "");
         }
