@@ -8,7 +8,7 @@
 ========================= */
 :root {
   /* UI Constants (never change) */
-  --ui-version: "1.7.0";
+  --ui-version: "1.7.1";
   --page-pad: 22px;
   --page-gap: 22px;
   --inset-pad: 24px;
@@ -124,10 +124,10 @@
 }
 
 /* =========================
-   POPCORN THEME
+   PLAYFUL THEME
    Warm, playful, cinema-inspired palette
 ========================= */
-[data-theme="popcorn"] {
+[data-theme="playful"] {
   --taskcolour1: #FF6B9D;  /* Pink/Magenta - Convert */
   --taskcolour2: #B185DB;  /* Purple - Rename */
   --taskcolour3: #FF8FB5;  /* Light pink - Delete */
@@ -186,10 +186,10 @@
 }
 
 /* =========================
-   POPCORN THEME
+   PLAYFUL THEME
    Warm, playful, cinema-inspired palette
 ========================= */
-[data-theme="popcorn"] {
+[data-theme="playful"] {
   --taskcolour1: #FF6B9D;  /* Pink/Magenta - Convert */
   --taskcolour2: #B185DB;  /* Purple - Rename */
   --taskcolour3: #FF8FB5;  /* Light pink - Delete */
@@ -245,4 +245,56 @@
   --taskcolour2-rgb: 181 55 242;
   --taskcolour3-rgb: 255 0 110;
   --buttons1-rgb: 26 31 58;
+}
+
+/* =========================
+   PLAYFUL THEME
+   Warm, playful, cinema-inspired palette
+========================= */
+[data-theme="playful"] {
+  --taskcolour1: #FF6B9D;
+  --taskcolour2: #B185DB;
+  --taskcolour3: #FF8FB5;
+  --background: #5B7FDB;
+  --buttons1: #4A6BC7;
+  --buttons2: #7B9DE8;
+  --font1: #FFFFFF;
+  --font2: #E0E8FF;
+  --font3: #B5C7F0;
+  --outlines: #8BA8E8;
+  --warning: #FFB84D;
+  --failed: #FF4757;
+  --empty: transparent;
+  --taskcolour1-rgb: 255 107 157;
+  --taskcolour2-rgb: 177 133 219;
+  --taskcolour3-rgb: 255 143 181;
+  --buttons1-rgb: 74 107 199;
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Englebert", cursive;
+}
+
+/* =========================
+   NEBULA THEME
+   Space-inspired, cosmic palette
+========================= */
+[data-theme="nebula"] {
+  --taskcolour1: #00D9FF;
+  --taskcolour2: #B537F2;
+  --taskcolour3: #FF006E;
+  --background: #0A0E27;
+  --buttons1: #1A1F3A;
+  --buttons2: #151A2E;
+  --font1: #E0E6FF;
+  --font2: #8B9DC3;
+  --font3: #4A5568;
+  --outlines: #2D3748;
+  --warning: #FFA500;
+  --failed: #FF3366;
+  --empty: transparent;
+  --taskcolour1-rgb: 0 217 255;
+  --taskcolour2-rgb: 181 55 242;
+  --taskcolour3-rgb: 255 0 110;
+  --buttons1-rgb: 26 31 58;
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Orbitron", sans-serif;
 }

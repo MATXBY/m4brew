@@ -115,31 +115,37 @@ extract_order_key() {
   local base="$1"
   local lc
   lc="$(echo "$base" | tr '[:upper:]' '[:lower:]')"
+
   local n=""
-  
-  # Pattern 1: numeric prefix at start
-  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
+
+  # 1) numeric prefix
+  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\).*/\1/p' | head -n 1)"
   if [[ -n "$n" ]]; then
     echo "$n"
     return 0
   fi
-  
-  # Pattern 2: Number after STRONG separator (dash, underscore, dot)
-  n="$(echo "$lc" | sed -n 's/.*[-_.][[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
-  if [[ -n "$n" ]]; then
-    echo "$n"
-    return 0
-  fi
-  
-  # Pattern 3: keyword + number
+
+  # 2) keyword + number
   n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|book\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
   if [[ -n "$n" ]]; then
     echo "$n"
     return 0
   fi
-  
+
+  # 3) separator + number (avoids grabbing years mid-sentence unless clearly separated)
+  n="$(echo "$lc" | sed -n 's/.*[-_.[:space:]]0*\([0-9]\{1,4\}\)\b.*/\1/p' | head -n 1)"
+  if [[ -n "$n" ]]; then
+    echo "$n"
+    return 0
+  fi
+
   echo ""
 }
+
+# Decide if the part order is clear for a set of files.
+# Returns:
+#   0 (true)  = clear
+#   1 (false) = unclear
 order_is_clear() {
   local -a files=("$@")
   local n="${#files[@]}"
