@@ -105,12 +105,25 @@ json_escape() {
   echo -n "$1" \
     | sed 's/\\/\\\\/g; s/"/\\"/g; s/\t/\\t/g; s/\r/\\r/g; s/\n/\\n/g'
 }
+# Convert roman numeral (i-xx) to integer (1-20)
+roman_to_num() {
+  local r="$1"
+  case "$r" in
+    i) echo "1" ;; ii) echo "2" ;; iii) echo "3" ;; iv) echo "4" ;; v) echo "5" ;;
+    vi) echo "6" ;; vii) echo "7" ;; viii) echo "8" ;; ix) echo "9" ;; x) echo "10" ;;
+    xi) echo "11" ;; xii) echo "12" ;; xiii) echo "13" ;; xiv) echo "14" ;; xv) echo "15" ;;
+    xvi) echo "16" ;; xvii) echo "17" ;; xviii) echo "18" ;; xix) echo "19" ;; xx) echo "20" ;;
+    *) echo "" ;;
+  esac
+}
 
 # Extract a numeric order key from a filename (base name only).
-# We ONLY accept "clear" patterns:
+# Patterns (in priority order):
 #   1) starts with digits: "01 Prologue"
-#   2) keyword+number: "Part 2", "Chapter 10", "Disc 1 Track 03", etc.
-#   3) separator+digits: "something - 03", "something_03", "something.03"
+#   2) separator+digits: "something - 03", "something_03", "something.03"
+#   3) keyword+number: "Part 2", "Chapter 10", "Disc 1 Track 03", etc.
+#   4) keyword+roman: "Chapter III", "Part IV"
+# Year rejection: numbers 1900-2099 are ignored
 extract_order_key() {
   local base="$1"
   local lc
@@ -119,23 +132,34 @@ extract_order_key() {
   
   # Pattern 1: numeric prefix at start
   n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
-  if [[ -n "$n" ]]; then
+  if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
   fi
   
   # Pattern 2: Number after STRONG separator (dash, underscore, dot)
   n="$(echo "$lc" | sed -n 's/.*[-_.][[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
-  if [[ -n "$n" ]]; then
+  if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
   fi
   
   # Pattern 3: keyword + number
-  n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|book\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
-  if [[ -n "$n" ]]; then
+  n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
+  if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
+  fi
+  
+  # Pattern 4: keyword + roman numeral (Chapter III, Part IV)
+  local roman=""
+  roman="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\)[^a-z]*\([ivxlc]\{1,7\}\)\b.*/\2/p' | head -n 1)"
+  if [[ -n "$roman" ]]; then
+    n="$(roman_to_num "$roman")"
+    if [[ -n "$n" ]]; then
+      echo "$n"
+      return 0
+    fi
   fi
   
   echo ""
@@ -178,10 +202,9 @@ order_is_clear() {
   max="$(echo "$sorted" | tail -n 1 | tr -d ' ')"
   [[ "$min" =~ ^[0-9]+$ ]] || return 1
   [[ "$max" =~ ^[0-9]+$ ]] || return 1
-
-  # Require min=1 and max=N (strict, predictable)
-  (( min == 1 )) || return 1
-  (( max == n )) || return 1
+  # Relaxed: allow starting at 0, allow gaps, reject years
+  (( min >= 0 )) || return 1
+  (( max <= 999 )) || return 1
 
   return 0
 }
@@ -514,6 +537,41 @@ warn_order_unclear() {
 
   warnings_json_items+=("{\"code\":\"order_unclear\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
 }
+warn_gaps() {
+  local book_dir="$1"
+  shift
+  local -a files=("$@")
+  local -a keys=()
+  local f base k
+  for f in "${files[@]}"; do
+    base="$(basename "$f")"
+    base="${base%.*}"
+    k="$(extract_order_key "$base")"
+    [[ -n "$k" ]] && keys+=("$k")
+  done
+  local sorted min max expected actual missing_list=""
+  sorted="$(printf "%s\n" "${keys[@]}" | sort -n)"
+  min="$(echo "$sorted" | head -n 1 | tr -d ' ')"
+  max="$(echo "$sorted" | tail -n 1 | tr -d ' ')"
+  expected=$(( max - min + 1 ))
+  actual="${#keys[@]}"
+  if (( actual < expected )); then
+    local i
+    for (( i = min; i <= max; i++ )); do
+      if ! printf "%s\n" "${keys[@]}" | grep -qx "$i"; then
+        missing_list="${missing_list:+${missing_list}, }${i}"
+      fi
+    done
+    local lbl
+    lbl="$(book_label "$book_dir")"
+    log "WARN: GAPS_DETECTED: BOOK=${lbl#* / } — expected ${expected} files (${min}–${max}), found ${actual}. Missing: ${missing_list}"
+    warnings_count=$((warnings_count + 1))
+    local book_name msg
+    book_name="${lbl#* / }"
+    msg="Possible missing files (${min}–${max}, found ${actual}). Missing: ${missing_list}"
+    warnings_json_items+=("{\"code\":\"gaps_detected\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
+  fi
+}
 
 while IFS= read -r -d '' book_dir; do
   author_dir="$(dirname "$book_dir")"
@@ -586,6 +644,7 @@ while IFS= read -r -d '' book_dir; do
         continue
       fi
     fi
+      warn_gaps "$book_dir" "${mp3s[@]}"
 
     first_mp3="${mp3s[0]}"
     detected="$(detect_channels "$first_mp3")"
@@ -697,6 +756,7 @@ while IFS= read -r -d '' book_dir; do
         failed_books+=("${book_dir}")
         continue
       fi
+      warn_gaps "$book_dir" "${m4as[@]}"
 
       first_m4a="${m4as[0]}"
       detected="$(detect_channels "$first_m4a")"
@@ -778,6 +838,7 @@ while IFS= read -r -d '' book_dir; do
       continue
     fi
 
+    warn_gaps "$book_dir" "${m4bs[@]}"
     log "MODE:   Multi-M4B merge (no re-encode)"
     log "OUTPUT: ${out_path}"
 

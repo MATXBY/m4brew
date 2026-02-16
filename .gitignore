@@ -22,3 +22,4 @@ _config_backups/
 
 # local/dev only
 /docker-compose.yml
+scripts/m4brew.sh.backup-before-improvements
