@@ -69,7 +69,7 @@
 /* Test button: purple */
 .task-test{
   background: var(--buttons1);
-  border-color: var(--taskcolour3);
+  border-color: var(--outlines);
 }
 
 /* Run buttons: brand colours */
@@ -79,7 +79,7 @@
 .run-3{ background: var(--taskcolour3); }
 
 .task-row .btn:hover{ transform: translateY(-1px); }
-.task-row .task-test:hover{ background: var(--buttons1); border-color: var(--taskcolour3); }
+.task-row .task-test:hover{ background: var(--buttons1); border-color: var(--outlines); }
 .task-row .run-1:hover{ background: var(--taskcolour1); }
 .task-row .run-2:hover{ background: var(--taskcolour2); }
 .task-row .run-3:hover{ background: var(--taskcolour3); }
@@ -275,7 +275,7 @@ display: flex;
 
 .help-box--delete{
   background: var(--taskcolour3);
-  border-color: var(--taskcolour3);
+  border-color: var(--outlines);
 }
 
 

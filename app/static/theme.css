@@ -42,7 +42,6 @@
   
   --font1: #FFFFFF;
   --font2: #A6A7AE;
-  --font3: #6B6C72;
   
   --outlines: #323539;
   
@@ -76,7 +75,6 @@
   
   --font1: #6F5B57;
   --font2: #B5A097;
-  --font3: #A6A7AE;
   
   --outlines: #BB9C7D;
   
@@ -108,7 +106,6 @@
   
   --font1: #F4EBD6;
   --font2: #AAA089;
-  --font3: #706958;
   
   --outlines: #7D552D;
   
@@ -139,7 +136,6 @@
   
   --font1: #FFFFFF;        /* White text */
   --font2: #E0E8FF;        /* Very light blue */
-  --font3: #B5C7F0;        /* Pale blue */
   
   --outlines: #8BA8E8;     /* Light blue borders */
   
@@ -170,7 +166,6 @@
   
   --font1: #E0E6FF;        /* Pale blue-white */
   --font2: #8B9DC3;        /* Medium blue-grey */
-  --font3: #4A5568;        /* Dark grey */
   
   --outlines: #2D3748;     /* Dark borders */
   
@@ -201,7 +196,6 @@
   
   --font1: #FFFFFF;        /* White text */
   --font2: #E0E8FF;        /* Very light blue */
-  --font3: #B5C7F0;        /* Pale blue */
   
   --outlines: #8BA8E8;     /* Light blue borders */
   
@@ -232,7 +226,6 @@
   
   --font1: #E0E6FF;        /* Pale blue-white */
   --font2: #8B9DC3;        /* Medium blue-grey */
-  --font3: #4A5568;        /* Dark grey */
   
   --outlines: #2D3748;     /* Dark borders */
   
@@ -260,7 +253,6 @@
   --buttons2: #7B9DE8;
   --font1: #FFFFFF;
   --font2: #E0E8FF;
-  --font3: #B5C7F0;
   --outlines: #8BA8E8;
   --warning: #FFB84D;
   --failed: #FF4757;
@@ -286,7 +278,6 @@
   --buttons2: #151A2E;
   --font1: #E0E6FF;
   --font2: #8B9DC3;
-  --font3: #4A5568;
   --outlines: #2D3748;
   --warning: #FFA500;
   --failed: #FF3366;

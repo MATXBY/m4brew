@@ -129,7 +129,7 @@ h1.title{
 .pill:hover{ transform: translateY(-1px); background: var(--buttons2); }
 .pill.active{
   background: var(--buttons1);
-  border-color: var(--taskcolour3);
+  border-color: var(--outlines);
 }
 
 /* ✅ Header pills same width (desktop/tablet). Mobile stays flexible. */
@@ -185,7 +185,7 @@ input[type="text"], input[type="number"], select{
   background: var(--empty);
   outline: none;
 }
-input::placeholder{ color: var(--font3); }
+input::placeholder{ color: var(--font2); }
 
 /* Buttons */
 .btn{
@@ -196,7 +196,7 @@ input::placeholder{ color: var(--font3); }
   height: var(--pill-h);
   padding: 0 16px;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--taskcolour3);
+  border: 1px solid var(--outlines);
   background: var(--buttons1);
   color: var(--font1);
   cursor: pointer;
@@ -207,11 +207,13 @@ input::placeholder{ color: var(--font3); }
 /* ✅ Primary purple everywhere (header active-ish buttons, live ON, etc.) */
 .btn.primary{
   background: var(--buttons1);
-  border-color: var(--taskcolour3);
+  border-color: var(--outlines);
+  background: var(--buttons1);
+  border-color: var(--outlines);
   font-weight: normal;
 }
 
-.btn.danger{ background: var(--buttons1); border-color: var(--taskcolour3); }
+.btn.danger{ background: var(--buttons1); border-color: var(--outlines); }
 .btn:disabled{ opacity: .55; cursor: not-allowed; transform:none; }
 
 /* Label pill */
@@ -342,12 +344,10 @@ pre{
 /* Error = red (write denied, folder not mounted, hard failures) */
 .status-pill.status-error{
   background: var(--failed);
-  border-color: var(--taskcolour3);
+  border-color: var(--outlines);
   font-weight: normal;
 }
 
-/* M4Brew: Force 2-line status pill to STACK (not side-by-side) */
-  text-align: center;
 }
 
 /* --- M4Brew: status pill running states --- */
@@ -382,7 +382,7 @@ pre{
 /* Purple test: all successful "Test Complete ..." states */
 .status-pill.status-test{
   background-color: var(--buttons1) !important;
-  border-color: var(--taskcolour3) !important;
+  border-color: var(--outlines) !important;
   border-width: 1px !important;
   border-style: solid !important;
   color: var(--font1) !important;
