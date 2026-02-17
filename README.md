@@ -14,7 +14,7 @@ Designed for users of:
 
 ## 📸 Screenshots
 
-| Espresso Theme | Romance Theme |
+| Espresso Theme | 12 Distictive Themes |
 |--------|--------|
 | ![](docs/screenshots/Home_1.png) | ![](docs/screenshots/Home_2.png) |
 
