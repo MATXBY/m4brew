@@ -14,11 +14,11 @@ Designed for users of:
 
 ## 📸 Screenshots
 
-| Home 1 | Home 2 |
+| Espresso Theme | Romance Theme |
 |--------|--------|
 | ![](docs/screenshots/Home_1.png) | ![](docs/screenshots/Home_2.png) |
 
-| Converting | History |
+| Converting Status - Simple / Advanced  | History - Full Log Outputs |
 |------------|----------|
 | ![](docs/screenshots/Task_Convert.png) | ![](docs/screenshots/Task_History.png)
 
