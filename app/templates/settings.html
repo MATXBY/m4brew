@@ -17,10 +17,17 @@
         {% set th = (settings.get("theme", "dark") if settings else "dark") %}
         <select class="field" id="theme" name="theme" onchange="applyTheme(this.value)">
           <option value="dark" {% if th == "dark" %}selected{% endif %}>Modern Dark</option>
-          <option value="latte" {% if th == "latte" %}selected{% endif %}>Latte</option>
+          <option value="light" {% if th == "light" %}selected{% endif %}>Modern Light</option>
           <option value="espresso" {% if th == "espresso" %}selected{% endif %}>Espresso</option>
-          <option value="playful" {% if th == "popcorn" %}selected{% endif %}>Playful</option>
-          <option value="nebula" {% if th == "nebula" %}selected{% endif %}>Nebula</option>
+          <option value="latte" {% if th == "latte" %}selected{% endif %}>Latte</option>
+          <option value="horror" {% if th == "horror" %}selected{% endif %}>Horror</option>
+          <option value="comedy" {% if th == "comedy" %}selected{% endif %}>Comedy</option>
+          <option value="scifi" {% if th == "scifi" %}selected{% endif %}>Sci-Fi</option>
+          <option value="fantasy" {% if th == "fantasy" %}selected{% endif %}>Fantasy</option>
+          <option value="romance" {% if th == "romance" %}selected{% endif %}>Romance</option>
+          <option value="ocean" {% if th == "ocean" %}selected{% endif %}>Ocean</option>
+          <option value="holiday" {% if th == "holiday" %}selected{% endif %}>Holiday</option>
+          <option value="war" {% if th == "war" %}selected{% endif %}>War</option>
         </select>
       </div>
       <div class="setting-row">

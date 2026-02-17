@@ -1,6 +1,6 @@
 /* =========================
    M4BREW THEME SYSTEM
-   Minimal 15-variable palette per theme
+   Minimal palette per theme
 ========================= */
 
 /* =========================
@@ -8,12 +8,12 @@
 ========================= */
 :root {
   /* UI Constants (never change) */
-  --ui-version: "1.7.1";
+  --ui-version: "1.7.3";
   --page-pad: 22px;
   --page-gap: 22px;
   --inset-pad: 24px;
   --list-indent: 18px;
-  --radius: 18px;
+  --radius: 36px;
   --radius-pill: 999px;
   --font-size: 10pt;
   --line-height: 1.35;
@@ -28,264 +28,289 @@
 
   /* Fonts */
   --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  --font-family2: "Orbitron", sans-serif;
+  --font-family2: "Pattaya", sans-serif;
 
-  /* 12 Core Colors */
+  /* Core Colors */
+  --background: #111318;
+  --outlines: #373E48;
+  --buttons1: #28255E;
+  --buttons2: #1D2233;
   --taskcolour1: #0264BF;
   --taskcolour2: #B958A7;
   --taskcolour3: #5250A1;
-  
-  --background: #111318;
-  
-  --buttons1: #222043;
-  --buttons2: #1F2128;
-  
-  --font1: #FFFFFF;
+  --font1: #FAFAFA;
   --font2: #A6A7AE;
-  
-  --outlines: #323539;
-  
-  --warning: #C26400;
-  --failed: #FF4000;
-
-  /* Universal */
+  --warning: #E57F13;
+  --failed: #E4410A;
   --empty: transparent;
 
-  /* RGB values */
+  /* RGB values for glow effects */
   --taskcolour1-rgb: 2 100 191;
   --taskcolour2-rgb: 185 88 167;
   --taskcolour3-rgb: 82 80 161;
-  --buttons1-rgb: 34 32 67;
+  --buttons1-rgb: 40 37 94;
 }
 
 /* =========================
-   LATTE THEME
+   MODERN LIGHT
 ========================= */
-[data-theme="latte"] {
+[data-theme="light"] {
   --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  --font-family2: "Domine", serif;
-  --taskcolour1: #E39C4C;
-  --taskcolour2: #BB9C7D;
-  --taskcolour3: #CF8C68;
-  
-  --background: #FEF9F3;
-  
-  --buttons1: #D6C1A4;
-  --buttons2: #F4EBD6;
-  
-  --font1: #6F5B57;
-  --font2: #B5A097;
-  
-  --outlines: #BB9C7D;
-  
-  --warning: #C26400;
-  --failed: #FF4000;
-
+  --font-family2: "Pattaya", sans-serif;
+  --background: #EDEDED;
+  --outlines: #C2C2C2;
+  --buttons1: #DFDFE8;
+  --buttons2: #E5E5E5;
+  --taskcolour1: #59A0E3;
+  --taskcolour2: #D698CA;
+  --taskcolour3: #9B9AD7;
+  --font1: #343434;
+  --font2: #8D8D8D;
+  --warning: #E57F13;
+  --failed: #E4410A;
   --empty: transparent;
-
-  --taskcolour1-rgb: 227 156 76;
-  --taskcolour2-rgb: 187 156 125;
-  --taskcolour3-rgb: 207 140 104;
-  --buttons1-rgb: 214 193 164;
+  --taskcolour1-rgb: 89 160 227;
+  --taskcolour2-rgb: 214 152 202;
+  --taskcolour3-rgb: 155 154 215;
+  --buttons1-rgb: 223 223 232;
 }
 
 /* =========================
-   ESPRESSO THEME
+   ESPRESSO
 ========================= */
 [data-theme="espresso"] {
   --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
   --font-family2: "Domine", serif;
+  --background: #1F1A12;
+  --outlines: #91602E;
+  --buttons1: #423116;
+  --buttons2: #2A241B;
+  --taskcolour1: #8F6E39;
+  --taskcolour2: #7D552D;
+  --taskcolour3: #CF8C68;
+  --font1: #F4EBD6;
+  --font2: #AAA089;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 143 110 57;
+  --taskcolour2-rgb: 125 85 45;
+  --taskcolour3-rgb: 207 140 104;
+  --buttons1-rgb: 66 49 22;
+}
+
+/* =========================
+   LATTE
+========================= */
+[data-theme="latte"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Domine", serif;
+  --background: #FFF0DE;
+  --outlines: #9E7750;
+  --buttons1: #F5D6AF;
+  --buttons2: #FFEBD3;
   --taskcolour1: #E39C4C;
   --taskcolour2: #BB9C7D;
   --taskcolour3: #CF8C68;
-  
-  --background: #1F1505;
-  
-  --buttons1: #4F3102;
-  --buttons2: #352306;
-  
-  --font1: #F4EBD6;
-  --font2: #AAA089;
-  
-  --outlines: #7D552D;
-  
-  --warning: #C26400;
-  --failed: #FF4000;
-
+  --font1: #6F5B57;
+  --font2: #B5A097;
+  --warning: #E57F13;
+  --failed: #E4410A;
   --empty: transparent;
-
   --taskcolour1-rgb: 227 156 76;
   --taskcolour2-rgb: 187 156 125;
   --taskcolour3-rgb: 207 140 104;
-  --buttons1-rgb: 79 49 2;
+  --buttons1-rgb: 245 214 175;
 }
 
 /* =========================
-   PLAYFUL THEME
-   Warm, playful, cinema-inspired palette
+   HORROR
 ========================= */
-[data-theme="playful"] {
-  --taskcolour1: #FF6B9D;  /* Pink/Magenta - Convert */
-  --taskcolour2: #B185DB;  /* Purple - Rename */
-  --taskcolour3: #FF8FB5;  /* Light pink - Delete */
-  
-  --background: #5B7FDB;   /* Medium blue */
-  
-  --buttons1: #4A6BC7;     /* Darker blue - selected */
-  --buttons2: #7B9DE8;     /* Lighter blue - unselected */
-  
-  --font1: #FFFFFF;        /* White text */
-  --font2: #E0E8FF;        /* Very light blue */
-  
-  --outlines: #8BA8E8;     /* Light blue borders */
-  
-  --warning: #FFB84D;      /* Orange warning */
-  --failed: #FF4757;       /* Red error */
-
-  --empty: transparent;
-
-  --taskcolour1-rgb: 255 107 157;
-  --taskcolour2-rgb: 177 133 219;
-  --taskcolour3-rgb: 255 143 181;
-  --buttons1-rgb: 74 107 199;
-}
-
-/* =========================
-   NEBULA THEME
-   Space-inspired, cosmic palette
-========================= */
-[data-theme="nebula"] {
-  --taskcolour1: #00D9FF;  /* Cyan - Convert */
-  --taskcolour2: #B537F2;  /* Purple - Rename */
-  --taskcolour3: #FF006E;  /* Magenta - Delete */
-  
-  --background: #0A0E27;   /* Deep space black */
-  
-  --buttons1: #1A1F3A;     /* Dark navy - selected */
-  --buttons2: #151A2E;     /* Darker navy - unselected */
-  
-  --font1: #E0E6FF;        /* Pale blue-white */
-  --font2: #8B9DC3;        /* Medium blue-grey */
-  
-  --outlines: #2D3748;     /* Dark borders */
-  
-  --warning: #FFA500;      /* Orange warning */
-  --failed: #FF3366;       /* Pink-red error */
-
-  --empty: transparent;
-
-  --taskcolour1-rgb: 0 217 255;
-  --taskcolour2-rgb: 181 55 242;
-  --taskcolour3-rgb: 255 0 110;
-  --buttons1-rgb: 26 31 58;
-}
-
-/* =========================
-   PLAYFUL THEME
-   Warm, playful, cinema-inspired palette
-========================= */
-[data-theme="playful"] {
-  --taskcolour1: #FF6B9D;  /* Pink/Magenta - Convert */
-  --taskcolour2: #B185DB;  /* Purple - Rename */
-  --taskcolour3: #FF8FB5;  /* Light pink - Delete */
-  
-  --background: #5B7FDB;   /* Medium blue */
-  
-  --buttons1: #4A6BC7;     /* Darker blue - selected */
-  --buttons2: #7B9DE8;     /* Lighter blue - unselected */
-  
-  --font1: #FFFFFF;        /* White text */
-  --font2: #E0E8FF;        /* Very light blue */
-  
-  --outlines: #8BA8E8;     /* Light blue borders */
-  
-  --warning: #FFB84D;      /* Orange warning */
-  --failed: #FF4757;       /* Red error */
-
-  --empty: transparent;
-
-  --taskcolour1-rgb: 255 107 157;
-  --taskcolour2-rgb: 177 133 219;
-  --taskcolour3-rgb: 255 143 181;
-  --buttons1-rgb: 74 107 199;
-}
-
-/* =========================
-   NEBULA THEME
-   Space-inspired, cosmic palette
-========================= */
-[data-theme="nebula"] {
-  --taskcolour1: #00D9FF;  /* Cyan - Convert */
-  --taskcolour2: #B537F2;  /* Purple - Rename */
-  --taskcolour3: #FF006E;  /* Magenta - Delete */
-  
-  --background: #0A0E27;   /* Deep space black */
-  
-  --buttons1: #1A1F3A;     /* Dark navy - selected */
-  --buttons2: #151A2E;     /* Darker navy - unselected */
-  
-  --font1: #E0E6FF;        /* Pale blue-white */
-  --font2: #8B9DC3;        /* Medium blue-grey */
-  
-  --outlines: #2D3748;     /* Dark borders */
-  
-  --warning: #FFA500;      /* Orange warning */
-  --failed: #FF3366;       /* Pink-red error */
-
-  --empty: transparent;
-
-  --taskcolour1-rgb: 0 217 255;
-  --taskcolour2-rgb: 181 55 242;
-  --taskcolour3-rgb: 255 0 110;
-  --buttons1-rgb: 26 31 58;
-}
-
-/* =========================
-   PLAYFUL THEME
-   Warm, playful, cinema-inspired palette
-========================= */
-[data-theme="playful"] {
-  --taskcolour1: #FF6B9D;
-  --taskcolour2: #B185DB;
-  --taskcolour3: #FF8FB5;
-  --background: #5B7FDB;
-  --buttons1: #4A6BC7;
-  --buttons2: #7B9DE8;
+[data-theme="horror"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Jolly Lodger", cursive;
+  --background: #3C0606;
+  --outlines: #C52525;
+  --buttons1: #720F0F;
+  --buttons2: #4E1111;
+  --taskcolour1: #DD2424;
+  --taskcolour2: #DD2424;
+  --taskcolour3: #DD2424;
   --font1: #FFFFFF;
-  --font2: #E0E8FF;
-  --outlines: #8BA8E8;
-  --warning: #FFB84D;
-  --failed: #FF4757;
+  --font2: #F43D3D;
+  --warning: #E57F13;
+  --failed: #E4410A;
   --empty: transparent;
-  --taskcolour1-rgb: 255 107 157;
-  --taskcolour2-rgb: 177 133 219;
-  --taskcolour3-rgb: 255 143 181;
-  --buttons1-rgb: 74 107 199;
-  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  --font-family2: "Englebert", cursive;
+  --taskcolour1-rgb: 221 36 36;
+  --taskcolour2-rgb: 221 36 36;
+  --taskcolour3-rgb: 221 36 36;
+  --buttons1-rgb: 114 15 15;
 }
 
 /* =========================
-   NEBULA THEME
-   Space-inspired, cosmic palette
+   COMEDY
 ========================= */
-[data-theme="nebula"] {
-  --taskcolour1: #00D9FF;
-  --taskcolour2: #B537F2;
-  --taskcolour3: #FF006E;
-  --background: #0A0E27;
-  --buttons1: #1A1F3A;
-  --buttons2: #151A2E;
-  --font1: #E0E6FF;
-  --font2: #8B9DC3;
-  --outlines: #2D3748;
-  --warning: #FFA500;
-  --failed: #FF3366;
-  --empty: transparent;
-  --taskcolour1-rgb: 0 217 255;
-  --taskcolour2-rgb: 181 55 242;
-  --taskcolour3-rgb: 255 0 110;
-  --buttons1-rgb: 26 31 58;
+[data-theme="comedy"] {
   --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
-  --font-family2: "Orbitron", sans-serif;
+  --font-family2: "Luckiest Guy", cursive;
+  --background: #F5D76C;
+  --outlines: #725B2A;
+  --buttons1: #F7E7B3;
+  --buttons2: #F9DE82;
+  --taskcolour1: #7C9915;
+  --taskcolour2: #909D0B;
+  --taskcolour3: #848F06;
+  --font1: #4C3103;
+  --font2: #725B2A;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 124 153 21;
+  --taskcolour2-rgb: 144 157 11;
+  --taskcolour3-rgb: 132 143 6;
+  --buttons1-rgb: 247 231 179;
+}
+
+/* =========================
+   SCIFI
+========================= */
+[data-theme="scifi"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Libre Barcode 39 Extended Text", system-ui;
+  --background: #000214;
+  --outlines: #763B7E;
+  --buttons1: #401B5C;
+  --buttons2: #1E062F;
+  --taskcolour1: #7168DD;
+  --taskcolour2: #BE179C;
+  --taskcolour3: #790FAE;
+  --font1: #FFFFFF;
+  --font2: #F399B8;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 113 104 221;
+  --taskcolour2-rgb: 190 23 156;
+  --taskcolour3-rgb: 121 15 174;
+  --buttons1-rgb: 64 27 92;
+}
+
+/* =========================
+   FANTASY
+========================= */
+[data-theme="fantasy"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Pirata One", system-ui;
+  --background: #00201C;
+  --outlines: #01E98A;
+  --buttons1: #007F5D;
+  --buttons2: #1E3B3F;
+  --taskcolour1: #1CABBB;
+  --taskcolour2: #26A73D;
+  --taskcolour3: #036154;
+  --font1: #FFFFFF;
+  --font2: #00EA8B;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 28 171 187;
+  --taskcolour2-rgb: 38 167 61;
+  --taskcolour3-rgb: 3 97 84;
+  --buttons1-rgb: 0 127 93;
+}
+
+/* =========================
+   ROMANCE
+========================= */
+[data-theme="romance"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Lily Script One", cursive;
+  --background: #EDD5DB;
+  --outlines: #CE617F;
+  --buttons1: #F1BDCA;
+  --buttons2: #F5DEE4;
+  --taskcolour1: #F85F47;
+  --taskcolour2: #FE9DE0;
+  --taskcolour3: #EB5C84;
+  --font1: #7C3458;
+  --font2: #CE617F;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 248 95 71;
+  --taskcolour2-rgb: 254 157 224;
+  --taskcolour3-rgb: 235 92 132;
+  --buttons1-rgb: 241 189 202;
+}
+
+/* =========================
+   OCEAN
+========================= */
+[data-theme="ocean"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Henny Penny", cursive;
+  --background: #2D6086;
+  --outlines: #427594;
+  --buttons1: #427594;
+  --buttons2: #235578;
+  --taskcolour1: #98DEEA;
+  --taskcolour2: #82C5D8;
+  --taskcolour3: #3F92B0;
+  --font1: #111524;
+  --font2: #02172C;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 152 222 234;
+  --taskcolour2-rgb: 130 197 216;
+  --taskcolour3-rgb: 63 146 176;
+  --buttons1-rgb: 66 117 148;
+}
+
+/* =========================
+   HOLIDAY
+========================= */
+[data-theme="holiday"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Margarine", cursive;
+  --background: #F39882;
+  --outlines: #C53504;
+  --buttons1: #E75C50;
+  --buttons2: #E66B65;
+  --taskcolour1: #F43E4B;
+  --taskcolour2: #F74952;
+  --taskcolour3: #F8444F;
+  --font1: #FFE5E4;
+  --font2: #FFD3D3;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 244 62 75;
+  --taskcolour2-rgb: 247 73 82;
+  --taskcolour3-rgb: 248 68 79;
+  --buttons1-rgb: 231 92 80;
+}
+
+/* =========================
+   WAR
+========================= */
+[data-theme="war"] {
+  --font-family1: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+  --font-family2: "Stick No Bills", sans-serif;
+  --background: #41513C;
+  --outlines: #749359;
+  --buttons1: #715145;
+  --buttons2: #554840;
+  --taskcolour1: #859320;
+  --taskcolour2: #938B3F;
+  --taskcolour3: #6C8A21;
+  --font1: #E5DFA9;
+  --font2: #7AA158;
+  --warning: #E57F13;
+  --failed: #E4410A;
+  --empty: transparent;
+  --taskcolour1-rgb: 133 147 32;
+  --taskcolour2-rgb: 147 139 63;
+  --taskcolour3-rgb: 108 138 33;
+  --buttons1-rgb: 113 81 69;
 }

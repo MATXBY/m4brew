@@ -3,7 +3,7 @@
 <head>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400..700&family=Englebert&family=Orbitron:wght@400..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400..700&family=Henny+Penny&family=Jolly+Lodger&family=Libre+Barcode+39+Extended+Text&family=Lily+Script+One&family=Luckiest+Guy&family=Margarine&family=Pattaya&family=Pirata+One&family=Stick+No+Bills:wght@200..800&display=swap" rel="stylesheet">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}M4Brew{% endblock %}</title>
@@ -19,7 +19,7 @@
     (function(){
       try {
         var t = localStorage.getItem("m4brew_theme");
-        if (t === "light" || t === "dark") {
+        if (t) {
           document.documentElement.setAttribute("data-theme", t);
         }
       } catch(e){}

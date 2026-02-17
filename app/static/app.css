@@ -31,9 +31,9 @@ body::before{
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(900px 520px at 12% 0%, rgb(var(--taskcolour1-rgb) / .22), rgb(var(--taskcolour1-rgb) / 0) 60%),
-    radial-gradient(900px 520px at 50% 0%, rgb(var(--taskcolour2-rgb) / .22), rgb(var(--taskcolour2-rgb) / 0) 60%),
-    radial-gradient(900px 520px at 88% 0%, rgb(var(--taskcolour3-rgb) / .20), rgb(var(--taskcolour3-rgb) / 0) 60%);
+    radial-gradient(900px 520px at 12% 0%, rgb(var(--taskcolour1-rgb) / .35), rgb(var(--taskcolour1-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 50% 0%, rgb(var(--taskcolour2-rgb) / .35), rgb(var(--taskcolour2-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 88% 0%, rgb(var(--taskcolour3-rgb) / .35), rgb(var(--taskcolour3-rgb) / 0) 60%);
 }
 
 a{ color: inherit; text-decoration: none; }
