@@ -131,14 +131,14 @@ extract_order_key() {
   local n=""
   
   # Pattern 1: numeric prefix at start
-  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
+  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\)\($\|[^0-9].*\)/\1/p' | head -n 1)"
   if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
   fi
   
   # Pattern 2: Number after STRONG separator (dash, underscore, dot)
-  n="$(echo "$lc" | sed -n 's/.*[-_.][[:space:]]*0*\([0-9]\{1,4\}\)[^0-9].*/\1/p' | head -n 1)"
+  n="$(echo "$lc" | sed -n 's/.*[-_.][[:space:]]*0*\([0-9]\{1,4\}\)\($\|[^0-9].*\)/\1/p' | head -n 1)"
   if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
@@ -541,6 +541,7 @@ warn_gaps() {
   local book_dir="$1"
   shift
   local -a files=("$@")
+  if (( ${#files[@]} <= 1 )); then return 0; fi
   local -a keys=()
   local f base k
   for f in "${files[@]}"; do
