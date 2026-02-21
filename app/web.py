@@ -585,7 +585,8 @@ def index_post():
         save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
         return redirect(url_for("settings_get"))
 
-    # Persist last selections (mode + dry_run only)save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
+    # Persist last selections (mode + dry_run only)
+    save_settings({**settings, "mode": mode, "dry_run": "true" if dry_run else "false"})
 
     # Server-side guard: do not start jobs if preflight fails
     pf = preflight_root_mapped(root_folder)
