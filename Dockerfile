@@ -1,14 +1,10 @@
 FROM python:3.12-slim
-
-# Don’t write __pycache__ / .pyc inside the container
+# Don't write __pycache__ / .pyc inside the container
 ENV PYTHONDONTWRITEBYTECODE=1
-
-
 LABEL app.name="m4brew" \
-      app.version="1.6.0" \
-      app.release_date="2026-02-11" \
+      app.version="1.7.4" \
+      app.release_date="2026-02-20" \
       app.description="Audiobook source manager and M4B converter"
-
 # System deps (ffmpeg + tooling)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -18,7 +14,6 @@ RUN apt-get update && \
       ffmpeg \
       gnupg && \
     rm -rf /var/lib/apt/lists/*
-
 # Install Docker CLI only (NOT full engine)
 RUN set -eux; \
     install -m 0755 -d /etc/apt/keyrings; \
@@ -30,14 +25,12 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends docker-ce-cli; \
     rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
-
 COPY app/ /app/
 COPY scripts/ /scripts/
 RUN chmod +x /scripts/m4brew.sh
-
 RUN pip install --no-cache-dir flask
-
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -f http://localhost:8080/ || exit 1
 CMD ["python", "web.py"]
