@@ -214,7 +214,7 @@ def _scan_total(mode: str, root_folder: str) -> int:
         for book_dir in book_dirs:
             author = book_dir.parent.name
             book = book_dir.name
-            m4bs = list(book_dir.glob("*.m4b"))
+            m4bs = [p for p in book_dir.glob("*.m4b") if not p.name.startswith("._")]
             if len(m4bs) != 1:
                 continue
             desired_name = f"{book} - {author}.m4b"
@@ -225,10 +225,10 @@ def _scan_total(mode: str, root_folder: str) -> int:
     # convert
     n = 0
     for book_dir in book_dirs:
-        m4bs = [p for p in book_dir.glob("*.m4b") if not (p.name.startswith(".tmp_") or p.name.startswith("tmp_"))]
-        if len(m4bs) == 1 and not list(book_dir.glob("*.mp3")) and not list(book_dir.glob("*.m4a")):
+        m4bs = [p for p in book_dir.glob("*.m4b") if not (p.name.startswith("._") or p.name.startswith(".tmp_") or p.name.startswith("tmp_"))]
+        if len(m4bs) == 1 and not [p for p in book_dir.glob("*.mp3") if not p.name.startswith("._")] and not [p for p in book_dir.glob("*.m4a") if not p.name.startswith("._")]:
             continue  # already has single m4b, skip
-        if list(book_dir.glob("*.mp3")) or list(book_dir.glob("*.m4a")) or len(m4bs) > 1:
+        if [p for p in book_dir.glob("*.mp3") if not p.name.startswith("._")] or [p for p in book_dir.glob("*.m4a") if not p.name.startswith("._")] or len(m4bs) > 1:
             n += 1
     return n
 

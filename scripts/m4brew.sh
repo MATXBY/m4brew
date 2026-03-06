@@ -438,7 +438,7 @@ if [[ "$MODE" == "correct" ]]; then
 
     [[ "$author" == "#recycle" ]] && continue
 
-    mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" -print0 2>/dev/null || true)
+    mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4b" -print0 2>/dev/null || true)
     m4b_count=${#m4bs[@]}
 
     if [[ "$m4b_count" -eq 0 ]]; then
@@ -582,11 +582,11 @@ while IFS= read -r -d '' book_dir; do
   [[ "$author" == "#recycle" ]] && continue
 
   # Gather source candidates
-  mapfile -d '' -t mp3s < <(find "$book_dir" -maxdepth 1 -type f -iname "*.mp3" -print0 2>/dev/null || true)
-  mapfile -d '' -t m4as < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4a" -print0 2>/dev/null || true)
+  mapfile -d '' -t mp3s < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.mp3" -print0 2>/dev/null || true)
+  mapfile -d '' -t m4as < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4a" -print0 2>/dev/null || true)
 
   # For m4b parts: EXCLUDE temp files
-  mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print0 2>/dev/null || true)
+  mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print0 2>/dev/null || true)
 
   mp3_count=${#mp3s[@]}
   m4a_count=${#m4as[@]}
@@ -706,7 +706,7 @@ while IFS= read -r -d '' book_dir; do
       log "[DRY-RUN] move *.mp3 → \"${backup_dir}/\""
     else
       mkdir -p "${backup_dir}"
-      find "${book_dir}" -maxdepth 1 -type f -iname "*.mp3" -print0 \
+      find "${book_dir}" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.mp3" -print0 \
         | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
     fi
     log "MP3s moved to: ${backup_dir}/"
@@ -819,7 +819,7 @@ while IFS= read -r -d '' book_dir; do
       log "[DRY-RUN] move *.m4a → \"${backup_dir}/\""
     else
       mkdir -p "${backup_dir}"
-      find "${book_dir}" -maxdepth 1 -type f -iname "*.m4a" -print0 \
+      find "${book_dir}" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4a" -print0 \
         | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
     fi
     log "M4As moved to: ${backup_dir}/"
@@ -892,7 +892,7 @@ while IFS= read -r -d '' book_dir; do
     else
       mkdir -p "${backup_dir}"
       # Move all .m4b except the newly created output file
-      find "${book_dir}" -maxdepth 1 -type f -iname "*.m4b" ! -iname "$(basename "$out_path")" -print0 \
+      find "${book_dir}" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4b" ! -iname "$(basename "$out_path")" -print0 \
         | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
     fi
     log "M4B parts moved to: ${backup_dir}/"
