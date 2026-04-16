@@ -28,6 +28,7 @@ services:
       DOCKER_HOST: tcp://socket-proxy:2375
     volumes:
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/audiobooks
+      - /mnt/cache/media/Audiobooks:/audiobooks2
       - ./config:/config
     networks:
       - socket-proxy
