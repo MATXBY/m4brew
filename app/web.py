@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, send_file, url_for
+from flask_wtf.csrf import CSRFProtect
 
 # -------------------------
 # JSON helpers (atomic writes)
@@ -30,6 +31,26 @@ def write_json(path: Path, data) -> None:
 CONFIG_DIR = Path(os.environ.get("CONFIG_DIR", "/config"))
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
+AUTH_PASSWORD = os.environ.get("AUTH_PASSWORD", "").strip()
+
+VALID_MODES = {"convert", "cleanup", "correct"}
+VALID_AUDIO_MODES = {"match", "mono", "stereo"}
+VALID_THEMES = {"dark", "light", "espresso", "latte", "horror", "comedy", "scifi", "fantasy", "romance", "ocean", "holiday", "war"}
+VALID_BITRATES = {"match", "32", "48", "64", "80", "96", "112", "128", "160", "192", "224", "256", "320"}
+
+
+def _get_secret_key() -> str:
+    env_key = os.environ.get("SECRET_KEY", "").strip()
+    if env_key:
+        return env_key
+    key_file = CONFIG_DIR / "secret_key.txt"
+    if key_file.exists():
+        return key_file.read_text().strip()
+    key = os.urandom(32).hex()
+    key_file.write_text(key)
+    return key
+
+
 SETTINGS_PATH = CONFIG_DIR / "settings.json"
 HISTORY_PATH = CONFIG_DIR / "history.jsonl"
 
@@ -42,7 +63,32 @@ SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 4294967296  # 4GB upload limit
+app.config["SECRET_KEY"] = _get_secret_key()
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024  # 16KB — app has no file uploads
+app.config["WTF_CSRF_ENABLED"] = True
+app.config["WTF_CSRF_TIME_LIMIT"] = None  # no expiry — tokens last the full session
+csrf = CSRFProtect(app)
+
+
+@app.before_request
+def check_auth():
+    if not AUTH_PASSWORD:
+        return
+    if request.endpoint == "health":
+        return
+    auth = request.authorization
+    if not auth or auth.password != AUTH_PASSWORD:
+        return Response(
+            "Authentication required",
+            401,
+            {"WWW-Authenticate": 'Basic realm="M4Brew"'},
+        )
+
+
+@app.get("/health")
+@csrf.exempt
+def health():
+    return "ok", 200
 
 
 # -------------------------
@@ -550,6 +596,21 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
     t.start()
 
     return job
+
+
+def _validated_bitrate(raw, fallback):
+    val = str(raw or "").strip().lower()
+    if val in VALID_BITRATES:
+        return val if val == "match" else int(val)
+    fb = str(fallback or "96").strip().lower()
+    return fb if fb == "match" else int(fb) if fb in VALID_BITRATES else 96
+
+
+def _validated_theme(raw, fallback):
+    val = str(raw or "").strip().lower()
+    return val if val in VALID_THEMES else (str(fallback or "dark") if str(fallback or "dark") in VALID_THEMES else "dark")
+
+
 # -------------------------
 # Routes
 # -------------------------
@@ -565,12 +626,14 @@ def index_post():
     settings = load_settings() or {}
 
     # Tasks page only chooses mode + dry_run
-    mode = (request.form.get("mode") or settings.get("mode") or "convert").strip().lower()
+    mode_raw = (request.form.get("mode") or settings.get("mode") or "convert").strip().lower()
+    mode = mode_raw if mode_raw in VALID_MODES else "convert"
     dry_run = str(request.form.get("dry_run") or settings.get("dry_run") or "true").lower() == "true"
 
     # Everything else comes from saved Settings
     root_folder = str(settings.get("root_folder") or "").strip()
-    audio_mode = str(settings.get("audio_mode") or "match").strip().lower()
+    audio_mode_raw = str(settings.get("audio_mode") or "match").strip().lower()
+    audio_mode = audio_mode_raw if audio_mode_raw in VALID_AUDIO_MODES else "match"
     bitrate_raw = settings.get("bitrate", 96)
     if str(bitrate_raw).strip().lower() == "match":
         bitrate = "match"
@@ -760,11 +823,14 @@ def settings_post():
         if incoming_root:
             root_folder = incoming_root
 
+    audio_mode_raw = (request.form.get("audio_mode") or existing.get("audio_mode", "match")).strip().lower()
+    audio_mode = audio_mode_raw if audio_mode_raw in VALID_AUDIO_MODES else "match"
+
     updated = {
         "root_folder": root_folder,
-        "audio_mode": request.form.get("audio_mode") or existing.get("audio_mode", "match"),
-        "bitrate": "match" if str(request.form.get("bitrate") or "").strip().lower() == "match" else int(request.form.get("bitrate") or existing.get("bitrate", 96)),
-        "theme": request.form.get("theme") or existing.get("theme", "dark"),
+        "audio_mode": audio_mode,
+        "bitrate": _validated_bitrate(request.form.get("bitrate"), existing.get("bitrate", 96)),
+        "theme": _validated_theme(request.form.get("theme"), existing.get("theme", "dark")),
         "mode": existing.get("mode", "convert"),
         "dry_run": existing.get("dry_run", "true"),
     }

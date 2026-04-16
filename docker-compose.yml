@@ -1,0 +1,41 @@
+services:
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+      IMAGES: 1
+      NETWORKS: 1
+      VOLUMES: 1
+      POST: 1
+      PING: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - socket-proxy
+
+  m4brew:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Set AUTH_PASSWORD to enable HTTP Basic Auth
+      # AUTH_PASSWORD: changeme
+      # Set SECRET_KEY to a fixed value to survive restarts without /config volume
+      # SECRET_KEY: changeme
+      DOCKER_HOST: tcp://socket-proxy:2375
+    volumes:
+      - /path/to/audiobooks:/audiobooks
+      - m4brew_config:/config
+    networks:
+      - socket-proxy
+    depends_on:
+      - socket-proxy
+
+volumes:
+  m4brew_config:
+
+networks:
+  socket-proxy:
+    driver: bridge

@@ -10,6 +10,7 @@
 {% block content %}
 <div class="card card--settings">
   <form method="post" action="/settings" id="settingsForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="stack">
 
       <div class="setting-row">

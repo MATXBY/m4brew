@@ -8,7 +8,7 @@
 ========================= */
 :root {
   /* UI Constants (never change) */
-  --ui-version: "1.7.5";
+  --ui-version: "2.0.0";
   --page-pad: 22px;
   --page-gap: 22px;
   --inset-pad: 24px;

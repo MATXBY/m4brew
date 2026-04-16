@@ -2,8 +2,8 @@ FROM python:3.12-slim
 # Don't write __pycache__ / .pyc inside the container
 ENV PYTHONDONTWRITEBYTECODE=1
 LABEL app.name="m4brew" \
-      app.version="1.7.4" \
-      app.release_date="2026-02-20" \
+      app.version="2.0.0" \
+      app.release_date="2026-04-16" \
       app.description="Audiobook source manager and M4B converter"
 # System deps (ffmpeg + tooling)
 RUN apt-get update && \
@@ -26,11 +26,15 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends docker-ce-cli; \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /app
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /app/
 COPY scripts/ /scripts/
 RUN chmod +x /scripts/m4brew.sh
-RUN pip install --no-cache-dir flask
+# Non-root user — /config volume permissions must match on the host
+RUN useradd -u 1000 -m m4brew && chown -R m4brew:m4brew /app /scripts
+USER m4brew
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
-CMD ["python", "web.py"]
+    CMD curl -f http://localhost:8080/health || exit 1
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--threads", "4", "--timeout", "120", "web:app"]

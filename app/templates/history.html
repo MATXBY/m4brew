@@ -13,6 +13,7 @@
       <a class="btn primary" href="/history/download">Download all</a>
 
       <form method="post" action="/history/clear" onsubmit="return confirm('Clear history?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn danger" type="submit">Clear history</button>
       </form>
     </div>

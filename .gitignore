@@ -20,6 +20,4 @@ docs/_junk_legacy/
 # local config tar backups
 _config_backups/
 
-# local/dev only
-/docker-compose.yml
 scripts/m4brew.sh.backup-before-improvements
