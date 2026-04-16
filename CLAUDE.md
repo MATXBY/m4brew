@@ -17,17 +17,11 @@ CONFIG_DIR=./config python app/web.py
 ## Docker Build & Run
 
 ```bash
-docker build -t m4brew:latest .
-
-docker run -it \
-  -p 8080:8080 \
-  -v /path/to/audiobooks:/audiobooks \
-  -v m4brew_config:/config \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  m4brew:latest
+docker compose up -d --build
+# Opens at http://localhost:8586
 ```
 
-The app requires `/var/run/docker.sock` because the bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) to perform the actual audio processing.
+The app uses a `docker-compose.yml` with two services: `m4brew` (the web UI, port 8586) and `m4brew-socket-proxy` (a `tecnativa/docker-socket-proxy` that gates access to the Docker socket). The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) via the proxy rather than mounting `/var/run/docker.sock` directly.
 
 ## No Build Step
 

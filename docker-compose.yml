@@ -1,6 +1,7 @@
 services:
   socket-proxy:
     image: tecnativa/docker-socket-proxy
+    container_name: m4brew-socket-proxy
     restart: unless-stopped
     environment:
       CONTAINERS: 1
@@ -16,10 +17,14 @@ services:
 
   m4brew:
     build: .
+    container_name: m4brew
     restart: unless-stopped
     user: "1026:100"
     ports:
-      - "8080:8080"
+      - "8586:8080"
+    labels:
+      net.unraid.docker.icon: https://raw.githubusercontent.com/MATXBY/m4brew/master/app/static/icons/source/m4brew-icon-dark.svg
+      net.unraid.docker.webui: http://[IP]:[PORT:8080]
     environment:
       # Set AUTH_PASSWORD to enable HTTP Basic Auth
       # AUTH_PASSWORD: changeme
