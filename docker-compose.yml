@@ -26,15 +26,13 @@ services:
       # SECRET_KEY: changeme
       DOCKER_HOST: tcp://socket-proxy:2375
     volumes:
-      - /path/to/audiobooks:/audiobooks
-      - m4brew_config:/config
+      # Set this to the path of your audiobooks folder on the host, e.g.:
+      # - /mnt/user/Audiobooks:/audiobooks
+      - ./config:/config
     networks:
       - socket-proxy
     depends_on:
       - socket-proxy
-
-volumes:
-  m4brew_config:
 
 networks:
   socket-proxy:
