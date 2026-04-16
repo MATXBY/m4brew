@@ -25,6 +25,8 @@ services:
       # AUTH_PASSWORD: changeme
       # Set SECRET_KEY to a fixed value to survive restarts without /config volume
       # SECRET_KEY: changeme
+      PUID: 1026
+      PGID: 100
       DOCKER_HOST: tcp://socket-proxy:2375
     volumes:
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/audiobooks
