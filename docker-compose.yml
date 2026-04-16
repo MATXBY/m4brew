@@ -26,8 +26,7 @@ services:
       # SECRET_KEY: changeme
       DOCKER_HOST: tcp://socket-proxy:2375
     volumes:
-      # Set this to the path of your audiobooks folder on the host, e.g.:
-      # - /mnt/user/Audiobooks:/audiobooks
+      - /mnt/remotes/192.168.4.4_media/Audiobooks:/audiobooks
       - ./config:/config
     networks:
       - socket-proxy
