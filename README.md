@@ -24,7 +24,7 @@ Designed for users of:
 
 ---
 
-### Who it’s for
+### Who it's for
 
 M4Brew is for anyone with audiobook folders full of:
 	•	MP3 parts
@@ -100,16 +100,29 @@ This structure ensures:
 
 ⸻
 
-## Mapped Folders (Unraid Setup)
+## Deployment (Docker Compose)
 
-When installing via Community Applications, you’ll see:
-	•	Audiobooks 1
-	•	Audiobooks 2
-	•	Audiobooks 3
+A `docker-compose.yml` is included. Edit the audiobooks volume path to match your setup, then run:
 
-Set these to your audiobook paths.
-They will then appear in the Mapped folder dropdown inside M4Brew.
-Only one is required — others are optional.
+```bash
+docker compose up -d
+```
+
+### Optional environment variables
+
+| Variable | Description |
+|---|---|
+| `AUTH_PASSWORD` | Set to enable HTTP Basic Auth (password-protect the UI) |
+| `SECRET_KEY` | Fixed secret for CSRF tokens — recommended if you want sessions to survive container restarts |
+| `PUID` / `PGID` | User/group ID for file permissions |
+
+⸻
+
+## Unraid Setup
+
+Edit `docker-compose.yml` and set your audiobook paths, `PUID`, `PGID`, and optionally `AUTH_PASSWORD`. The included compose file uses a Docker socket proxy for improved security — M4Brew only gets the Docker permissions it actually needs.
+
+Config is stored in `./config` next to the compose file.
 
 ⸻
 
@@ -139,31 +152,28 @@ M4Brew is intentionally cautious:
 
 M4Brew uses:
 	•	**FFmpeg** for audio processing
-	•	Clean, minimal Flask UI
+	•	**Flask** + **Gunicorn** web server
+	•	**Docker socket proxy** to limit container permissions
 	•	Docker container deployment
+
 It wraps professional media tooling in a focused interface built specifically for audiobook workflows.
 
 ⸻
 
 ## Themes
 
-M4Brew now includes **multiple visual themes.**
-Because if you’re going to brew audiobooks…
+M4Brew includes **12 visual themes.**
+Because if you're going to brew audiobooks…
 it might as well look good while doing it.
 
 ⸻
 
-Project Status - v1.7.3 — Stable
+Project Status - v2.0.0 — Stable
 	•	Core conversion workflow complete
+	•	Security hardened (auth, CSRF protection, input whitelisting, non-root container)
 	•	Safety logic hardened
 	•	Batch behaviour reliable
 	•	History logging polished
-	•	Known issues addressed
-Fingers crossed — all major bugs squashed.
-
-Future updates may include:
-	•	Additional input formats
-	•	Minor UX refinements
 
 Enjoy.
 
