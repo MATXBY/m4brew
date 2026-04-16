@@ -17,6 +17,7 @@ services:
   m4brew:
     build: .
     restart: unless-stopped
+    user: "1026:100"
     ports:
       - "8080:8080"
     environment:
