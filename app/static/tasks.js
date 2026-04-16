@@ -345,8 +345,10 @@
       : (job.status === "finished" ? "Finished" : String(job.status));
 
     const settings = job.settings || {};
-    const am = settings.audio_mode ? String(settings.audio_mode) : "—";
-    const br = (settings.bitrate != null) ? String(settings.bitrate) + " kbps" : "—";
+    const amRaw = settings.audio_mode ? String(settings.audio_mode) : "—";
+    const am = amRaw.charAt(0).toUpperCase() + amRaw.slice(1);
+    const brRaw = (settings.bitrate != null) ? String(settings.bitrate) : null;
+    const br = brRaw ? (brRaw.charAt(0).toUpperCase() + brRaw.slice(1)) + " kbps" : "—";
     const audio = (am !== "—" || br !== "—") ? (am + ", " + br) : "—";
 
     const sum = job.summary || {};
