@@ -99,7 +99,6 @@ h1.title{
 /* ✅ Single source of truth: version is dark grey */
 .version{
   margin: 10px 0 0;
-  color: var(--version-color);
   opacity: 1;
   font-weight: normal;
   color: var(--font2);
@@ -422,8 +421,6 @@ pre{
   display: none !important;
 }
 
-/* UI version label comes from theme.css */
-.version::before{ content: var(--ui-version); }
 
 .step-label:hover::before,
 .status-pill:hover::before {

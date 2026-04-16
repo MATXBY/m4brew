@@ -315,31 +315,12 @@ display: flex;
 
 
 /* M4Brew: Status pill is the primary control; hide Live button */
-#liveBtn{display:none !important;}
+#liveBtn{ display: none !important; }
 
-/* M4Brew: Advanced view (full log) should be shorter + scroll */
+/* Advanced log: flat appearance, scrollable */
 #fullLog{
-  max-height: 260px;   /* ~half-height cap */
+  max-height: 260px;
   overflow: auto;
-}
-
-/* M4Brew: keep the Live card the same size in Simple vs Advanced */
-.live-panel{
-  min-height: 420px;   /* adjust if you want taller/shorter */
-}
-
-/* M4Brew: keep the Live card the same size in Simple vs Advanced */
-.live-panel{
-  min-height: 420px;   /* adjust if you want taller/shorter */
-}
-
-/* M4Brew: keep the Live card the same size in Simple vs Advanced */
-.live-panel{
-  min-height: 360px;   /* adjust if you want taller/shorter */
-}
-
-/* M4Brew: Advanced log should look "flat" (no inset box) */
-#fullLog{
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
@@ -347,120 +328,21 @@ display: flex;
   border-radius: 0 !important;
 }
 
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 520px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 260px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
+/* Keep Live panel height stable; transparent card with outline */
 .live-panel{
   min-height: 400px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 300px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 380px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 320px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 380px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 300px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 400px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 320px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 380px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 300px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 380px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 280px;
-  overflow: auto;
-}
-
-/* Keep Live panel height stable between Simple/Advanced */
-.live-panel{
-  min-height: 400px;
-}
-
-/* Advanced log scrolls inside the same card */
-.full-log{
-  max-height: 320px;
-  overflow: auto;
-}
-
-/* Live panel: transparent card with outline */
-.live-panel{
   background: transparent !important;
   border: 1px solid var(--outlines) !important;
   box-shadow: none !important;
 }
 
-/* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
-.status-pill.status-run2{
-  background-color: var(--taskcolour2);
-  border-color: var(--outlines);
-  color: var(--font1);
-  font-weight: normal;
+/* Advanced log scrolls inside the same card */
+.full-log{
+  max-height: 320px;
+  overflow: auto;
 }
 
-/* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
-
-/* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
-.status-pill.status-run3{
-  background-color: var(--taskcolour3);
-  border-color: var(--outlines);
-  color: var(--font1);
-  font-weight: normal;
-}
-
-/* --- M4Brew: Force status pills to match Run button solid colours --- */
+/* --- Status pills: match Run button colours --- */
 .status-pill.status-run1{
   background: var(--taskcolour1) !important;
   border-color: var(--outlines) !important;

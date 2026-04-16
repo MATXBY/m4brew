@@ -56,7 +56,7 @@
         <div>
           <h1 class="title">M4Brew</h1>
           <p class="subtitle">Brewing better audiobooks</p>
-          <p class="version" aria-label="Version"></p>
+          <p class="version" aria-label="Version">{{ app_version }}</p>
         </div>
       </div>
 
@@ -81,6 +81,7 @@
     </main>
   </div>
 
+  <script src="{{ url_for('static', filename='help.js') }}"></script>
   {% block extra_js %}{% endblock %}
 
   <!--

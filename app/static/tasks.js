@@ -87,63 +87,7 @@
     }
   };
 
-  const overlay = document.getElementById("helpOverlay");
-  const closeBtn = document.getElementById("helpCloseBtn");
-  const bodyEl = document.getElementById("helpBody");
-  const titleEl = document.getElementById("helpTitle");
-
-  function openHelp(key){
-    const d = HELP[key];
-    if(!d || !overlay || !bodyEl || !titleEl || !closeBtn) return;
-
-    titleEl.textContent = d.title || "Help";
-    bodyEl.innerHTML = (d.body || []).map(t => `<p>${String(t)}</p>`).join("");
-
-    if (d.boxes && Array.isArray(d.boxes)) {
-      d.boxes.forEach(b => {
-        const wrap = document.createElement("div");
-        wrap.className = "help-box" + (b.tone ? (" help-box--" + b.tone) : "");
-
-        const h = document.createElement("div");
-        h.className = "help-box-title";
-        h.textContent = b.title || "";
-        wrap.appendChild(h);
-
-        (b.lines || []).forEach(l => {
-          const p = document.createElement("p");
-          p.textContent = l;
-          wrap.appendChild(p);
-        });
-
-        bodyEl.appendChild(wrap);
-      });
-    }
-
-    overlay.classList.add("open");
-    overlay.setAttribute("aria-hidden","false");
-    closeBtn.focus();
-  }
-
-  function closeHelp(){
-    if(!overlay) return;
-    overlay.classList.remove("open");
-    overlay.setAttribute("aria-hidden","true");
-  }
-
-  document.querySelectorAll("[data-help]").forEach(el => {
-    if (!el.classList.contains("step-label")) return;
-    el.addEventListener("click", () => openHelp(el.getAttribute("data-help")));
-    el.addEventListener("keydown", (e) => {
-      if(e.key === "Enter" || e.key === " "){
-        e.preventDefault();
-        openHelp(el.getAttribute("data-help"));
-      }
-    });
-  });
-
-  if (closeBtn) closeBtn.addEventListener("click", closeHelp);
-  if (overlay) overlay.addEventListener("click", (e) => { if(e.target === overlay) closeHelp(); });
-  document.addEventListener("keydown", (e) => { if(e.key === "Escape") closeHelp(); });
+  initHelpModal(HELP);
 
   // =========================
   // TASK PAGE LOGIC
@@ -263,13 +207,6 @@
          : (m === "cleanup") ? "Delete"
          : "Run";
   }
-  function modeVerb(mode){
-    const m = String(mode || "").toLowerCase();
-    return (m === "convert") ? "Convert"
-         : (m === "correct") ? "Rename"
-         : (m === "cleanup") ? "Delete"
-         : "Run";
-  }
   function modePast(mode){
     const m = String(mode || "").toLowerCase();
     return (m === "convert") ? "converted"
@@ -346,10 +283,6 @@
       if(el2.textContent !== "") el2.textContent = "";
       el2.style.display = "none";
     }
-  }
-
-  function setPillDirect(stateClass, line1, line2){
-    setPill(stateClass, line1, line2);
   }
 
   // -------------------------
@@ -539,7 +472,7 @@
         try{
           const pf = await fetchPreflight(true);
           const pill = (pf && pf.ok) ? {cls:"status-idle", l1:"Ready", l2:""} : preflightToPill(pf);
-          setPillDirect(pill.cls, pill.l1, pill.l2);
+          setPill(pill.cls, pill.l1, pill.l2);
         }catch(_){}
       });
 
@@ -627,7 +560,7 @@
     }
 
     const info = preflightToPill(pf || {});
-    setPillDirect(info.cls, info.l1, info.l2);
+    setPill(info.cls, info.l1, info.l2);
   }, true);
 
   // =========================
@@ -790,7 +723,7 @@
         }
       }
 
-      const verb = modeVerb(mode);    // Convert/Rename/Delete
+      const verb = modeLabel(mode);    // Convert/Rename/Delete
       const past = modePast(mode);    // converted/renamed/deleted
 
       // =========

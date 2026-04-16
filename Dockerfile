@@ -2,7 +2,7 @@ FROM python:3.12-slim
 # Don't write __pycache__ / .pyc inside the container
 ENV PYTHONDONTWRITEBYTECODE=1
 LABEL app.name="m4brew" \
-      app.version="2.0.0" \
+      app.version="2.0.1" \
       app.release_date="2026-04-16" \
       app.description="Audiobook source manager and M4B converter"
 # System deps (ffmpeg + tooling)
