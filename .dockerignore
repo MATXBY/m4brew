@@ -1,0 +1,17 @@
+# Never bake local safety backups into images
+*.bak
+*.bak.*
+*.bak.*
+**/*.bak
+**/*.bak.*
+**/*.bak.*
+
+# Your cold backups (if you use them)
+.COLD_BACKUP
+**/.COLD_BACKUP
+
+# Usual junk
+.DS_Store
+**/.DS_Store
+.git
+.gitignore

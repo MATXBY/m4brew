@@ -1,0 +1,23 @@
+# runtime state
+config/
+
+# python cache
+__pycache__/
+*.pyc
+
+# local safety backups / snapshots
+*.bak.*
+app/templates/*.bak.*
+app/templates/*.BROKEN.*
+app/static/*.bak.*
+*.bak
+app/static/tasks.js.BROKEN.*
+
+# temp/scratch
+*.tmp
+docs/_junk_legacy/
+
+# local config tar backups
+_config_backups/
+
+scripts/m4brew.sh.backup-before-improvements

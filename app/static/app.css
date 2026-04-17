@@ -1,0 +1,462 @@
+/* =========================
+   m4brew — BASE STYLES (LEAN)
+========================= */
+*{ box-sizing: border-box; }
+html{ background: var(--background); min-height: 100%; }
+
+body{
+  margin: 0;
+  min-height: 100%;
+  font-family: var(--font-family1);
+  font-size: var(--font);
+  line-height: var(--lh);
+  color: var(--font1);
+  background: transparent;
+  position: relative;
+}
+
+button, input, select, textarea{
+  font: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+/* Top glow overlay (aligned to your new purple) */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 520px;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(900px 520px at 12% 0%, rgb(var(--taskcolour1-rgb) / .35), rgb(var(--taskcolour1-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 50% 0%, rgb(var(--taskcolour2-rgb) / .35), rgb(var(--taskcolour2-rgb) / 0) 60%),
+    radial-gradient(900px 520px at 88% 0%, rgb(var(--taskcolour3-rgb) / .35), rgb(var(--taskcolour3-rgb) / 0) 60%);
+}
+
+a{ color: inherit; text-decoration: none; }
+
+.wrap{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 26px 18px 44px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  padding: 18px 16px 10px;
+}
+
+.brand{
+  display:flex;
+  flex-direction: column;
+  align-items:center;
+  gap: 10px;
+}
+
+.logo{
+  width: 92px;
+  height: 92px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.logo img{
+  width: 92px;
+  height: 92px;
+  object-fit: contain;
+  display:block;
+  background: transparent;
+}
+
+/* Only exception: big app title */
+h1.title{
+  font-family: var(--font-family2);
+  font-weight: 400;
+  margin: 0;
+  line-height: 1.1;
+  font-size: 30pt;
+  letter-spacing: .2px;
+}
+
+.subtitle{
+  margin: 0;
+  color: var(--font2);
+}
+
+/* ✅ Single source of truth: version is dark grey */
+.version{
+  margin: 10px 0 0;
+  opacity: 1;
+  font-weight: normal;
+  color: var(--font2);
+}
+
+/* Nav pills */
+.nav{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  height: var(--pill-h);
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--buttons2);
+  border: 1px solid var(--outlines);
+  transition: transform .06s ease, background .12s ease, border-color .12s ease;
+  user-select: none;
+}
+.pill:hover{ transform: translateY(-1px); background: var(--buttons2); }
+.pill.active{
+  background: var(--buttons1);
+  border-color: var(--outlines);
+}
+
+/* ✅ Header pills same width (desktop/tablet). Mobile stays flexible. */
+.nav .pill{
+  width: 170px;
+  justify-content: center;
+}
+@media (max-width: 520px){
+  .nav .pill{
+    width: auto;
+    justify-content: flex-start;
+  }
+}
+
+.dot{
+  display: none;
+}
+.pill.active .dot{
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--taskcolour3);
+}
+
+/* Content */
+.content{ margin-top: 18px; padding: 0 2px; }
+
+.card{
+  background: transparent; /* 👈 remove fill */
+  border: 1px solid var(--outlines); /* keep outline */
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+/* Content stack helper (History-style rows) */
+.content-stack{
+  display: grid;
+  gap: 0;
+  padding: 0;
+}
+.content-stack > *{ padding: var(--stack-pad) 0; }
+.content-stack > * + *{ border-top: 1px solid var(--stack-line); }
+
+/* Inputs */
+input[type="text"], input[type="number"], select{
+  color: var(--font1);
+  width:100%;
+  height: var(--pill-h);
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--outlines);
+  background: var(--empty);
+  outline: none;
+}
+input::placeholder{ color: var(--font2); }
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap: 8px;
+  height: var(--pill-h);
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--outlines);
+  background: var(--buttons1);
+  color: var(--font1);
+  cursor: pointer;
+  transition: transform .06s ease, background .12s ease, border-color .12s ease;
+}
+.btn:hover{ transform: translateY(-1px); }
+
+/* ✅ Primary purple everywhere (header active-ish buttons, live ON, etc.) */
+.btn.primary{
+  background: var(--buttons1);
+  border-color: var(--outlines);
+  background: var(--buttons1);
+  border-color: var(--outlines);
+  font-weight: normal;
+}
+
+.btn.danger{ background: var(--buttons1); border-color: var(--outlines); }
+.btn:disabled{ opacity: .55; cursor: not-allowed; transform:none; }
+
+/* Label pill */
+.label-pill{
+  position: relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: var(--pill-h);
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-border);
+  color: var(--font1);
+  font-weight: normal;
+  letter-spacing: .2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; }
+
+pre{
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  background: var(--buttons2);
+  border: 1px solid var(--outlines);
+  border-radius: 14px;
+  padding: 12px;
+  max-height: 45vh;
+  overflow:auto;
+  color: var(--font1);
+}
+
+/* Page card alignment */
+.card--about{ padding: 0; }
+.card--settings{ padding: 0; }
+
+/* Narrow content cards (About / Tasks / Settings only) */
+.card--about,
+.card--tasks,
+.card--settings{
+  width: 100%;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* Donate line – intro grey, link white (About + Tasks) */
+.donate-line{
+  margin-top: -10px;
+  text-align: center;
+}
+.donate-line .muted{
+  color: var(--font2) !important;
+  color: var(--font2);
+}
+.donate-line a{
+  font-weight: 700;
+  color: var(--font1) !important;
+  color: var(--font2);
+  text-decoration: none;
+}
+.donate-line a:hover{
+  text-decoration: underline;
+}
+
+/* =========================
+   M4Brew: Status pill animation
+   - running: subtle pulse
+   - done: quick confirmation flash
+========================= */
+
+@keyframes m4brewStatusDone{
+  0%   { box-shadow: 0 0 0 0 rgba(60,220,130,0.0); }
+  35%  { box-shadow: 0 0 0 8px rgba(60,220,130,0.18); }
+  100% { box-shadow: 0 0 0 0 rgba(60,220,130,0.0); }
+}
+
+@keyframes m4brewStatusPulse2{
+  0%   { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  50%  { transform: translateY(-1px); box-shadow: 0 0 0 8px var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+  100% { transform: translateY(0);    box-shadow: 0 0 0 0 var(--pulse-color, rgba(var(--taskcolour3-rgb), 0.14)); }
+}
+
+.status-pill.status-done{
+  font-weight: normal;
+  animation: m4brewStatusDone 900ms ease-out 1;
+}
+
+
+/* =========================
+   M4Brew: Status pill (1.3.0 groundwork)
+   - full width
+   - double-height (2-line)
+   - warn / error states
+========================= */
+
+.status-wrap .status-pill{
+  position: relative;
+  width: 100%;
+  text-align: left;
+}
+
+.status-pill .pill-line1{
+  display: block;
+  line-height: 1.15;
+  font-weight: normal;
+}
+
+.status-pill .pill-line2{
+  display: block;
+  margin-top: 6px;
+  line-height: 1.15;
+  opacity: .92;
+}
+
+/* keep pill height consistent even when line2 is empty */
+.status-pill.status-warn{
+  background: var(--warning);
+  border-color: var(--warning);
+  font-weight: normal;
+}
+
+/* Error = red (write denied, folder not mounted, hard failures) */
+.status-pill.status-error{
+  background: var(--failed);
+  border-color: var(--outlines);
+  font-weight: normal;
+}
+
+}
+
+/* --- M4Brew: status pill running states --- */
+.status-pill.status-running{
+  border-color: var(--empty);
+  background-color: var(--running-bg, var(--buttons1));
+  font-weight: normal;
+  animation: m4brewStatusPulse2 1.2s ease-in-out infinite;
+  will-change: transform, box-shadow;
+  position: relative;
+  overflow: visible;
+}
+
+/* Task-specific colors override when running */
+.status-pill.status-running.status-run1 {
+  background-color: var(--taskcolour1) !important;
+}
+.status-pill.status-running.status-run2 {
+  background-color: var(--taskcolour2) !important;
+}
+.status-pill.status-running.status-run3 {
+  background-color: var(--taskcolour3) !important;
+}
+
+/* Grey idle: "Ready to Brew" */
+.status-pill.status-idle{
+  background-color: var(--buttons2);
+  border-color: var(--outlines);
+  color: var(--font1);
+}
+
+/* Purple test: all successful "Test Complete ..." states */
+.status-pill.status-test{
+  background-color: var(--buttons1) !important;
+  border-color: var(--outlines) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  color: var(--font1) !important;
+}
+
+/* --- M4Brew: Convert RUN complete pill (matches Step 1 Run button) --- */
+.status-pill.status-run1{
+  background-color: var(--taskcolour1) !important;
+  border-color: var(--outlines);
+  color: var(--font1);
+  font-weight: normal;
+}
+
+/* --- M4Brew: Rename RUN complete pill (matches Step 2 Run button) --- */
+.status-pill.status-run2{
+  background-color: var(--taskcolour2);
+  border-color: var(--outlines);
+  color: var(--font1);
+  font-weight: normal;
+}
+
+/* --- M4Brew: Delete RUN complete pill (matches Step 3 Run button) --- */
+.status-pill.status-run3{
+  background-color: var(--taskcolour3);
+  border-color: var(--outlines);
+  color: var(--font1);
+  font-weight: normal;
+}
+
+/* --- M4Brew: Status pill one-line mode (keep line2 capability, but never grow taller) --- */
+.status-pill.is-two-line{
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  min-height: var(--pill-h) !important;
+}
+.status-pill .pill-line2{
+  display: none !important;
+}
+
+
+.step-label:hover::before,
+.status-pill:hover::before {
+  opacity: 1;
+}
+
+/* Adjust text to make room for icon */
+
+/* Hover info icon for clickable elements */
+.step-label::before,
+.status-pill::before {
+  content: "ⓘ";
+  position: absolute;
+  left: 16px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  color: var(--font2);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.step-label:hover::before,
+.status-pill:hover::before {
+  opacity: 1;
+}
+
+.step-label {
+  position: relative;
+}
+
+/* Reserve space for hover icon so text doesn't shift */
+
+
+/* Permanent space for hover icon - no text shift */
+.step-label,
+.status-pill,
+.label-pill {
+  padding-left: 36px;
+}

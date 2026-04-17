@@ -1,0 +1,50 @@
+/* =========================
+   Settings (embedded on Tasks)
+   - No extra outer padding (Tasks stack already insets)
+   - Clean 2-column rows
+========================= */
+
+
+/* When embedded, DO NOT add its own inset/padding */
+.stack{
+  display: grid;
+  gap: var(--settings-gap);
+  padding: 0;
+}
+
+/* 2-column row: label pill + field */
+.setting-row{
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+/* Label pill: centered, single line */
+.setting-row .label-pill{
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Field fills its half */
+.setting-row .field{
+  width: 100%;
+}
+
+/* Mobile: stack */
+@media (max-width: 820px){
+  .setting-row{
+    grid-template-columns: 1fr;
+  }
+  .setting-row .label-pill{
+    white-space: normal;
+  }
+}
+
+/* Standalone settings page padding */
+.card--settings {
+  padding: var(--page-pad);
+}

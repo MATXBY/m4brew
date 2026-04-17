@@ -1,0 +1,164 @@
+/* =========================
+   History page — match Tasks/Settings
+   - Card has NO internal padding (content controls spacing)
+   - Consistent padding: 22px
+   - Consistent inset: 24px
+   - Clean 1px dividers
+========================= */
+
+
+/* Kill the default 16px card padding for this page only */
+.card.card--history{
+  padding: 0;
+}
+
+/* Outer spacing matches Tasks/Settings stacks */
+.history-stack{
+  padding: var(--history-pad) var(--history-inset);
+}
+
+/* Top buttons row */
+.history-top{
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: var(--history-pad);
+}
+
+/* Empty state */
+.history-empty{
+  padding: var(--history-pad) 0;
+  text-align: center;
+  color: var(--font2);
+}
+
+/* Table wrapper */
+.history-table-wrap{
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table */
+.history-table{
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Header row */
+.history-table thead th{
+  text-align: left;
+  font-weight: normal;
+  padding: 14px 12px var(--history-pad);
+  border-bottom: 1px solid var(--outlines);
+  white-space: nowrap;
+}
+
+/* Body rows */
+.history-table tbody td{
+  padding: var(--history-pad) 12px;
+  border-top: 1px solid var(--outlines);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Status tick/cross */
+.status{
+  font-weight: normal;
+  font-size: 14pt;
+  width: 70px;
+}
+.status.ok{ color: var(--font1); }
+.status.warn{ color: var(--font1); }
+.status.bad{ color: var(--font1); }
+
+/* Small mono numbers */
+.mono-small{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  letter-spacing: .2px;
+}
+
+/* View button cell */
+.history-view{
+  text-align: right;
+}
+.history-view .btn{
+  min-width: 92px;
+}
+
+/* Mobile tidy */
+@media (max-width: 720px){
+  .history-table thead th,
+  .history-table tbody td{
+    padding: 16px 10px;
+  }
+  .status{ width: 56px; }
+}
+
+/* =========================
+   Run detail page
+========================= */
+
+.card.card--history-detail{
+  position: relative;
+  padding: 22px 24px;
+}
+
+.run-detail-close{
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--outlines);
+  background: var(--panel-bg-2);
+  color: var(--text-main);
+  font-size: 26px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.run-detail-close:hover{ transform: translateY(-1px); }
+
+.run-detail-title{
+  margin: 0 0 10px 0;
+}
+
+.run-detail-meta{
+  margin: 0 0 16px 0;
+}
+
+.run-detail-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 12px 0 16px 0;
+}
+
+.run-detail-chip{
+  margin: 0;
+  background: var(--panel-bg-03);
+}
+
+.run-detail-value{
+  font-size: 16px;
+}
+
+.run-detail-label{
+  margin: 8px 0 6px;
+}
+
+.run-detail-pre{
+  margin: 0;
+  max-height: 58vh;
+  overflow: auto;
+}
+
+/* Mobile */
+@media (max-width: 720px){
+  .run-detail-grid{ grid-template-columns: 1fr; }
+}
