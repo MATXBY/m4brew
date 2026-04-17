@@ -62,7 +62,7 @@ CANCEL_PATH = CONFIG_DIR / "cancel.flag"
 SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
-APP_VERSION = "2.0.1"
+APP_VERSION = "1.1"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
@@ -946,80 +946,41 @@ def history_clear():
 # - Tell the user whether the path is (a) not mounted, (b) missing, (c) not writable
 # - Only return "failed" for real job failures, not setup issues
 
-def _docker_mount_map() -> list[tuple[str, str]]:
-    """
-    Return list of (host_source, container_dest) mounts for THIS container.
-    Uses docker inspect via /var/run/docker.sock (already mounted in your setup).
-    """
-    cid = os.environ.get("HOSTNAME", "").strip()  # container id
-    if not cid:
-        return []
+_SYSTEM_DIRS = frozenset([
+    "/", "/proc", "/sys", "/dev", "/run", "/tmp",
+    "/app", "/config", "/scripts",
+    "/bin", "/sbin", "/usr", "/lib", "/lib64",
+    "/etc", "/opt", "/root", "/home", "/var",
+    "/boot", "/media", "/mnt", "/srv",
+])
+
+def _filtered_mounts() -> list[tuple[str, str]]:
+    """Return user-mounted audiobook directories by scanning top-level dirs."""
     try:
-        p = subprocess.run(
-            ["docker", "inspect", cid, "--format", "{{range .Mounts}}{{println .Source \"|\" .Destination}}{{end}}"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        if p.returncode != 0:
-            return []
-        out = (p.stdout or "").splitlines()
-        mounts: list[tuple[str, str]] = []
-        for line in out:
-            line = line.strip()
-            if not line or "|" not in line:
-                continue
-            src, dst = line.split("|", 1)
-            src = (src or "").strip()
-            dst = (dst or "").strip()
-            if src and dst:
-                mounts.append((src, dst))
-        return mounts
+        dirs = []
+        for name in sorted(os.listdir("/")):
+            path = "/" + name
+            if path not in _SYSTEM_DIRS and os.path.isdir(path):
+                dirs.append((path, path))
+        return dirs
     except Exception:
         return []
 
-def _filtered_mounts() -> list[tuple[str, str]]:
-    """Return mounts filtered to real audiobook roots (hides internal mounts)."""
-    return [(src, dst) for (src, dst) in _docker_mount_map()
-            if dst and dst.startswith("/")
-            and dst not in ("/app", "/config", "/var/run/docker.sock")
-            and not dst.startswith("/scripts")
-            and src != "/var/run/docker.sock"
-            and "/mnt/cache/appdata/m4brew" not in src]
-
 
 def _map_host_to_container_path(host_path: str) -> tuple[str | None, str | None]:
-    """
-    Given a host path the user typed, map it to an in-container path if it's within a mounted source.
-    Returns (container_path, matched_mount_source).
-    """
+    """In single-container mode paths are identical — just validate the path is within a known mount."""
     host_path = os.path.normpath(host_path)
-
-    mounts = _filtered_mounts()
-
-    best_src = None
-    best_dst = None
-
-    for src, dst in mounts:
-        src_n = os.path.normpath(src)
-        if host_path == src_n or host_path.startswith(src_n.rstrip("/") + "/"):
-            if best_src is None or len(src_n) > len(best_src):
-                best_src = src_n
-                best_dst = dst
-
-    if not best_src or not best_dst:
-        return (None, None)
-
-    rel = host_path[len(best_src):].lstrip("/")
-    container_path = os.path.normpath(os.path.join(best_dst, rel))
-    return (container_path, best_src)
+    for src, dst in _filtered_mounts():
+        if host_path == dst or host_path.startswith(dst.rstrip("/") + "/"):
+            return (host_path, src)
+    return (None, None)
 
 
 @app.get("/api/mounts")
 def api_mounts():
     mounts = _filtered_mounts()
 
-    items = [{"host": src, "container": dst} for (src, dst) in mounts]
+    items = [{"host": dst, "container": dst} for (src, dst) in mounts]
     items.sort(key=lambda x: x["container"])
     return jsonify({"ok": True, "mounts": items}), 200
 
@@ -1037,25 +998,8 @@ def preflight_root_mapped(root: str) -> dict:
     if root and not root.startswith("/"):
         root = "/" + root
 
-    # Decide if root is a CONTAINER path or a HOST path
-    mounts = _filtered_mounts()
-
     root_n = os.path.normpath(root)
-
-    container_path = None
-    matched_src = None
-
-    # container path case: root matches a destination mount (e.g. /audiobooks)
-    for src, dst in mounts:
-        dst_n = os.path.normpath(dst)
-        if root_n == dst_n or root_n.startswith(dst_n.rstrip("/") + "/"):
-            container_path = root_n
-            matched_src = src
-            break
-
-    # host path case: root matches a source mount (e.g. /mnt/remotes/...)
-    if not container_path:
-        container_path, matched_src = _map_host_to_container_path(root)
+    container_path, matched_src = _map_host_to_container_path(root_n)
 
     if not container_path:
         return {
@@ -1088,11 +1032,11 @@ def preflight_root_mapped(root: str) -> dict:
             "message": "Write access denied (check PUID/PGID + permissions)",
             "root_folder": root,
         }
-    except Exception as e:
+    except Exception:
         return {
             "ok": False,
             "error_code": "unknown",
-            "message": str(e),
+            "message": "Unexpected error accessing folder (check permissions and path)",
             "root_folder": root,
         }
 

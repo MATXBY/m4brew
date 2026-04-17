@@ -121,7 +121,7 @@
       for (const m of filtered) {
         const opt = document.createElement("option");
         opt.value = String(m.container);
-        opt.textContent = m.container + "  (" + m.host + ")";
+        opt.textContent = m.host === m.container ? m.container : m.container + "  (" + m.host + ")";
         mountPick.appendChild(opt);
       }
       const cur = String(rootInput.value || "").trim();
