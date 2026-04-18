@@ -32,6 +32,16 @@
         </select>
       </div>
       <div class="setting-row">
+        <span class="label-pill step-label" data-help="select-effect" role="button" tabindex="0" aria-label="More info: Effect">SELECT:&nbsp;Effect</span>
+        {% set ef = (settings.get("effect", "none") if settings else "none") %}
+        <select class="field" id="effect" name="effect" onchange="applyEffect(this.value)">
+          <option value="none" {% if ef == "none" %}selected{% endif %}>None</option>
+          <option value="aurora" {% if ef == "aurora" %}selected{% endif %}>Aurora</option>
+          <option value="stars" {% if ef == "stars" %}selected{% endif %}>Stars</option>
+          <option value="underwater" {% if ef == "underwater" %}selected{% endif %}>Underwater</option>
+        </select>
+      </div>
+      <div class="setting-row">
         <span class="label-pill step-label" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder">SELECT:&nbsp;Mapped folder</span>
         <input type="hidden" id="root_folder" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
         <select class="field" id="root_mount_pick" aria-label="Pick from mapped folders">
@@ -159,7 +169,20 @@
         "Your preference is saved and remembered between sessions."
       ],
       boxes: [
-        { title: "", lines: ["ESPRESSO — dark roast, easy on the eyes", "LATTE — light and creamy, for the daytime brewer"] }
+        { title: "", lines: [
+          "MODERN DARK \u2014 clean dark UI, the default",
+          "MODERN LIGHT \u2014 clean light UI",
+          "ESPRESSO \u2014 dark roast, warm browns",
+          "LATTE \u2014 light and creamy, for the daytime brewer",
+          "HORROR \u2014 deep reds and dripping dread",
+          "COMEDY \u2014 bright yellows, big energy",
+          "SCI-FI \u2014 deep space blues and neon",
+          "FANTASY \u2014 dark greens and emerald glow",
+          "ROMANCE \u2014 soft pinks and warm tones",
+          "OCEAN \u2014 deep sea blues",
+          "HOLIDAY \u2014 sunshine oranges and reds",
+          "WAR \u2014 muted greens and military earth tones"
+        ] }
       ]
     },
     "select-source": {
@@ -189,6 +212,18 @@
       body: ["Choose your preferred audio bitrate."],
       boxes: [
         { title: "", lines: ["MATCH SOURCE \u2014 detects the highest source bitrate and matches it", "FIXED \u2014 choose a specific bitrate (32\u2013320 kbps)"] }
+      ]
+    },
+    "select-effect": {
+      title: "BACKGROUND EFFECT",
+      body: ["Add an animated background effect to the interface. Uses your current theme\u2019s colours."],
+      boxes: [
+        { title: "", lines: [
+          "NONE \u2014 clean, no animation",
+          "AURORA \u2014 drifting colour blobs",
+          "STARS \u2014 floating stars rising upward",
+          "UNDERWATER \u2014 wide sunbeams swaying through water"
+        ]}
       ]
     }
   };

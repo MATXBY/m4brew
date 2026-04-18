@@ -1,8 +1,8 @@
 FROM sandreas/m4b-tool:latest
 ENV PYTHONDONTWRITEBYTECODE=1
 LABEL app.name="m4brew" \
-      app.version="1.1" \
-      app.release_date="2026-04-17" \
+      app.version="1.2" \
+      app.release_date="2026-04-18" \
       app.description="Audiobook source manager and M4B converter"
 RUN apk add --no-cache python3 py3-pip curl bash
 WORKDIR /app

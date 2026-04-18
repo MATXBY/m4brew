@@ -313,3 +313,89 @@
   --taskcolour3-rgb: 108 138 33;
   --buttons1-rgb: 113 81 69;
 }
+
+/* =========================
+   BACKGROUND EFFECTS
+========================= */
+
+#bg-effect {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* --- None (default) --- */
+[data-effect="none"] #bg-effect { display: none; }
+
+/* --- Aurora --- */
+[data-effect="aurora"] .aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+}
+[data-effect="aurora"] .aurora-blob-1 {
+  width: 65vw; height: 55vh;
+  background: radial-gradient(ellipse at center, rgba(var(--taskcolour1-rgb) / 0.55), transparent 70%);
+  top: -15%; left: 5%;
+  animation: aurora-1 7s ease-in-out infinite alternate;
+}
+[data-effect="aurora"] .aurora-blob-2 {
+  width: 55vw; height: 65vh;
+  background: radial-gradient(ellipse at center, rgba(var(--taskcolour2-rgb) / 0.45), transparent 70%);
+  top: 15%; right: -10%;
+  animation: aurora-2 9s ease-in-out infinite alternate;
+}
+[data-effect="aurora"] .aurora-blob-3 {
+  width: 45vw; height: 45vh;
+  background: radial-gradient(ellipse at center, rgba(var(--taskcolour3-rgb) / 0.5), transparent 70%);
+  bottom: -10%; left: 25%;
+  animation: aurora-3 11s ease-in-out infinite alternate;
+}
+@keyframes aurora-1 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(12%, 18%) scale(1.25); }
+}
+@keyframes aurora-2 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-18%, 8%) scale(1.2); }
+}
+@keyframes aurora-3 {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(8%, -20%) scale(1.15); }
+}
+
+/* --- Stars (canvas injected by JS) --- */
+[data-effect="stars"] #bg-effect { opacity: 0.7; }
+
+/* --- Underwater --- */
+[data-effect="underwater"] #bg-effect {
+  background: rgba(var(--taskcolour1-rgb) / 0.04);
+}
+
+/* Wide, fan-shaped sunbeams fanning down from the top */
+[data-effect="underwater"] .light-ray {
+  position: absolute;
+  left: calc(var(--rl, 30%) - 10vw);
+  top: -2%;
+  width: 20vw;
+  height: 85vh;
+  background: radial-gradient(
+    ellipse 50% 95% at 50% 0%,
+    rgba(var(--taskcolour1-rgb) / 0.6) 0%,
+    rgba(var(--taskcolour1-rgb) / 0.28) 28%,
+    rgba(var(--taskcolour2-rgb) / 0.1) 55%,
+    transparent 76%
+  );
+  filter: blur(16px);
+  transform-origin: top center;
+  transform: rotate(var(--rr, 0deg));
+  mix-blend-mode: screen;
+  animation: ray-sway var(--rdur, 16s) ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+@keyframes ray-sway {
+  from { transform: rotate(calc(var(--rr, 0deg) - var(--rs, 6deg))); opacity: 0.55; }
+  to   { transform: rotate(calc(var(--rr, 0deg) + var(--rs, 6deg))); opacity: 1;    }
+}

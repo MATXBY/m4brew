@@ -37,6 +37,7 @@ VALID_MODES = {"convert", "cleanup", "correct"}
 VALID_AUDIO_MODES = {"match", "mono", "stereo"}
 VALID_THEMES = {"dark", "light", "espresso", "latte", "horror", "comedy", "scifi", "fantasy", "romance", "ocean", "holiday", "war"}
 VALID_BITRATES = {"match", "32", "48", "64", "80", "96", "112", "128", "160", "192", "224", "256", "320"}
+VALID_EFFECTS = {"none", "aurora", "stars", "underwater"}
 
 
 def _get_secret_key() -> str:
@@ -62,7 +63,7 @@ CANCEL_PATH = CONFIG_DIR / "cancel.flag"
 SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
@@ -618,6 +619,11 @@ def _validated_theme(raw, fallback):
     return val if val in VALID_THEMES else (str(fallback or "dark") if str(fallback or "dark") in VALID_THEMES else "dark")
 
 
+def _validated_effect(raw, fallback):
+    val = str(raw or "").strip().lower()
+    return val if val in VALID_EFFECTS else (str(fallback or "none") if str(fallback or "none") in VALID_EFFECTS else "none")
+
+
 # -------------------------
 # Routes
 # -------------------------
@@ -838,6 +844,7 @@ def settings_post():
         "audio_mode": audio_mode,
         "bitrate": _validated_bitrate(request.form.get("bitrate"), existing.get("bitrate", 96)),
         "theme": _validated_theme(request.form.get("theme"), existing.get("theme", "dark")),
+        "effect": _validated_effect(request.form.get("effect"), existing.get("effect", "none")),
         "mode": existing.get("mode", "convert"),
         "dry_run": existing.get("dry_run", "true"),
     }
