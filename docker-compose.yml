@@ -1,20 +1,4 @@
 services:
-  socket-proxy:
-    image: tecnativa/docker-socket-proxy
-    container_name: m4brew-socket-proxy
-    restart: unless-stopped
-    environment:
-      CONTAINERS: 1
-      IMAGES: 1
-      NETWORKS: 1
-      VOLUMES: 1
-      POST: 1
-      PING: 1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - socket-proxy
-
   m4brew:
     build: .
     container_name: m4brew
@@ -32,16 +16,8 @@ services:
       # SECRET_KEY: changeme
       PUID: 1026
       PGID: 100
-      DOCKER_HOST: tcp://socket-proxy:2375
     volumes:
-      - /mnt/remotes/192.168.4.4_media/Audiobooks:/audiobooks
-      - /mnt/cache/media/Audiobooks:/audiobooks2
+      - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks
+      - /mnt/cache/media/Audiobooks:/Test_Folder
+      - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr
       - ./config:/config
-    networks:
-      - socket-proxy
-    depends_on:
-      - socket-proxy
-
-networks:
-  socket-proxy:
-    driver: bridge

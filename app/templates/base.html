@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="{{ settings.get('theme', 'dark') if settings else 'dark' }}">
+<html lang="en" data-theme="{{ settings.get('theme', 'dark') if settings else 'dark' }}" data-effect="{{ settings.get('effect', 'none') if settings else 'none' }}">
 <head>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,13 +16,13 @@
   <link rel="manifest" href="{{ url_for('static', filename='icons/site.webmanifest') }}">
 
   <script>
-    // Apply saved theme immediately to prevent flash
+    // Apply saved theme and effect immediately to prevent flash
     (function(){
       try {
         var t = localStorage.getItem("m4brew_theme");
-        if (t) {
-          document.documentElement.setAttribute("data-theme", t);
-        }
+        if (t) document.documentElement.setAttribute("data-theme", t);
+        var ef = localStorage.getItem("m4brew_effect");
+        if (ef) document.documentElement.setAttribute("data-effect", ef);
       } catch(e){}
     })();
     </script>
@@ -33,6 +33,7 @@
 </head>
 
 <body>
+  <div id="bg-effect" aria-hidden="true"></div>
   <div class="wrap">
     <header class="header">
       <div class="brand">
@@ -83,6 +84,114 @@
 
   <script src="{{ url_for('static', filename='help.js') }}"></script>
   {% block extra_js %}{% endblock %}
+
+  <script>
+  /* Background effect initialisation */
+  (function() {
+    var _particlesRAF = null;
+
+    function initParticles(canvas) {
+      var ctx = canvas.getContext("2d");
+      var W = canvas.width = window.innerWidth;
+      var H = canvas.height = window.innerHeight;
+      var style = getComputedStyle(document.documentElement);
+      var rgb1 = style.getPropertyValue("--taskcolour1-rgb").trim();
+      var rgb2 = style.getPropertyValue("--taskcolour2-rgb").trim();
+      var rgb3 = style.getPropertyValue("--taskcolour3-rgb").trim();
+      var palettes = [rgb1, rgb2, rgb3].map(function(r) { return "rgb(" + r + ")"; });
+      var N = Math.min(60, Math.floor(W * H / 15000));
+      var particles = [];
+      for (var i = 0; i < N; i++) {
+        particles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 1.5 + Math.random() * 2.5,
+          speed: 0.2 + Math.random() * 0.5,
+          drift: (Math.random() - 0.5) * 0.3,
+          color: palettes[i % palettes.length],
+          opacity: 0.3 + Math.random() * 0.4
+        });
+      }
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (var j = 0; j < particles.length; j++) {
+          var p = particles[j];
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.color;
+          ctx.globalAlpha = p.opacity;
+          ctx.fill();
+          p.y -= p.speed;
+          p.x += p.drift;
+          if (p.y + p.r < 0) { p.y = H + p.r; p.x = Math.random() * W; }
+          if (p.x < -p.r) p.x = W + p.r;
+          if (p.x > W + p.r) p.x = -p.r;
+        }
+        ctx.globalAlpha = 1;
+        if (document.documentElement.dataset.effect === "stars") {
+          _particlesRAF = requestAnimationFrame(draw);
+        }
+      }
+      draw();
+      window.addEventListener("resize", function() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+      });
+    }
+
+    function buildEffect(effect) {
+      var el = document.getElementById("bg-effect");
+      if (!el) return;
+      if (_particlesRAF) { cancelAnimationFrame(_particlesRAF); _particlesRAF = null; }
+      el.innerHTML = "";
+
+      if (effect === "aurora") {
+        for (var i = 1; i <= 3; i++) {
+          var b = document.createElement("span");
+          b.className = "aurora-blob aurora-blob-" + i;
+          el.appendChild(b);
+        }
+      } else if (effect === "stars") {
+        var canvas = document.createElement("canvas");
+        canvas.style.cssText = "position:absolute;inset:0;width:100%;height:100%";
+        el.appendChild(canvas);
+        initParticles(canvas);
+      } else if (effect === "underwater") {
+        // Beams spread across the viewport; each has a base tilt, sway amount, and speed
+        var beams = [
+          { rl: 4,  rr: -6, rs: 8,  rdur: 8  },
+          { rl: 17, rr: -3, rs: 10, rdur: 11 },
+          { rl: 30, rr: -1, rs: 9,  rdur: 7  },
+          { rl: 44, rr:  2, rs: 11, rdur: 10 },
+          { rl: 57, rr: -2, rs: 8,  rdur: 9  },
+          { rl: 70, rr:  4, rs: 10, rdur: 12 },
+          { rl: 83, rr:  6, rs: 9,  rdur: 8  },
+          { rl: 94, rr:  8, rs: 7,  rdur: 10 }
+        ];
+        for (var r = 0; r < beams.length; r++) {
+          var b = beams[r];
+          var ray = document.createElement("span");
+          ray.className = "light-ray";
+          ray.style.setProperty("--rl",   b.rl   + "%");
+          ray.style.setProperty("--rr",   b.rr   + "deg");
+          ray.style.setProperty("--rs",   b.rs   + "deg");
+          ray.style.setProperty("--rdur", b.rdur + "s");
+          el.appendChild(ray);
+        }
+      }
+    }
+
+    window.applyEffect = function(e) {
+      document.documentElement.setAttribute("data-effect", e);
+      try { localStorage.setItem("m4brew_effect", e); } catch(_) {}
+      buildEffect(e);
+    };
+
+    document.addEventListener("DOMContentLoaded", function() {
+      buildEffect(document.documentElement.dataset.effect || "none");
+    });
+  })();
+  </script>
 
   <!--
     GLOBAL PAGE BEHAVIOUR

@@ -6,35 +6,7 @@ IFS=$'\n\t'
 JOB_ID="${JOB_ID:-manual}"
 
 # Root of your audiobooks (Author/Book folders)
-ROOT_DEFAULT="/audiobooks"
-ROOT="${ROOT_FOLDER:-$ROOT_DEFAULT}"
-
-# Map container paths to host paths for helper docker runs
-# (because "docker run -v ..." happens on the HOST, not inside this container)
-HOST_AUDIOBOOKS="$(docker inspect "${HOSTNAME:-}" --format '{{range .Mounts}}{{if eq .Destination "/audiobooks"}}{{.Source}}{{end}}{{end}}' 2>/dev/null || true)"
-
-to_host_path() {
-  local p="$1"
-  local self="${M4BREW_CONTAINER_NAME:-${HOSTNAME}}"
-
-  # Find the LONGEST matching mount destination prefix, then map to its source
-  local best_dst="" best_src=""
-  while IFS="|" read -r dst src; do
-    [ -z "$dst" ] && continue
-    if [[ "$p" == "$dst" || "$p" == "$dst/"* ]]; then
-      if (( ${#dst} > ${#best_dst} )); then
-        best_dst="$dst"
-        best_src="$src"
-      fi
-    fi
-  done < <(docker inspect "$self" --format '{{range .Mounts}}{{printf "%s|%s\n" .Destination .Source}}{{end}}' 2>/dev/null)
-
-  if [ -n "$best_dst" ]; then
-    echo "${best_src}${p#${best_dst}}"
-  else
-    echo "$p"
-  fi
-}
+ROOT="${ROOT_FOLDER:-/audiobooks}"
 
 # Operation mode (can be overridden via environment variable MODE):
 MODE="${MODE:-convert}"
@@ -42,27 +14,9 @@ MODE="${MODE:-convert}"
 # DRY_RUN (can be overridden via environment variable DRY_RUN):
 DRY_RUN="${DRY_RUN:-true}"
 
-# Ensure helper containers join the same docker network as m4brew
-DOCKER_NETWORK="${DOCKER_NETWORK:-bridge}"
-
 # Audio mode policy (can be overridden via environment variable AUDIO_MODE):
 AUDIO_MODE_DEFAULT="match"
 AUDIO_MODE="${AUDIO_MODE:-$AUDIO_MODE_DEFAULT}"   # match | mono | stereo
-
-# Docker user:group (match your mount ownership)
-# Prefer DOCKER_UID_GID, else PUID/PGID, else DOCKER_UID/DOCKER_GID
-PUID="${PUID:-${DOCKER_UID:-}}"
-PGID="${PGID:-${DOCKER_GID:-}}"
-if [ -z "${DOCKER_UID_GID:-}" ] && [ -n "${PUID}" ] && [ -n "${PGID}" ]; then
-  DOCKER_UID_GID="${PUID}:${PGID}"
-fi
-DOCKER_UID_GID="${DOCKER_UID_GID:-1000:1000}"
-
-# Docker image for m4b-tool (merge + optional re-encode)
-M4B_IMAGE="sandreas/m4b-tool:latest"
-
-# Docker image for ffmpeg (for single-file M4A remux)
-FFMPEG_IMAGE="linuxserver/ffmpeg"
 
 # Target bitrate for all MP3→M4B outputs (numeric kbps from env → append "k")
 BITRATE_DEFAULT="64"
@@ -253,11 +207,8 @@ detect_channels() {
   fi
 
   local ch
-  ch=$(docker run --rm --entrypoint ffprobe --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
-      -v "$(to_host_path "$(dirname "$first_file")"):/data" \
-      "$FFMPEG_IMAGE" \
-      -v error -select_streams a:0 -show_entries stream=channels \
-      -of default=nk=1:nw=1 "/data/$(basename "$first_file")" 2>/dev/null || echo "2")
+  ch=$(ffprobe -v error -select_streams a:0 -show_entries stream=channels \
+      -of default=nk=1:nw=1 "$first_file" 2>/dev/null || echo "2")
 
   if [[ "$ch" == "1" ]]; then
     echo "1"
@@ -286,11 +237,8 @@ detect_bitrate() {
     return 0
   fi
   local br
-  br=$(docker run --rm --entrypoint ffprobe --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" \
-      -v "$(to_host_path "$(dirname "$file")"):/data" \
-      "$FFMPEG_IMAGE" \
-      -v error -select_streams a:0 -show_entries stream=bit_rate \
-      -of default=nk=1:nw=1 "/data/$(basename "$file")" 2>/dev/null || echo "0")
+  br=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate \
+      -of default=nk=1:nw=1 "$file" 2>/dev/null || echo "0")
   # ffprobe returns bits/sec, convert to kbps
   if [[ "$br" =~ ^[0-9]+$ ]] && (( br > 0 )); then
     echo $(( br / 1000 ))
@@ -343,7 +291,6 @@ log "ROOT=${ROOT}"
 log "DRY_RUN=${DRY_RUN}"
 log "BITRATE=${BITRATE}"
 log "AUDIO_MODE=${AUDIO_MODE}"
-log "DOCKER_UID:GID=${DOCKER_UID_GID}"
 
 # Ensure root exists
 if [[ ! -d "${ROOT}" ]]; then
@@ -497,16 +444,6 @@ log " - M4As: single file remux (stream copy), multi-file merge @ ${BITRATE}"
 log " - M4Bs: multi-file merge (no re-encode) when part order is clear"
 log "Safety: If multi-file order isn't clear, the book is skipped with a warning (does not stop the batch)."
 
-# Pull images once (skip in dry-run)
-if is_dry_run; then
-  log "[DRY-RUN] skipping docker pull"
-else
-  log "[RUN] docker pull \"${M4B_IMAGE}\" >/dev/null 2>&1 || true"
-  docker pull "${M4B_IMAGE}" >/dev/null 2>&1 || true
-  log "[RUN] docker pull \"${FFMPEG_IMAGE}\" >/dev/null 2>&1 || true"
-  docker pull "${FFMPEG_IMAGE}" >/dev/null 2>&1 || true
-fi
-
 created_count=0
 skipped_count=0
 failed_count=0
@@ -658,21 +595,14 @@ while IFS= read -r -d '' book_dir; do
     effective_bitrate=$(resolve_bitrate "${BITRATE}" "${mp3s[@]}")
     audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
-    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
-      -v "$(to_host_path "${book_dir}"):/data"
-      "${M4B_IMAGE}" merge /data
-      --output-file "/data/$(basename "$tmp_path")"
-      "${audio_args[@]}"
-    )
-
     if is_dry_run; then
-      log "[DRY-RUN] ${cmd[*]}"
+      log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\" ${audio_args[*]}"
       created_count=$((created_count + 1))
       created_files+=("${out_path} (DRY-RUN, from MP3)")
       continue
     fi
 
-    if ! "${cmd[@]}"; then
+    if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}" "${audio_args[@]}"; then
       log "ERROR: m4b-tool merge (MP3) failed for: ${book_dir}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
@@ -724,24 +654,14 @@ while IFS= read -r -d '' book_dir; do
       log "INPUT:  ${in_file}"
       log "OUTPUT: ${out_path}"
 
-      cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}"
-        -e "PUID=${DOCKER_UID_GID%%:*}"
-        -e "PGID=${DOCKER_UID_GID##*:}"
-        -v "$(to_host_path "${book_dir}"):/data"
-        "${FFMPEG_IMAGE}" -v error -stats
-        -i "/data/$(basename "$in_file")"
-        -c copy -movflags +faststart
-        "/data/$(basename "$tmp_path")"
-      )
-
       if is_dry_run; then
-        log "[DRY-RUN] ${cmd[*]}"
+        log "[DRY-RUN] ffmpeg -i \"${in_file}\" -c copy -movflags +faststart \"${tmp_path}\""
         created_count=$((created_count + 1))
         created_files+=("${out_path} (DRY-RUN, from single M4A)")
         continue
       fi
 
-      if ! "${cmd[@]}"; then
+      if ! ffmpeg -v error -stats -i "${in_file}" -c copy -movflags +faststart "${tmp_path}"; then
         log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
@@ -770,21 +690,14 @@ while IFS= read -r -d '' book_dir; do
       effective_bitrate=$(resolve_bitrate "${BITRATE}" "${m4as[@]}")
       audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
-      cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
-        -v "$(to_host_path "${book_dir}"):/data"
-        "${M4B_IMAGE}" merge /data
-        --output-file "/data/$(basename "$tmp_path")"
-        "${audio_args[@]}"
-      )
-
       if is_dry_run; then
-        log "[DRY-RUN] ${cmd[*]}"
+        log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\" ${audio_args[*]}"
         created_count=$((created_count + 1))
         created_files+=("${out_path} (DRY-RUN, from multi M4A)")
         continue
       fi
 
-      if ! "${cmd[@]}"; then
+      if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}" "${audio_args[@]}"; then
         log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
@@ -844,20 +757,14 @@ while IFS= read -r -d '' book_dir; do
     log "OUTPUT: ${out_path}"
 
     # For M4B inputs, do not pass bitrate/channels (avoid re-encode).
-    cmd=(docker run --rm --label "m4brew_job=${JOB_ID}" --network "${DOCKER_NETWORK}" -u "${DOCKER_UID_GID}"
-      -v "$(to_host_path "${book_dir}"):/data"
-      "${M4B_IMAGE}" merge /data
-      --output-file "/data/$(basename "$tmp_path")"
-    )
-
     if is_dry_run; then
-      log "[DRY-RUN] ${cmd[*]}"
+      log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\""
       created_count=$((created_count + 1))
       created_files+=("${out_path} (DRY-RUN, from multi M4B)")
       continue
     fi
 
-    if ! "${cmd[@]}"; then
+    if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}"; then
       log "ERROR: m4b-tool merge (M4B) failed for: ${book_dir}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")

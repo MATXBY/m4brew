@@ -107,6 +107,7 @@
   const lvStage = document.getElementById("lvStage");
   const lvWarn = document.getElementById("lvWarn");
   const lvErr = document.getElementById("lvErr");
+  const lvSkip = document.getElementById("lvSkip");
 
   let liveOn = (localStorage.getItem("m4brew_live") === "1");
   let _nextPollMs = 1000;
@@ -304,7 +305,7 @@
   });
 
   function updateLivePanel(job){
-    if(!lvTask || !lvBook || !lvProgress || !lvRuntime || !lvAudio || !lvStage || !lvWarn || !lvErr) return;
+    if(!lvTask || !lvBook || !lvProgress || !lvRuntime || !lvAudio || !lvStage || !lvWarn || !lvErr || !lvSkip) return;
 
     if(!job || !job.status || job.status === "none"){
       lvTask.textContent = "—";
@@ -315,6 +316,7 @@
       lvStage.textContent = "—";
       lvWarn.textContent = "—";
       lvErr.textContent = "—";
+      lvSkip.textContent = "—";
       return;
     }
 
@@ -355,6 +357,7 @@
     const w = getWarnings(sum);
     const warnings = String(Number(sum.warnings_count ?? (Array.isArray(sum.warnings) ? sum.warnings.length : 0) ?? 0));
     const errors = String(Number(sum.failed || 0));
+    const skipped = String(Number(sum.skipped || 0));
 
     lvTask.textContent = taskLine;
     lvBook.textContent = book;
@@ -364,6 +367,7 @@
     lvStage.textContent = st;
     lvWarn.textContent = warnings;
     lvErr.textContent = errors;
+    lvSkip.textContent = skipped;
   }
 
   // --- Live panel view toggle (Human vs Full log) ---
@@ -450,7 +454,7 @@
       for(const m of filtered){
         const opt = document.createElement("option");
         opt.value = String(m.container);
-        opt.textContent = `${m.container}  (${m.host})`;
+        opt.textContent = m.host === m.container ? m.container : `${m.container}  (${m.host})`;
         sel.appendChild(opt);
       }
 
