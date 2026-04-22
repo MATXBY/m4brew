@@ -17,11 +17,16 @@ CONFIG_DIR=./config python app/web.py
 ## Docker Build & Run
 
 ```bash
+cd /mnt/user/appdata/m4brew
 docker compose up -d --build
 # Opens at http://localhost:8586
 ```
 
 The app uses a `docker-compose.yml` with two services: `m4brew` (the web UI, port 8586) and `m4brew-socket-proxy` (a `tecnativa/docker-socket-proxy` that gates access to the Docker socket). The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) via the proxy rather than mounting `/var/run/docker.sock` directly.
+
+## Networking
+
+The container joins the external `matt-net` Docker network (set via `networks.default.name: matt-net` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
 
 ## No Build Step
 

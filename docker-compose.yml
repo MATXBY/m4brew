@@ -21,3 +21,7 @@ services:
       - /mnt/cache/media/Audiobooks:/Test_Folder
       - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr
       - ./config:/config
+networks:
+  default:
+    name: matt-net
+    external: true
