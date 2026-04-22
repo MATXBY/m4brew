@@ -28,6 +28,19 @@ The app uses a `docker-compose.yml` with two services: `m4brew` (the web UI, por
 
 The container joins the external `matt-net` Docker network (set via `networks.default.name: matt-net` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
 
+## Unraid Docker Icon
+
+The icon is set via the `net.unraid.docker.icon` label in `docker-compose.yml`, pointing to `http://192.168.4.10:8586/static/images/m4brew-logo.png` (served by the container itself).
+
+Available icon files in `app/static/images/`:
+- `m4brew-logo.png` — light version (white cup, transparent background) — **currently used**
+- `m4brew-logo-dark.png` — dark cup, transparent background
+- `m4brew-logo.svg` / `m4brew-logo-dark.svg` — SVG variants
+
+To change the icon: update the label in `docker-compose.yml`, recreate the container (`docker compose down && docker compose up -d`). Unraid may cache the icon — clear it with `rm -f /var/lib/docker/unraid/images/m4brew.png` then refresh the Docker page.
+
+Note: the Docker Folders plugin manages folder icons separately — those must be updated directly in the plugin's settings, not via container labels.
+
 ## No Build Step
 
 There is no npm, no asset compilation, and no test suite. The frontend is vanilla HTML/CSS/JS with Jinja2 templating. Linting is manual.
