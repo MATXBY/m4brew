@@ -96,12 +96,11 @@ h1.title{
   color: var(--font2);
 }
 
-/* ✅ Single source of truth: version is dark grey */
 .version{
   margin: 10px 0 0;
   opacity: 1;
   font-weight: normal;
-  color: var(--font2);
+  color: var(--taskcolour3);
 }
 
 /* Nav pills */
