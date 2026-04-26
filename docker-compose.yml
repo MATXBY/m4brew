@@ -17,9 +17,9 @@ services:
       PUID: 1026
       PGID: 100
     volumes:
-      - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks
-      - /mnt/cache/media/Audiobooks:/Test_Folder
-      - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr
+      - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks:slave
+      - /mnt/cache/media/Audiobooks:/Test_Folder:slave
+      - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:slave
       - ./config:/config
 networks:
   default:

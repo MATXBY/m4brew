@@ -4,7 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-M4Brew is a containerized web app for batch-converting audiobook folders into single-file M4B format. It's a **Flask web UI + Bash processing engine** deployed as a Docker container.
+M4Brew is a self-hosted, containerised web app for batch-converting audiobook folders into single-file M4B format. It runs on Unraid and is accessed via a browser at `http://192.168.4.10:8586`.
+
+**Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
+
+**Status:** Final Version — feature-complete. Changes should be focused and conservative.
+
+---
+
+## Repository Layout
+
+```
+m4brew/
+├── app/
+│   ├── web.py              # Flask server — all routes, job management, persistence
+│   ├── templates/          # Jinja2 HTML templates
+│   │   ├── base.html       # Shared layout, nav, theme bootstrap
+│   │   ├── index.html      # Tasks page (main UI)
+│   │   ├── about.html      # About page (donate link lives here only)
+│   │   ├── settings.html   # Settings form
+│   │   ├── history.html    # Job history list
+│   │   └── history_detail.html
+│   └── static/
+│       ├── theme.css       # 12 themes via CSS custom properties
+│       ├── tasks.js        # Live polling UI
+│       ├── about.css       # About page styles
+│       └── images/         # Logo variants (see Unraid Icon section)
+├── scripts/
+│   └── m4brew.sh           # Core processing engine (Bash)
+├── config/                 # Runtime data — gitignored, persisted on host
+├── Dockerfile
+├── docker-compose.yml
+└── requirements.txt
+```
+
+---
 
 ## Running Locally (without Docker)
 
@@ -14,44 +48,86 @@ CONFIG_DIR=./config python app/web.py
 # Opens at http://localhost:8080
 ```
 
-## Docker Build & Run
+---
+
+## Docker Build & Run (on Unraid)
+
+The app data lives at `/mnt/user/appdata/m4brew` on the Unraid host. The SMB share `//192.168.4.10/appdata/m4brew` maps to this path and is what this repo is checked out into on a Mac via `/Volumes/m4brew`.
 
 ```bash
 cd /mnt/user/appdata/m4brew
 docker compose up -d --build
-# Opens at http://localhost:8586
+# Opens at http://192.168.4.10:8586
 ```
 
-The app uses a `docker-compose.yml` with two services: `m4brew` (the web UI, port 8586) and `m4brew-socket-proxy` (a `tecnativa/docker-socket-proxy` that gates access to the Docker socket). The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) via the proxy rather than mounting `/var/run/docker.sock` directly.
+**Always use `--build`** when changing Python, templates, or static files — the container must be rebuilt. Template changes are not picked up without a rebuild (Flask caches them in memory).
+
+---
+
+## Services
+
+`docker-compose.yml` defines two services:
+
+| Service | Image | Purpose |
+|---------|-------|---------|
+| `m4brew` | Built from `./Dockerfile` | Flask web UI, port 8586→8080 |
+| `m4brew-socket-proxy` | `tecnativa/docker-socket-proxy` | Gates access to the Docker socket |
+
+The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) via the socket proxy rather than mounting `/var/run/docker.sock` directly.
+
+---
 
 ## Networking
 
-The container joins the external `matt-net` Docker network (set via `networks.default.name: matt-net` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
+The container joins the external `matt-net` Docker network (`networks.default.name: matt-net` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
+
+---
+
+## Volumes
+
+Audiobook source folders are bind-mounted from the host. All mounts that come from Unassigned Devices (including remote SMB mounts under `/mnt/remotes/`) **must use the `:slave` propagation option**, otherwise the container cannot see mounts established after startup.
+
+Current mounts in `docker-compose.yml`:
+
+```yaml
+- /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks:slave
+- /mnt/cache/media/Audiobooks:/Test_Folder:slave
+- /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:slave
+- ./config:/config
+```
+
+To add a new audiobook source: add a new line in the same format and rebuild.
+
+---
 
 ## Unraid Docker Icon
 
-The icon is set via the `net.unraid.docker.icon` label in `docker-compose.yml`, pointing to `http://192.168.4.10:8586/static/images/m4brew-logo.png` (served by the container itself).
+Set via the `net.unraid.docker.icon` label in `docker-compose.yml`, pointing to `http://192.168.4.10:8586/static/images/m4brew-logo.png` (served by the container itself).
 
-Available icon files in `app/static/images/`:
-- `m4brew-logo.png` — light version (white cup, transparent background) — **currently used**
+Available icons in `app/static/images/`:
+- `m4brew-logo.png` — light (white cup, transparent background) — **currently used**
 - `m4brew-logo-dark.png` — dark cup, transparent background
 - `m4brew-logo.svg` / `m4brew-logo-dark.svg` — SVG variants
 
-To change the icon: update the label in `docker-compose.yml`, recreate the container (`docker compose down && docker compose up -d`). Unraid may cache the icon — clear it with `rm -f /var/lib/docker/unraid/images/m4brew.png` then refresh the Docker page.
+To change: update the label in `docker-compose.yml`, then `docker compose down && docker compose up -d`. Unraid may cache the icon — clear with `rm -f /var/lib/docker/unraid/images/m4brew.png` then refresh the Docker page.
 
-Note: the Docker Folders plugin manages folder icons separately — those must be updated directly in the plugin's settings, not via container labels.
+The Docker Folders plugin manages folder icons separately — update those directly in the plugin settings.
+
+---
 
 ## No Build Step
 
 There is no npm, no asset compilation, and no test suite. The frontend is vanilla HTML/CSS/JS with Jinja2 templating. Linting is manual.
 
+---
+
 ## Architecture
 
 ### Separation of Concerns
 
-- **`app/web.py`** — Flask server (~1043 lines). Handles all HTTP routes, settings/history/job persistence, and spawns the bash script in a background thread.
-- **`scripts/m4brew.sh`** — Core processing engine (~967 lines). Runs in a subprocess; all audio work happens here via Docker-in-Docker. Emits a JSON summary line at the end that `web.py` parses.
-- **`app/templates/`** — Jinja2 HTML templates. `base.html` contains shared layout and theme bootstrap logic.
+- **`app/web.py`** — Flask server. Handles all HTTP routes, settings/history/job persistence, and spawns the bash script in a background thread.
+- **`scripts/m4brew.sh`** — Core processing engine. Runs in a subprocess; all audio work happens here via Docker-in-Docker. Emits a JSON summary line at the end that `web.py` parses.
+- **`app/templates/`** — Jinja2 HTML templates. `base.html` contains the shared layout and theme bootstrap logic.
 - **`app/static/`** — CSS (including `theme.css` with 12 themes) and JS. `tasks.js` drives the live polling UI.
 
 ### Job Lifecycle
@@ -72,25 +148,27 @@ There is no npm, no asset compilation, and no test suite. The frontend is vanill
 
 ### Docker Mount Mapping
 
-The bash script needs host paths (not container paths) when spawning helper containers. `web.py` inspects its own container mounts and the helper functions `to_host_path()` / `_map_host_to_container_path()` translate `/audiobooks` → the real host path.
+The bash script needs host paths (not container paths) when spawning helper containers. `web.py` inspects its own container mounts and the helper functions `to_host_path()` / `_map_host_to_container_path()` translate container paths (e.g. `/DSM_Audiobooks`) → real host paths.
 
 ### Key Flask Routes
 
 ```
-GET/POST /          Tasks page — start convert/cleanup/correct jobs
-GET      /api/job   Current job state (read-only, polled by frontend)
-POST     /job/cancel  Request cancellation (kills process group + containers)
-GET      /job/output  Raw log stream
-GET/POST /settings  Settings form
-GET      /history   Job history list
+GET/POST /               Tasks page — start convert/cleanup/correct jobs
+GET      /api/job        Current job state (polled by frontend every 500ms)
+POST     /job/cancel     Request cancellation (kills process group + containers)
+GET      /job/output     Raw log stream
+GET/POST /settings       Settings form
+GET      /history        Job history list
 GET      /history/<idx>  Full output for a specific job
 GET      /api/mounts     Available Docker volumes
 GET      /api/preflight  Validate root folder path
+GET      /health         Health check endpoint (used by Docker HEALTHCHECK)
+GET      /about          About page
 ```
 
 ### Bash Script Modes
 
-- **Convert**: Multi-file MP3/M4A folders → single M4B with chapters, files backed up to `_backup_files/`
+- **Convert**: Multi-file MP3/M4A folders → single M4B with chapters, originals backed up to `_backup_files/`
 - **Cleanup**: Remove `_backup_files/` directories left by prior conversions
 - **Correct**: Rename output M4Bs to "Book - Author.m4b" format
 
@@ -100,8 +178,17 @@ All modes support `DRY_RUN=true` which simulates without making changes.
 
 `app/static/theme.css` defines 12 themes via CSS custom properties. The active theme is stored in `settings.json` and applied as a `data-theme` attribute on `<html>` at page load (preventing flash). Theme changes are applied immediately client-side before the settings form saves.
 
+---
+
 ## Version Tracking
 
-Version is maintained in two places — keep them in sync when bumping:
-- `app/static/theme.css` → `--ui-version` CSS variable
-- `Dockerfile` → `LABEL app.version`
+Version is set in one place: `app/web.py` → `APP_VERSION` constant. It is passed to all templates via a context processor and displayed in the header.
+
+---
+
+## Handover Notes
+
+- The donate/coffee link appears **only on the About page** (`app/templates/about.html`) — do not add it back to `base.html`.
+- Volume mounts that go through Unassigned Devices need `:slave` — forgetting this means the container sees an empty directory.
+- The SMB share at `/Volumes/m4brew` (Mac) maps directly to `/mnt/user/appdata/m4brew` (Unraid). Edits on either side are the same files.
+- There is no staging environment. Changes go straight to production on Unraid.

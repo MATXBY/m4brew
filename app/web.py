@@ -63,7 +63,7 @@ CANCEL_PATH = CONFIG_DIR / "cancel.flag"
 SCRIPT_PATH = Path(os.environ.get("SCRIPT_PATH", "/scripts/m4brew.sh"))
 HISTORY_MAX_LINES = int(os.environ.get("HISTORY_MAX_LINES", "100"))
 
-APP_VERSION = "1.2"
+APP_VERSION = "Final Version"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
