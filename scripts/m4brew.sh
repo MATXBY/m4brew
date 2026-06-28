@@ -75,7 +75,7 @@ roman_to_num() {
 # Patterns (in priority order):
 #   1) starts with digits: "01 Prologue"
 #   2) separator+digits: "something - 03", "something_03", "something.03"
-#   3) keyword+number: "Part 2", "Chapter 10", "Disc 1 Track 03", etc.
+#   3) keyword+number: "Part 2", "Chapter 10", "Episode 3", "Volume 1", "Book 2", etc.
 #   4) keyword+roman: "Chapter III", "Part IV"
 # Year rejection: numbers 1900-2099 are ignored
 extract_order_key() {
@@ -99,7 +99,7 @@ extract_order_key() {
   fi
   
   # Pattern 3: keyword + number
-  n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
+  n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|episode\|ep\|volume\|vol\|book\|session\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
   if [[ -n "$n" && "$n" -le 999 ]]; then
     echo "$n"
     return 0
@@ -107,7 +107,7 @@ extract_order_key() {
   
   # Pattern 4: keyword + roman numeral (Chapter III, Part IV)
   local roman=""
-  roman="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\)[^a-z]*\([ivxlc]\{1,7\}\)\b.*/\2/p' | head -n 1)"
+  roman="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|episode\|ep\|volume\|vol\|book\|session\)[^a-z]*\([ivxlc]\{1,7\}\)\b.*/\2/p' | head -n 1)"
   if [[ -n "$roman" ]]; then
     n="$(roman_to_num "$roman")"
     if [[ -n "$n" ]]; then
@@ -199,18 +199,16 @@ emit_summary() {
 detect_channels() {
   local first_file="$1"
 
-  # DRY_RUN should never spin up helper containers.
-  # Default to stereo (2) to keep the run fast and safe.
+  # DRY_RUN skips probing — default to stereo.
   if is_dry_run; then
     echo "2"
     return 0
   fi
 
-  local ch
-  ch=$(ffprobe -v error -select_streams a:0 -show_entries stream=channels \
-      -of default=nk=1:nw=1 "$first_file" 2>/dev/null || echo "2")
+  local ch_str
+  ch_str=$(ffmpeg -hide_banner -i "$first_file" 2>&1 | grep "Audio:" | grep -oE 'mono|stereo' | head -1)
 
-  if [[ "$ch" == "1" ]]; then
+  if [[ "$ch_str" == "mono" ]]; then
     echo "1"
   else
     echo "2"
@@ -229,19 +227,23 @@ resolve_channels() {
 }
 
 
-# Detect bitrate (kbps) of a single audio file using ffprobe
+# Detect bitrate (kbps) of a single audio file using ffmpeg
 detect_bitrate() {
   local file="$1"
   if is_dry_run; then
     echo "0"
     return 0
   fi
-  local br
-  br=$(ffprobe -v error -select_streams a:0 -show_entries stream=bit_rate \
-      -of default=nk=1:nw=1 "$file" 2>/dev/null || echo "0")
-  # ffprobe returns bits/sec, convert to kbps
+  local info br
+  info=$(ffmpeg -hide_banner -i "$file" 2>&1)
+  # Try stream-level first (e.g. "Audio: mp3, 44100 Hz, stereo, fltp, 128 kb/s")
+  br=$(echo "$info" | grep "Audio:" | grep -oE ', [0-9]+ kb/s' | grep -oE '[0-9]+' | head -1)
+  # Fall back to format-level (e.g. "bitrate: 128 kb/s") — reliable for VBR files
+  if [[ ! "$br" =~ ^[0-9]+$ ]] || (( br == 0 )); then
+    br=$(echo "$info" | grep -oE 'bitrate: [0-9]+ kb/s' | grep -oE '[0-9]+' | head -1)
+  fi
   if [[ "$br" =~ ^[0-9]+$ ]] && (( br > 0 )); then
-    echo $(( br / 1000 ))
+    echo "$br"
   else
     echo "0"
   fi
@@ -272,7 +274,11 @@ resolve_bitrate() {
       log "BITRATE: matched source -> ${detected}k" >&2
       echo "${detected}k"
     else
-      log "BITRATE: could not detect source, falling back to ${BITRATE_DEFAULT}k" >&2
+      if is_dry_run; then
+        log "BITRATE: dry-run — detection skipped, real run will match source bitrate" >&2
+      else
+        log "BITRATE: could not detect source, falling back to ${BITRATE_DEFAULT}k" >&2
+      fi
       echo "${BITRATE_DEFAULT}k"
     fi
   else

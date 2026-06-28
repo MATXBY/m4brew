@@ -8,7 +8,7 @@ M4Brew is a self-hosted, containerised web app for batch-converting audiobook fo
 
 **Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
 
-**Status:** Final Version — feature-complete. Changes should be focused and conservative.
+**Status:** v1.7.6 — actively maintained. Changes should be focused and conservative.
 
 ---
 
@@ -79,7 +79,7 @@ The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmp
 
 ## Networking
 
-The container joins the external `matt-net` Docker network (`networks.default.name: matt-net` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
+The container joins the external `matflix` Docker network (`networks.default.name: matflix` in `docker-compose.yml`). Do not use the auto-created `m4brew_default` network.
 
 ---
 

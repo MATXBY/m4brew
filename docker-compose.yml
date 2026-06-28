@@ -2,6 +2,8 @@ services:
   m4brew:
     build: .
     container_name: m4brew
+    networks:
+      - matflix
     restart: unless-stopped
     user: "1026:100"
     ports:
@@ -21,7 +23,7 @@ services:
       - /mnt/cache/media/Audiobooks:/Test_Folder:slave
       - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:slave
       - ./config:/config
+
 networks:
-  default:
-    name: matt-net
+  matflix:
     external: true
