@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-M4Brew is a self-hosted, containerised web app for batch-converting audiobook folders into single-file M4B format. It runs on Unraid and is accessed via a browser at `http://192.168.4.10:8586`.
+M4Brew is a self-hosted, containerised web app for batch-converting audiobook folders into single-file M4B format. It runs on Unraid and is accessed via a browser at `http://<unraid-ip>:8586`.
 
 **Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
 
@@ -52,12 +52,12 @@ CONFIG_DIR=./config python app/web.py
 
 ## Docker Build & Run (on Unraid)
 
-The app data lives at `/mnt/user/appdata/m4brew` on the Unraid host. The SMB share `//192.168.4.10/appdata/m4brew` maps to this path and is what this repo is checked out into on a Mac via `/Volumes/m4brew`.
+The app data lives at `/mnt/user/appdata/m4brew` on the Unraid host. The SMB share `//<unraid-ip>/appdata/m4brew` maps to this path and is what this repo is checked out into on a Mac via `/Volumes/m4brew`.
 
 ```bash
 cd /mnt/user/appdata/m4brew
 docker compose up -d --build
-# Opens at http://192.168.4.10:8586
+# Opens at http://<unraid-ip>:8586
 ```
 
 **Always use `--build`** when changing Python, templates, or static files — the container must be rebuilt. Template changes are not picked up without a rebuild (Flask caches them in memory).
@@ -90,7 +90,7 @@ Audiobook source folders are bind-mounted from the host. All mounts that come fr
 Current mounts in `docker-compose.yml`:
 
 ```yaml
-- /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks:slave
+- /mnt/remotes/<synology-ip>_media/Audiobooks:/DSM_Audiobooks:slave
 - /mnt/cache/media/Audiobooks:/Test_Folder:slave
 - /mnt/cache/media/Chaptarr/Audiobooks:/Chaptarr:slave
 - ./config:/config
@@ -102,7 +102,7 @@ To add a new audiobook source: add a new line in the same format and rebuild.
 
 ## Unraid Docker Icon
 
-Set via the `net.unraid.docker.icon` label in `docker-compose.yml`, pointing to `http://192.168.4.10:8586/static/images/m4brew-logo.png` (served by the container itself).
+Set via the `net.unraid.docker.icon` label in `docker-compose.yml`, pointing to `http://<unraid-ip>:8586/static/images/m4brew-logo.png` (served by the container itself).
 
 Available icons in `app/static/images/`:
 - `m4brew-logo.png` — light (white cup, transparent background) — **currently used**
