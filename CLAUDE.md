@@ -126,7 +126,7 @@ There is no npm, no asset compilation, and no test suite. The frontend is vanill
 
 ### Separation of Concerns
 
-- **`app/web.py`** — Flask server. Handles all HTTP routes, settings/history/job persistence, and spawns the bash script in a background thread.
+- **`app/web.py`** — Flask server. Handles all HTTP routes, settings/history/job persistence, and spawns `app/job_runner.py` as a detached subprocess, which in turn runs the bash script.
 - **`scripts/m4brew.sh`** — Core processing engine. Runs in a subprocess inside the same container; calls the baked-in `m4b-tool`/`ffmpeg` binaries directly, in-process. Emits a JSON summary line at the end that `web.py` parses.
 - **`app/templates/`** — Jinja2 HTML templates. `base.html` contains the shared layout and theme bootstrap logic.
 - **`app/static/`** — CSS (including `theme.css` with 12 themes) and JS. `tasks.js` drives the live polling UI.
