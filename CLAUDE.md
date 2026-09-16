@@ -147,7 +147,7 @@ There is no npm, no asset compilation, and no test suite. The frontend is vanill
 
 ### Docker Mount Mapping
 
-The bash script needs host paths (not container paths) when spawning helper containers. `web.py` inspects its own container mounts and the helper functions `to_host_path()` / `_map_host_to_container_path()` translate container paths (e.g. `/DSM_Audiobooks`) → real host paths.
+The bash script runs in-process inside the same container as `web.py` and uses the same container paths directly — there are no spawned helper containers needing a separate host path. `web.py` inspects its own container mounts and the helper functions `to_host_path()` / `_map_host_to_container_path()` translate container paths (e.g. `/DSM_Audiobooks`) → real host paths.
 
 ### Key Flask Routes
 
