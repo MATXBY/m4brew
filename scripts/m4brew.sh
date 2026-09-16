@@ -71,54 +71,212 @@ roman_to_num() {
   esac
 }
 
-# Extract a numeric order key from a filename (base name only).
+# Convert a written-out number word (one-twenty) to an integer
+word_to_num() {
+  case "$1" in
+    one) echo "1" ;; two) echo "2" ;; three) echo "3" ;; four) echo "4" ;; five) echo "5" ;;
+    six) echo "6" ;; seven) echo "7" ;; eight) echo "8" ;; nine) echo "9" ;; ten) echo "10" ;;
+    eleven) echo "11" ;; twelve) echo "12" ;; thirteen) echo "13" ;; fourteen) echo "14" ;; fifteen) echo "15" ;;
+    sixteen) echo "16" ;; seventeen) echo "17" ;; eighteen) echo "18" ;; nineteen) echo "19" ;; twenty) echo "20" ;;
+    *) echo "" ;;
+  esac
+}
+
+# Canonical position (1-9) of a recognized unnumbered front-matter keyword.
+# Front matter sorts before any numbered chapter.
+frontmatter_rank() {
+  case "$1" in
+    foreword) echo "1" ;;
+    preface) echo "2" ;;
+    introduction|intro) echo "3" ;;
+    prologue) echo "4" ;;
+    *) echo "" ;;
+  esac
+}
+
+# a=1 .. z=26
+letter_to_num() {
+  local c="$1"
+  printf '%d' "$(( $(printf '%d' "'$c") - $(printf '%d' "'a") + 1 ))"
+}
+
+# "Disc 1" / "Disk 02" / "CD3" (directory basename) -> "1" / "2" / "3". Empty if no match.
+disc_number_for_dir() {
+  local lc
+  lc="$(echo "$1" | tr '[:upper:]' '[:lower:]')"
+  echo "$lc" | sed -n -E 's/^(disc|disk|cd)[[:space:]_-]*0*([0-9]{1,3})$/\2/p' | head -n 1
+}
+
+# Extract an order key from a filename (base name only, extension already stripped).
+# Returns a 7-character string: 1 digit type (0=front matter, 1=chapter) +
+# 4-digit chapter/rank number + 2-digit ACX sub-letter (00 = none). Empty if unclear.
 # Patterns (in priority order):
-#   1) starts with digits: "01 Prologue"
+#   0) unnumbered front matter: "Prologue", "Introduction"
+#   1) starts with digits, optionally wrapped in ()/[] and/or with an ACX letter
+#      suffix: "01 Prologue", "(01) Title", "[01] Title", "01a Title"
 #   2) separator+digits: "something - 03", "something_03", "something.03"
 #   3) keyword+number: "Part 2", "Chapter 10", "Episode 3", "Volume 1", "Book 2", etc.
 #   4) keyword+roman: "Chapter III", "Part IV"
-# Year rejection: numbers 1900-2099 are ignored
+#   5) written-out number: "One", "Chapter Two"
+#   6) trailing number with only whitespace before it: "Title 01"
+# Year rejection: numbers 1900-2099 are ignored (all patterns cap at 999)
 extract_order_key() {
   local base="$1"
   local lc
-  lc="$(echo "$base" | tr '[:upper:]' '[:lower:]')"
-  local n=""
-  
-  # Pattern 1: numeric prefix at start
-  n="$(echo "$lc" | sed -n 's/^[[:space:]]*0*\([0-9]\{1,4\}\)\($\|[^0-9].*\)/\1/p' | head -n 1)"
-  if [[ -n "$n" && "$n" -le 999 ]]; then
-    echo "$n"
+  lc="$(echo "$base" | tr '[:upper:]' '[:lower:]' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+  local n="" sub=0
+
+  # Pattern 0: unnumbered front matter (whole name is a known keyword)
+  n="$(frontmatter_rank "$lc")"
+  if [[ -n "$n" ]]; then
+    printf '0%04d00' "$n"
     return 0
   fi
-  
+
+  # Normalize a leading (01) or [01] wrapper to a bare leading number
+  lc="$(echo "$lc" | sed -E 's/^\(([0-9]+)\)/\1/; s/^\[([0-9]+)\]/\1/')"
+
+  # Pattern 1: numeric prefix at start, optional single-letter ACX suffix (01a, 01b)
+  n="$(echo "$lc" | sed -n -E 's/^[[:space:]]*0*([0-9]{1,4})($|[^0-9].*)/\1/p' | head -n 1)"
+  if [[ -n "$n" && "$n" -le 999 ]]; then
+    local letter=""
+    letter="$(echo "$lc" | sed -n -E 's/^[[:space:]]*0*[0-9]{1,4}([a-z])($|[^a-z0-9].*)/\1/p' | head -n 1)"
+    [[ -n "$letter" ]] && sub="$(letter_to_num "$letter")"
+    printf '1%04d%02d' "$n" "$sub"
+    return 0
+  fi
+
   # Pattern 2: Number after STRONG separator (dash, underscore, dot)
   n="$(echo "$lc" | sed -n 's/.*[-_.][[:space:]]*0*\([0-9]\{1,4\}\)\($\|[^0-9].*\)/\1/p' | head -n 1)"
   if [[ -n "$n" && "$n" -le 999 ]]; then
-    echo "$n"
+    printf '1%04d00' "$n"
     return 0
   fi
-  
+
   # Pattern 3: keyword + number
   n="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|episode\|ep\|volume\|vol\|book\|session\)[^0-9]\{0,6\}0*\([0-9]\{1,4\}\)\b.*/\2/p' | head -n 1)"
   if [[ -n "$n" && "$n" -le 999 ]]; then
-    echo "$n"
+    printf '1%04d00' "$n"
     return 0
   fi
-  
+
   # Pattern 4: keyword + roman numeral (Chapter III, Part IV)
   local roman=""
   roman="$(echo "$lc" | sed -n 's/.*\b\(part\|chapter\|ch\|disc\|disk\|cd\|track\|episode\|ep\|volume\|vol\|book\|session\)[^a-z]*\([ivxlc]\{1,7\}\)\b.*/\2/p' | head -n 1)"
   if [[ -n "$roman" ]]; then
     n="$(roman_to_num "$roman")"
     if [[ -n "$n" ]]; then
-      echo "$n"
+      printf '1%04d00' "$n"
       return 0
     fi
   fi
-  
+
+  # Pattern 5: written-out number ("One") or keyword + written-out number ("Chapter Two")
+  n="$(word_to_num "$lc")"
+  if [[ -z "$n" ]]; then
+    local word=""
+    word="$(echo "$lc" | sed -n -E 's/.*\b(part|chapter|ch|disc|disk|cd|track|episode|ep|volume|vol|book|session)[[:space:]_-]+([a-z]+)\b.*/\2/p' | head -n 1)"
+    [[ -n "$word" ]] && n="$(word_to_num "$word")"
+  fi
+  if [[ -n "$n" ]]; then
+    printf '1%04d00' "$n"
+    return 0
+  fi
+
+  # Pattern 6: trailing number with only whitespace before it ("Title 01")
+  n="$(echo "$lc" | sed -n -E 's/.*[[:space:]]0*([0-9]{1,4})$/\1/p' | head -n 1)"
+  if [[ -n "$n" && "$n" -le 999 ]]; then
+    printf '1%04d00' "$n"
+    return 0
+  fi
+
   echo ""
 }
+
+# Combine a file's disc-folder number (if any) with its chapter order key into
+# a single 10-digit, zero-padded, lexically-sortable string. Empty if unclear.
+compute_sort_key() {
+  local filepath="$1" book_dir="$2"
+  local parent_dir parent_base disc=0 d chapkey base
+  parent_dir="$(dirname "$filepath")"
+  if [[ "$parent_dir" != "$book_dir" ]]; then
+    parent_base="$(basename "$parent_dir")"
+    d="$(disc_number_for_dir "$parent_base")"
+    [[ -n "$d" ]] && disc=$((10#$d))
+  fi
+  base="$(basename "$filepath")"
+  base="${base%.*}"
+  chapkey="$(extract_order_key "$base")"
+  [[ -z "$chapkey" ]] && return 1
+  printf '%03d%s' "$disc" "$chapkey"
+}
+
+# Gather audio files of a given extension directly under book_dir, plus any
+# files one level down inside "Disc N"/"Disk N"/"CD N" subfolders.
+gather_audio_files() {
+  local book_dir="$1" ext="$2"
+  find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.${ext}" -print0 2>/dev/null
+
+  local discdir discbase
+  while IFS= read -r -d '' discdir; do
+    discbase="$(basename "$discdir")"
+    if [[ -n "$(disc_number_for_dir "$discbase")" ]]; then
+      find "$discdir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.${ext}" -print0 2>/dev/null
+    fi
+  done < <(find "$book_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+}
+
+# Move source files (top-level and any Disc N/ subfolders) into the backup dir.
+# Files coming from a disc subfolder are prefixed with that folder's name to
+# avoid collisions (e.g. two discs both having a "01 Title.mp3").
+move_to_backup() {
+  local book_dir="$1" ext="$2" backup_dir="$3"
+  find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.${ext}" -print0 2>/dev/null \
+    | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
+
+  local discdir discbase f
+  while IFS= read -r -d '' discdir; do
+    discbase="$(basename "$discdir")"
+    if [[ -n "$(disc_number_for_dir "$discbase")" ]]; then
+      while IFS= read -r -d '' f; do
+        mv -f "$f" "${backup_dir}/${discbase} - $(basename "$f")"
+      done < <(find "$discdir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.${ext}" -print0 2>/dev/null)
+    fi
+  done < <(find "$book_dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+}
+
+# Given book_dir and a list of files, print them NUL-separated in merge order
+# (by compute_sort_key). Files whose key can't be determined keep their
+# original relative order and sort last.
+sorted_files_for_book() {
+  local book_dir="$1"; shift
+  local -a files=("$@")
+  local -a lines=()
+  local i n=${#files[@]} key
+  for (( i = 0; i < n; i++ )); do
+    key="$(compute_sort_key "${files[i]}" "$book_dir")"
+    [[ -z "$key" ]] && key="9999999999"
+    lines+=("${key} ${i}")
+  done
+  local sorted_idx idx
+  sorted_idx="$(printf '%s\n' "${lines[@]}" | sort | awk '{print $2}')"
+  while IFS= read -r idx; do
+    printf '%s\0' "${files[idx]}"
+  done <<< "$sorted_idx"
+}
+
+# Log the resolved merge order so DRY_RUN output can be visually verified.
+log_planned_order() {
+  local -a files=("$@")
+  local i=1 f
+  log "PLANNED ORDER:"
+  for f in "${files[@]}"; do
+    log "  $(printf '%2d' "$i")) $(basename "$f")"
+    i=$((i + 1))
+  done
+}
 order_is_clear() {
+  local book_dir="$1"; shift
   local -a files=("$@")
   local n="${#files[@]}"
 
@@ -128,37 +286,26 @@ order_is_clear() {
   fi
 
   local -a keys=()
-  local f base k
+  local f k
   for f in "${files[@]}"; do
-    base="$(basename "$f")"
-    base="${base%.*}" # drop extension
-    k="$(extract_order_key "$base")"
+    k="$(compute_sort_key "$f" "$book_dir")"
     if [[ -z "$k" ]]; then
       return 1
     fi
     keys+=("$k")
   done
 
-  # ensure all keys are numeric
+  # keys must be well-formed (10-digit, zero-padded disc+type+chapter+subletter)
   local x
   for x in "${keys[@]}"; do
-    [[ "$x" =~ ^[0-9]+$ ]] || return 1
+    [[ "$x" =~ ^[0-9]{10}$ ]] || return 1
   done
 
-  # uniqueness + contiguity: keys must be exactly 1..N (after sorting)
+  # uniqueness: no two files may resolve to the same slot
   # (This avoids "cbx/xdr/wor" and avoids guessing when numbering is weird.)
-  local sorted uniq_count min max
-  sorted="$(printf "%s\n" "${keys[@]}" | sort -n)"
-  uniq_count="$(printf "%s\n" "${keys[@]}" | sort -n | uniq | wc -l | tr -d ' ')"
+  local uniq_count
+  uniq_count="$(printf "%s\n" "${keys[@]}" | sort | uniq | wc -l | tr -d ' ')"
   (( uniq_count == n )) || return 1
-
-  min="$(echo "$sorted" | head -n 1 | tr -d ' ')"
-  max="$(echo "$sorted" | tail -n 1 | tr -d ' ')"
-  [[ "$min" =~ ^[0-9]+$ ]] || return 1
-  [[ "$max" =~ ^[0-9]+$ ]] || return 1
-  # Relaxed: allow starting at 0, allow gaps, reject years
-  (( min >= 0 )) || return 1
-  (( max <= 999 )) || return 1
 
   return 0
 }
@@ -485,36 +632,52 @@ warn_gaps() {
   shift
   local -a files=("$@")
   if (( ${#files[@]} <= 1 )); then return 0; fi
-  local -a keys=()
-  local f base k
+
+  # Group numbered-chapter keys by disc (first 3 digits of the sort key).
+  # Front matter (type digit 0) and ACX sub-letters are excluded/collapsed:
+  # gaps are only meaningful across distinct chapter numbers, per disc.
+  local f k disc chapter
+  local -A chapters_by_disc=()
   for f in "${files[@]}"; do
-    base="$(basename "$f")"
-    base="${base%.*}"
-    k="$(extract_order_key "$base")"
-    [[ -n "$k" ]] && keys+=("$k")
+    k="$(compute_sort_key "$f" "$book_dir")"
+    [[ -z "$k" ]] && continue
+    [[ "${k:3:1}" == "1" ]] || continue
+    disc="${k:0:3}"
+    chapter="$((10#${k:4:4}))"
+    chapters_by_disc["$disc"]+="${chapter}"$'\n'
   done
-  local sorted min max expected actual missing_list=""
-  sorted="$(printf "%s\n" "${keys[@]}" | sort -n)"
-  min="$(echo "$sorted" | head -n 1 | tr -d ' ')"
-  max="$(echo "$sorted" | tail -n 1 | tr -d ' ')"
-  expected=$(( max - min + 1 ))
-  actual="${#keys[@]}"
-  if (( actual < expected )); then
-    local i
-    for (( i = min; i <= max; i++ )); do
-      if ! printf "%s\n" "${keys[@]}" | grep -qx "$i"; then
-        missing_list="${missing_list:+${missing_list}, }${i}"
-      fi
-    done
-    local lbl
-    lbl="$(book_label "$book_dir")"
-    log "WARN: GAPS_DETECTED: BOOK=${lbl#* / } — expected ${expected} files (${min}–${max}), found ${actual}. Missing: ${missing_list}"
-    warnings_count=$((warnings_count + 1))
-    local book_name msg
-    book_name="${lbl#* / }"
-    msg="Possible missing files (${min}–${max}, found ${actual}). Missing: ${missing_list}"
-    warnings_json_items+=("{\"code\":\"gaps_detected\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
-  fi
+
+  local lbl book_name
+  lbl="$(book_label "$book_dir")"
+  book_name="${lbl#* / }"
+
+  local disc_key
+  for disc_key in "${!chapters_by_disc[@]}"; do
+    local -a uniq_chs
+    mapfile -t uniq_chs < <(printf '%s' "${chapters_by_disc[$disc_key]}" | sort -n -u)
+    (( ${#uniq_chs[@]} <= 1 )) && continue
+
+    local min max expected actual missing_list="" disc_num disc_note=""
+    min="${uniq_chs[0]}"
+    max="${uniq_chs[-1]}"
+    expected=$(( max - min + 1 ))
+    actual="${#uniq_chs[@]}"
+    disc_num=$((10#$disc_key))
+    (( disc_num > 0 )) && disc_note=" (Disc ${disc_num})"
+    if (( actual < expected )); then
+      local i
+      for (( i = min; i <= max; i++ )); do
+        if ! printf "%s\n" "${uniq_chs[@]}" | grep -qx "$i"; then
+          missing_list="${missing_list:+${missing_list}, }${i}"
+        fi
+      done
+      log "WARN: GAPS_DETECTED: BOOK=${book_name}${disc_note} — expected ${expected} files (${min}–${max}), found ${actual}. Missing: ${missing_list}"
+      warnings_count=$((warnings_count + 1))
+      local msg
+      msg="Possible missing files${disc_note} (${min}–${max}, found ${actual}). Missing: ${missing_list}"
+      warnings_json_items+=("{\"code\":\"gaps_detected\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
+    fi
+  done
 }
 
 while IFS= read -r -d '' book_dir; do
@@ -525,8 +688,8 @@ while IFS= read -r -d '' book_dir; do
   [[ "$author" == "#recycle" ]] && continue
 
   # Gather source candidates
-  mapfile -d '' -t mp3s < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.mp3" -print0 2>/dev/null || true)
-  mapfile -d '' -t m4as < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4a" -print0 2>/dev/null || true)
+  mapfile -d '' -t mp3s < <(gather_audio_files "$book_dir" "mp3" || true)
+  mapfile -d '' -t m4as < <(gather_audio_files "$book_dir" "m4a" || true)
 
   # For m4b parts: EXCLUDE temp files
   mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print0 2>/dev/null || true)
@@ -581,7 +744,7 @@ while IFS= read -r -d '' book_dir; do
   if (( mp3_count > 0 )); then
     # Safety: if multiple MP3s and order unclear, warn + fail this book only
     if (( mp3_count > 1 )); then
-      if ! order_is_clear "${mp3s[@]}"; then
+      if ! order_is_clear "$book_dir" "${mp3s[@]}"; then
         warn_order_unclear "$book_dir" "$mp3_count"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
@@ -590,25 +753,28 @@ while IFS= read -r -d '' book_dir; do
     fi
       warn_gaps "$book_dir" "${mp3s[@]}"
 
-    first_mp3="${mp3s[0]}"
+    mapfile -d '' -t sorted_mp3s < <(sorted_files_for_book "$book_dir" "${mp3s[@]}")
+
+    first_mp3="${sorted_mp3s[0]}"
     detected="$(detect_channels "$first_mp3")"
     channels="$(resolve_channels "$detected")"
 
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
     log "MODE:   MP3 merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"
+    (( mp3_count > 1 )) && log_planned_order "${sorted_mp3s[@]}"
 
     effective_bitrate=$(resolve_bitrate "${BITRATE}" "${mp3s[@]}")
     audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
     if is_dry_run; then
-      log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\" ${audio_args[*]}"
+      log "[DRY-RUN] m4b-tool merge ${sorted_mp3s[*]@Q} --output-file \"${tmp_path}\" ${audio_args[*]}"
       created_count=$((created_count + 1))
       created_files+=("${out_path} (DRY-RUN, from MP3)")
       continue
     fi
 
-    if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}" "${audio_args[@]}"; then
+    if ! m4b-tool merge "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"; then
       log "ERROR: m4b-tool merge (MP3) failed for: ${book_dir}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
@@ -642,8 +808,7 @@ while IFS= read -r -d '' book_dir; do
       log "[DRY-RUN] move *.mp3 → \"${backup_dir}/\""
     else
       mkdir -p "${backup_dir}"
-      find "${book_dir}" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.mp3" -print0 \
-        | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
+      move_to_backup "${book_dir}" "mp3" "${backup_dir}"
     fi
     log "MP3s moved to: ${backup_dir}/"
 
@@ -677,7 +842,7 @@ while IFS= read -r -d '' book_dir; do
 
     else
       # Safety: multi-M4A order must be clear
-      if ! order_is_clear "${m4as[@]}"; then
+      if ! order_is_clear "$book_dir" "${m4as[@]}"; then
         warn_order_unclear "$book_dir" "$m4a_count"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
@@ -685,25 +850,28 @@ while IFS= read -r -d '' book_dir; do
       fi
       warn_gaps "$book_dir" "${m4as[@]}"
 
-      first_m4a="${m4as[0]}"
+      mapfile -d '' -t sorted_m4as < <(sorted_files_for_book "$book_dir" "${m4as[@]}")
+
+      first_m4a="${sorted_m4as[0]}"
       detected="$(detect_channels "$first_m4a")"
       channels="$(resolve_channels "$detected")"
 
       [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
       log "MODE:   Multi-M4A merge (${mode_desc} @ ${BITRATE})"
       log "OUTPUT: ${out_path}"
+      log_planned_order "${sorted_m4as[@]}"
 
       effective_bitrate=$(resolve_bitrate "${BITRATE}" "${m4as[@]}")
       audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
       if is_dry_run; then
-        log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\" ${audio_args[*]}"
+        log "[DRY-RUN] m4b-tool merge ${sorted_m4as[*]@Q} --output-file \"${tmp_path}\" ${audio_args[*]}"
         created_count=$((created_count + 1))
         created_files+=("${out_path} (DRY-RUN, from multi M4A)")
         continue
       fi
 
-      if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}" "${audio_args[@]}"; then
+      if ! m4b-tool merge "${sorted_m4as[@]}" --output-file "${tmp_path}" "${audio_args[@]}"; then
         log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
@@ -738,8 +906,7 @@ while IFS= read -r -d '' book_dir; do
       log "[DRY-RUN] move *.m4a → \"${backup_dir}/\""
     else
       mkdir -p "${backup_dir}"
-      find "${book_dir}" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4a" -print0 \
-        | xargs -0 -I{} mv -f "{}" "${backup_dir}/"
+      move_to_backup "${book_dir}" "m4a" "${backup_dir}"
     fi
     log "M4As moved to: ${backup_dir}/"
 
@@ -751,7 +918,7 @@ while IFS= read -r -d '' book_dir; do
   ##########################################
   if (( m4b_count > 1 )); then
     # Safety: multi-M4B order must be clear
-    if ! order_is_clear "${m4bs[@]}"; then
+    if ! order_is_clear "$book_dir" "${m4bs[@]}"; then
       warn_order_unclear "$book_dir" "$m4b_count"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
@@ -759,18 +926,20 @@ while IFS= read -r -d '' book_dir; do
     fi
 
     warn_gaps "$book_dir" "${m4bs[@]}"
+    mapfile -d '' -t sorted_m4bs < <(sorted_files_for_book "$book_dir" "${m4bs[@]}")
     log "MODE:   Multi-M4B merge (no re-encode)"
     log "OUTPUT: ${out_path}"
+    log_planned_order "${sorted_m4bs[@]}"
 
     # For M4B inputs, do not pass bitrate/channels (avoid re-encode).
     if is_dry_run; then
-      log "[DRY-RUN] m4b-tool merge \"${book_dir}\" --output-file \"${tmp_path}\""
+      log "[DRY-RUN] m4b-tool merge ${sorted_m4bs[*]@Q} --output-file \"${tmp_path}\""
       created_count=$((created_count + 1))
       created_files+=("${out_path} (DRY-RUN, from multi M4B)")
       continue
     fi
 
-    if ! m4b-tool merge "${book_dir}" --output-file "${tmp_path}"; then
+    if ! m4b-tool merge "${sorted_m4bs[@]}" --output-file "${tmp_path}"; then
       log "ERROR: m4b-tool merge (M4B) failed for: ${book_dir}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
