@@ -203,6 +203,37 @@ extract_order_key() {
   echo ""
 }
 
+# Fallback for files whose filename gives no usable order at all: read the
+# embedded track-number tag via ffprobe. ffmpeg normalizes ID3v2 TRCK (and
+# the M4A/M4B "trkn" atom) into the generic "track" format tag, but some
+# files expose it as a literal "TRCK" tag instead, so both are checked.
+# Handles both a bare number ("5") and "N/total" ("3/12" -> 3). Only used
+# when extract_order_key() found nothing - it's a fallback, not an override,
+# and is never asked to arbitrate between two filename-based guesses.
+# Returns the same 7-character chapter-key format as extract_order_key();
+# empty if ffprobe finds no usable tag.
+extract_id3_track_key() {
+  local filepath="$1"
+  local raw="" n tag
+  for tag in track TRCK; do
+    raw="$(timeout -k 10 "$PROBE_TIMEOUT_SECS" ffprobe -v error \
+      -show_entries "format_tags=${tag}" -of default=noprint_wrappers=1:nokey=1 \
+      "$filepath" 2>/dev/null | head -n 1)"
+    [[ -n "$raw" ]] && break
+  done
+  [[ -z "$raw" ]] && { echo ""; return 0; }
+
+  # "N/total" -> keep just N
+  raw="${raw%%/*}"
+  raw="$(echo "$raw" | tr -d '[:space:]')"
+  n="$(echo "$raw" | sed -n -E 's/^0*([0-9]{1,4})$/\1/p')"
+  if [[ -n "$n" && "$n" -le 999 ]]; then
+    printf '1%04d00' "$n"
+    return 0
+  fi
+  echo ""
+}
+
 # Combine a file's disc-folder number (if any) with its chapter order key into
 # a single 10-digit, zero-padded, lexically-sortable string. Empty if unclear.
 compute_sort_key() {
@@ -217,6 +248,7 @@ compute_sort_key() {
   base="$(basename "$filepath")"
   base="${base%.*}"
   chapkey="$(extract_order_key "$base")"
+  [[ -z "$chapkey" ]] && chapkey="$(extract_id3_track_key "$filepath")"
   [[ -z "$chapkey" ]] && return 1
   printf '%03d%s' "$disc" "$chapkey"
 }

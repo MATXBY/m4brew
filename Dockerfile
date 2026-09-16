@@ -3,7 +3,10 @@ ENV PYTHONDONTWRITEBYTECODE=1
 LABEL app.name="m4brew" \
       app.release_date="2026-04-18" \
       app.description="Audiobook source manager and M4B converter"
-RUN apk add --no-cache python3 py3-pip curl bash su-exec shadow
+# ffmpeg here is *only* for ffprobe - the base image bundles a static
+# /usr/local/bin/ffmpeg (which wins on PATH and is what m4brew.sh actually
+# uses) but no ffprobe binary at all, needed for the ID3 track-tag fallback.
+RUN apk add --no-cache python3 py3-pip curl bash su-exec shadow ffmpeg
 WORKDIR /app
 COPY requirements.txt /app/
 RUN pip3 install --no-cache-dir --break-system-packages -r requirements.txt
