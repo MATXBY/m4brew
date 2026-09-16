@@ -2,7 +2,6 @@ services:
   m4brew:
     build: .
     container_name: m4brew
-    command: gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 4 --timeout 7200 web:app
     networks:
       - matflix
     restart: unless-stopped
