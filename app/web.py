@@ -53,7 +53,7 @@ def _get_secret_key() -> str:
     return key
 
 
-APP_VERSION = "1.7.8"
+APP_VERSION = "1.8.0"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
