@@ -613,9 +613,23 @@ failed_count=0
 
 warnings_count=0
 declare -a warnings_json_items=()
-declare -a order_unclear_books=()   # "Author / Book" list for footer
+declare -a warning_entries=()   # "code<TAB>Author / Book<TAB>message" per warning, for the footer
 declare -a failed_books=()
 declare -a created_files=()
+
+# Per-code footer headline + explanation, keyed by the same "code" used in
+# warnings_json_items. Unrecognized codes still get listed, just without
+# custom copy (see the footer loop below).
+declare -A WARNING_CODE_TITLES=(
+  [order_unclear]="Order of book files unclear."
+  [gaps_detected]="Possible missing files."
+  [timeout]="Conversion step timed out."
+)
+declare -A WARNING_CODE_HINTS=(
+  [order_unclear]="These books were skipped to avoid incorrect chapter order. Rename parts with numeric prefixes (01, 02, 03...) and re-run."
+  [gaps_detected]="Check these books for missing files — the chapter numbering has a gap."
+  [timeout]="These books were skipped because a conversion step exceeded the timeout. The source file(s) may be corrupt or malformed."
+)
 
 # Common warning helper
 warn_order_unclear() {
@@ -627,7 +641,6 @@ warn_order_unclear() {
   log "WARN: ORDER_UNCLEAR: Skipping merge. Rename parts with numeric prefixes (01, 02, 03...) then re-run."
 
   warnings_count=$((warnings_count + 1))
-  order_unclear_books+=("$lbl")
 
   # JSON warning object
   local book_name author_name msg
@@ -635,6 +648,7 @@ warn_order_unclear() {
   book_name="${lbl#* / }"
   msg="Part order not clear. Rename parts with numeric prefixes (01, 02, 03...) then re-run."
 
+  warning_entries+=("order_unclear"$'\t'"${lbl}"$'\t'"${msg}")
   warnings_json_items+=("{\"code\":\"order_unclear\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
 }
 
@@ -650,6 +664,7 @@ warn_timeout() {
 
   local msg
   msg="${step} exceeded the ${secs}s timeout and was killed. Source file(s) may be corrupt or malformed."
+  warning_entries+=("timeout"$'\t'"${lbl}"$'\t'"${msg}")
   warnings_json_items+=("{\"code\":\"timeout\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
 }
 
@@ -708,6 +723,7 @@ warn_gaps() {
       warnings_count=$((warnings_count + 1))
       local msg
       msg="Possible missing files${disc_note} (${min}–${max}, found ${actual}). Missing: ${missing_list}"
+      warning_entries+=("gaps_detected"$'\t'"${lbl}"$'\t'"${msg}")
       warnings_json_items+=("{\"code\":\"gaps_detected\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
     fi
   done
@@ -1072,21 +1088,38 @@ if [[ "${#failed_books[@]}" -gt 0 ]]; then
   done
 fi
 
-# Human-friendly warning footer (so History is instantly useful)
+# Human-friendly warning footer (so History is instantly useful).
+# Grouped by warning code so each type gets its own headline, explanation,
+# and list of affected books (with the specific per-book message) - rather
+# than assuming every warning is an order_unclear one.
 if (( warnings_count > 0 )); then
   log "=================================================="
   log "SUMMARY: WARNINGS"
   log "=================================================="
   log "Failed: ${failed_count}"
-  log ""
-  log "Order of book files unclear."
-  log "These books were skipped to avoid incorrect chapter order."
-  log "Please rename files with numeric prefixes (01, 02, 03...) and re-run."
-  log ""
-  log "Affected books:"
-  # de-dupe just in case
-  printf "%s\n" "${order_unclear_books[@]}" | awk '!seen[$0]++' | while IFS= read -r lbl; do
-    [ -n "$lbl" ] && log " - ${lbl}"
+
+  declare -a seen_codes=()
+  for entry in "${warning_entries[@]}"; do
+    code="${entry%%$'\t'*}"
+    if ! printf "%s\n" "${seen_codes[@]}" | grep -qx "$code"; then
+      seen_codes+=("$code")
+    fi
+  done
+
+  for code in "${seen_codes[@]}"; do
+    log ""
+    log "${WARNING_CODE_TITLES[$code]:-${code}}"
+    [[ -n "${WARNING_CODE_HINTS[$code]:-}" ]] && log "${WARNING_CODE_HINTS[$code]}"
+    log ""
+    log "Affected books:"
+    for entry in "${warning_entries[@]}"; do
+      entry_code="${entry%%$'\t'*}"
+      [[ "$entry_code" == "$code" ]] || continue
+      rest="${entry#*$'\t'}"
+      entry_lbl="${rest%%$'\t'*}"
+      entry_msg="${rest#*$'\t'}"
+      log " - ${entry_lbl}: ${entry_msg}"
+    done
   done
   log "=================================================="
 fi
