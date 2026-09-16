@@ -8,7 +8,7 @@ M4Brew is a self-hosted, containerised web app for batch-converting audiobook fo
 
 **Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
 
-**Status:** v1.7.6 — actively maintained. Changes should be focused and conservative.
+**Status:** v1.8.0 — actively maintained. Changes should be focused and conservative.
 
 ---
 
@@ -131,7 +131,7 @@ There is no npm, no asset compilation, and no test suite. The frontend is vanill
 
 ### Job Lifecycle
 
-1. User submits form → `POST /` → `web.py` runs preflight checks → spawns `m4brew.sh` in a background thread
+1. User submits form → `POST /` → `web.py` runs preflight checks → spawns `app/job_runner.py` as a detached subprocess (not a thread inside the gunicorn worker), which in turn runs `m4brew.sh`
 2. Script streams stdout to `/config/job_output.log`
 3. Frontend polls `GET /api/job` every 500ms and streams `/job/output` for live display
 4. On completion, `web.py` parses the JSON summary from the script's final stdout line and appends to `history.jsonl`
@@ -154,7 +154,7 @@ The bash script runs in-process inside the same container as `web.py` and uses t
 ```
 GET/POST /               Tasks page — start convert/cleanup/correct jobs
 GET      /api/job        Current job state (polled by frontend every 500ms)
-POST     /job/cancel     Request cancellation (kills process group + containers)
+POST     /job/cancel     Request cancellation (kills process group)
 GET      /job/output     Raw log stream
 GET/POST /settings       Settings form
 GET      /history        Job history list
