@@ -554,7 +554,7 @@ while IFS= read -r -d '' book_dir; do
     log "INFO: Both MP3 and M4A found, using MP3s only → ${book_dir}"
   fi
 
-  out_name="${book}.m4b"
+  out_name="${book} - ${author}.m4b"
   out_path="${book_dir}/${out_name}"
   tmp_stem="$(safe_name "$book")"
   tmp_path="${book_dir}/.tmp_${tmp_stem}.m4b"
