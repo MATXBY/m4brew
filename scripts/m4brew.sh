@@ -29,6 +29,16 @@ fi
 # Minimum acceptable output size (5 MB) to consider conversion valid
 MIN_BYTES=$((5 * 1024 * 1024))
 
+# Max seconds for a single ffmpeg/m4b-tool conversion step (remux or merge)
+# before it's killed. A hung or corrupt input file would otherwise block the
+# whole batch indefinitely; this should comfortably exceed how long converting
+# a single legitimately huge book takes.
+CONVERT_TIMEOUT_SECS="${CONVERT_TIMEOUT_SECS:-1800}"
+
+# Max seconds for the quick ffmpeg probes (channel/bitrate detection) - these
+# only read a file's metadata and should finish in well under a minute.
+PROBE_TIMEOUT_SECS="${PROBE_TIMEOUT_SECS:-60}"
+
 ############################################
 # Helpers
 ############################################
@@ -353,7 +363,7 @@ detect_channels() {
   fi
 
   local ch_str
-  ch_str=$(ffmpeg -hide_banner -i "$first_file" 2>&1 | grep "Audio:" | grep -oE 'mono|stereo' | head -1)
+  ch_str=$(timeout -k 10 "$PROBE_TIMEOUT_SECS" ffmpeg -hide_banner -i "$first_file" 2>&1 | grep "Audio:" | grep -oE 'mono|stereo' | head -1)
 
   if [[ "$ch_str" == "mono" ]]; then
     echo "1"
@@ -382,7 +392,7 @@ detect_bitrate() {
     return 0
   fi
   local info br
-  info=$(ffmpeg -hide_banner -i "$file" 2>&1)
+  info=$(timeout -k 10 "$PROBE_TIMEOUT_SECS" ffmpeg -hide_banner -i "$file" 2>&1)
   # Try stream-level first (e.g. "Audio: mp3, 44100 Hz, stereo, fltp, 128 kb/s")
   br=$(echo "$info" | grep "Audio:" | grep -oE ', [0-9]+ kb/s' | grep -oE '[0-9]+' | head -1)
   # Fall back to format-level (e.g. "bitrate: 128 kb/s") — reliable for VBR files
@@ -627,6 +637,29 @@ warn_order_unclear() {
 
   warnings_json_items+=("{\"code\":\"order_unclear\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
 }
+
+warn_timeout() {
+  local book_dir="$1" step="$2" secs="$3"
+  local lbl book_name
+  lbl="$(book_label "$book_dir")"
+  book_name="${lbl#* / }"
+  log "WARN: TIMEOUT: BOOK=${book_name} — ${step} exceeded ${secs}s and was killed."
+  log "WARN: TIMEOUT: Skipping book. The source file(s) may be corrupt or malformed."
+
+  warnings_count=$((warnings_count + 1))
+
+  local msg
+  msg="${step} exceeded the ${secs}s timeout and was killed. Source file(s) may be corrupt or malformed."
+  warnings_json_items+=("{\"code\":\"timeout\",\"book\":\"$(json_escape "$book_name")\",\"path\":\"$(json_escape "$book_dir")\",\"message\":\"$(json_escape "$msg")\"}")
+}
+
+# Exit codes that mean "timeout killed it" for both BusyBox timeout (which
+# exits with 128+signal, i.e. 143 for TERM or 137 for the KILL escalation)
+# and GNU coreutils timeout (which exits 124).
+is_timeout_exit_code() {
+  local rc="$1"
+  [[ "$rc" == "124" || "$rc" == "137" || "$rc" == "143" ]]
+}
 warn_gaps() {
   local book_dir="$1"
   shift
@@ -774,8 +807,14 @@ while IFS= read -r -d '' book_dir; do
       continue
     fi
 
-    if ! m4b-tool merge "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"; then
-      log "ERROR: m4b-tool merge (MP3) failed for: ${book_dir}"
+    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
+    rc=$?
+    if (( rc != 0 )); then
+      if is_timeout_exit_code "$rc"; then
+        warn_timeout "$book_dir" "m4b-tool merge (MP3)" "$CONVERT_TIMEOUT_SECS"
+      else
+        log "ERROR: m4b-tool merge (MP3) failed for: ${book_dir}"
+      fi
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
       rm -f "${tmp_path}" >/dev/null 2>&1 || true
@@ -832,8 +871,14 @@ while IFS= read -r -d '' book_dir; do
         continue
       fi
 
-      if ! ffmpeg -v error -stats -i "${in_file}" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart "${tmp_path}"; then
-        log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
+      timeout -k 30 "$CONVERT_TIMEOUT_SECS" ffmpeg -v error -stats -i "${in_file}" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart "${tmp_path}"
+      rc=$?
+      if (( rc != 0 )); then
+        if is_timeout_exit_code "$rc"; then
+          warn_timeout "$book_dir" "ffmpeg remux (M4A)" "$CONVERT_TIMEOUT_SECS"
+        else
+          log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
+        fi
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
         rm -f "${tmp_path}" >/dev/null 2>&1 || true
@@ -871,8 +916,14 @@ while IFS= read -r -d '' book_dir; do
         continue
       fi
 
-      if ! m4b-tool merge "${sorted_m4as[@]}" --output-file "${tmp_path}" "${audio_args[@]}"; then
-        log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
+      timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_m4as[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
+      rc=$?
+      if (( rc != 0 )); then
+        if is_timeout_exit_code "$rc"; then
+          warn_timeout "$book_dir" "m4b-tool merge (M4A)" "$CONVERT_TIMEOUT_SECS"
+        else
+          log "ERROR: m4b-tool merge (M4A) failed for: ${book_dir}"
+        fi
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
         rm -f "${tmp_path}" >/dev/null 2>&1 || true
@@ -939,8 +990,14 @@ while IFS= read -r -d '' book_dir; do
       continue
     fi
 
-    if ! m4b-tool merge "${sorted_m4bs[@]}" --output-file "${tmp_path}"; then
-      log "ERROR: m4b-tool merge (M4B) failed for: ${book_dir}"
+    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_m4bs[@]}" --output-file "${tmp_path}"
+    rc=$?
+    if (( rc != 0 )); then
+      if is_timeout_exit_code "$rc"; then
+        warn_timeout "$book_dir" "m4b-tool merge (M4B)" "$CONVERT_TIMEOUT_SECS"
+      else
+        log "ERROR: m4b-tool merge (M4B) failed for: ${book_dir}"
+      fi
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
       rm -f "${tmp_path}" >/dev/null 2>&1 || true
