@@ -6,7 +6,6 @@ services:
     networks:
       - matflix
     restart: unless-stopped
-    user: "1026:100"
     ports:
       - "8586:8080"
     labels:
@@ -17,6 +16,7 @@ services:
       # AUTH_PASSWORD: changeme
       # Set SECRET_KEY to a fixed value to survive restarts without /config volume
       # SECRET_KEY: changeme
+      # UID/GID the app runs as (adjust to match ownership of your mounted folders)
       PUID: 1026
       PGID: 100
     volumes:
