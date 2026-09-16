@@ -661,13 +661,13 @@ while IFS= read -r -d '' book_dir; do
       log "OUTPUT: ${out_path}"
 
       if is_dry_run; then
-        log "[DRY-RUN] ffmpeg -i \"${in_file}\" -c copy -movflags +faststart \"${tmp_path}\""
+        log "[DRY-RUN] ffmpeg -i \"${in_file}\" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart \"${tmp_path}\""
         created_count=$((created_count + 1))
         created_files+=("${out_path} (DRY-RUN, from single M4A)")
         continue
       fi
 
-      if ! ffmpeg -v error -stats -i "${in_file}" -c copy -movflags +faststart "${tmp_path}"; then
+      if ! ffmpeg -v error -stats -i "${in_file}" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart "${tmp_path}"; then
         log "ERROR: ffmpeg remux (M4A) failed for: ${book_dir}"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
