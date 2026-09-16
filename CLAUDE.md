@@ -74,6 +74,8 @@ docker compose up -d --build
 
 `m4b-tool` and `ffmpeg` are baked into the image via the `sandreas/m4b-tool` base — the bash script calls them directly, in-process. There's no Docker socket, no socket-proxy, and no helper containers.
 
+`entrypoint.sh` runs as root before dropping privileges: it adjusts the baked-in `m4brew` user/group to match `PUID`/`PGID` (default `1000`/`1000`), sets the process umask from `UMASK` (default `022`, i.e. `644` files — set `UMASK=000` for `666`), chowns `/app`, `/scripts` and `/config`, then `exec`s into the app via `su-exec`.
+
 ---
 
 ## Networking

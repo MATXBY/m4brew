@@ -18,6 +18,9 @@ services:
       # UID/GID the app runs as (adjust to match ownership of your mounted folders)
       PUID: 1026
       PGID: 100
+      # Umask for files the app creates, e.g. converted .m4b output (default 022 = 644 files).
+      # Must be quoted - YAML parses an unquoted leading-zero number as octal.
+      # UMASK: "000"
     volumes:
       - /mnt/remotes/192.168.4.4_media/Audiobooks:/DSM_Audiobooks:slave
       - /mnt/cache/media/Audiobooks:/Test_Folder:slave
