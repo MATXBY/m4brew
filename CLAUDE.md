@@ -66,14 +66,13 @@ docker compose up -d --build
 
 ## Services
 
-`docker-compose.yml` defines two services:
+`docker-compose.yml` defines a single service:
 
 | Service | Image | Purpose |
 |---------|-------|---------|
-| `m4brew` | Built from `./Dockerfile` | Flask web UI, port 8586→8080 |
-| `m4brew-socket-proxy` | `tecnativa/docker-socket-proxy` | Gates access to the Docker socket |
+| `m4brew` | Built from `./Dockerfile` (`FROM sandreas/m4b-tool:latest`) | Flask web UI + processing engine, port 8586→8080 |
 
-The bash script spawns helper containers (`sandreas/m4b-tool`, `linuxserver/ffmpeg`) via the socket proxy rather than mounting `/var/run/docker.sock` directly.
+`m4b-tool` and `ffmpeg` are baked into the image via the `sandreas/m4b-tool` base — the bash script calls them directly, in-process. There's no Docker socket, no socket-proxy, and no helper containers.
 
 ---
 
@@ -126,7 +125,7 @@ There is no npm, no asset compilation, and no test suite. The frontend is vanill
 ### Separation of Concerns
 
 - **`app/web.py`** — Flask server. Handles all HTTP routes, settings/history/job persistence, and spawns the bash script in a background thread.
-- **`scripts/m4brew.sh`** — Core processing engine. Runs in a subprocess; all audio work happens here via Docker-in-Docker. Emits a JSON summary line at the end that `web.py` parses.
+- **`scripts/m4brew.sh`** — Core processing engine. Runs in a subprocess inside the same container; calls the baked-in `m4b-tool`/`ffmpeg` binaries directly, in-process. Emits a JSON summary line at the end that `web.py` parses.
 - **`app/templates/`** — Jinja2 HTML templates. `base.html` contains the shared layout and theme bootstrap logic.
 - **`app/static/`** — CSS (including `theme.css` with 12 themes) and JS. `tasks.js` drives the live polling UI.
 
