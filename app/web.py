@@ -53,7 +53,7 @@ def _get_secret_key() -> str:
     return key
 
 
-APP_VERSION = "1.8.2"
+APP_VERSION = "1.9.0"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
@@ -180,12 +180,20 @@ def _scan_total(mode: str, root_folder: str) -> int:
         return n
 
     # convert
+    def _has(book_dir: Path, ext: str) -> bool:
+        return bool([p for p in book_dir.glob(f"*.{ext}") if not p.name.startswith("._")])
+
+    # MP3/FLAC/OPUS are all re-encoded into the M4B/AAC output the same way,
+    # so they all count as "has a re-encodable source" here (mirrors
+    # reencode_sources in scripts/m4brew.sh).
     n = 0
     for book_dir in book_dirs:
         m4bs = [p for p in book_dir.glob("*.m4b") if not (p.name.startswith("._") or p.name.startswith(".tmp_") or p.name.startswith("tmp_"))]
-        if len(m4bs) == 1 and not [p for p in book_dir.glob("*.mp3") if not p.name.startswith("._")] and not [p for p in book_dir.glob("*.m4a") if not p.name.startswith("._")]:
+        has_reencode_source = _has(book_dir, "mp3") or _has(book_dir, "flac") or _has(book_dir, "opus")
+        has_m4a = _has(book_dir, "m4a")
+        if len(m4bs) == 1 and not has_reencode_source and not has_m4a:
             continue  # already has single m4b, skip
-        if [p for p in book_dir.glob("*.mp3") if not p.name.startswith("._")] or [p for p in book_dir.glob("*.m4a") if not p.name.startswith("._")] or len(m4bs) > 1:
+        if has_reencode_source or has_m4a or len(m4bs) > 1:
             n += 1
     return n
 

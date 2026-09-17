@@ -18,7 +18,7 @@ DRY_RUN="${DRY_RUN:-true}"
 AUDIO_MODE_DEFAULT="match"
 AUDIO_MODE="${AUDIO_MODE:-$AUDIO_MODE_DEFAULT}"   # match | mono | stereo
 
-# Target bitrate for all MP3→M4B outputs (numeric kbps from env → append "k")
+# Target bitrate for all re-encoded (MP3/FLAC/OPUS) → M4B outputs (numeric kbps from env → append "k")
 BITRATE_DEFAULT="64"
 BITRATE="${BITRATE:-$BITRATE_DEFAULT}"
 if [[ "$BITRATE" != "match" ]]; then
@@ -205,8 +205,11 @@ extract_order_key() {
 
 # Fallback for files whose filename gives no usable order at all: read the
 # embedded track-number tag via ffprobe. ffmpeg normalizes ID3v2 TRCK (and
-# the M4A/M4B "trkn" atom) into the generic "track" format tag, but some
-# files expose it as a literal "TRCK" tag instead, so both are checked.
+# the M4A/M4B "trkn" atom, and FLAC's Vorbis-comment TRACKNUMBER) into the
+# generic "track" FORMAT tag, but some files expose it as a literal "TRCK"
+# tag instead, so both are checked. Opus (Ogg container) is the odd one out:
+# ffprobe surfaces its Vorbis-comment track tag as a STREAM tag instead of a
+# format tag, so that's checked as a second-pass fallback.
 # Handles both a bare number ("5") and "N/total" ("3/12" -> 3). Only used
 # when extract_order_key() found nothing - it's a fallback, not an override,
 # and is never asked to arbitrate between two filename-based guesses.
@@ -221,6 +224,14 @@ extract_id3_track_key() {
       "$filepath" 2>/dev/null | head -n 1)"
     [[ -n "$raw" ]] && break
   done
+  if [[ -z "$raw" ]]; then
+    for tag in track TRCK; do
+      raw="$(timeout -k 10 "$PROBE_TIMEOUT_SECS" ffprobe -v error \
+        -select_streams a:0 -show_entries "stream_tags=${tag}" -of default=noprint_wrappers=1:nokey=1 \
+        "$filepath" 2>/dev/null | head -n 1)"
+      [[ -n "$raw" ]] && break
+    done
+  fi
   [[ -z "$raw" ]] && { echo ""; return 0; }
 
   # "N/total" -> keep just N
@@ -404,6 +415,19 @@ detect_channels() {
   fi
 }
 
+# Build a "MP3+FLAC+OPUS"-style label from whichever re-encodable source
+# counts are actually present, for log/error messages that used to say
+# "MP3" unconditionally.
+reencode_format_label() {
+  local mp3_n="$1" flac_n="$2" opus_n="$3"
+  local -a parts=()
+  (( mp3_n > 0 ))  && parts+=("MP3")
+  (( flac_n > 0 )) && parts+=("FLAC")
+  (( opus_n > 0 )) && parts+=("OPUS")
+  local IFS='+'
+  echo "${parts[*]}"
+}
+
 # Resolve audio channels based on AUDIO_MODE policy
 resolve_channels() {
   local detected="$1"
@@ -480,7 +504,7 @@ resolve_bitrate() {
 ############################################
 START_EPOCH=$(date +%s)
 
-log "===== START MP3/M4A/M4B → M4B tool ====="
+log "===== START MP3/FLAC/OPUS/M4A/M4B → M4B tool ====="
 log "MODE=${MODE}"
 log "ROOT=${ROOT}"
 log "DRY_RUN=${DRY_RUN}"
@@ -634,7 +658,7 @@ fi
 ############################################
 log "MODE=convert: converting + backing up sources → _backup_files/"
 log "Policy:"
-log " - MP3s merged → re-encoded @ ${BITRATE}"
+log " - MP3/FLAC/OPUS merged → re-encoded @ ${BITRATE} (mixed sources in one book are merged together)"
 log " - M4As: single file remux (stream copy), multi-file merge @ ${BITRATE}"
 log " - M4Bs: multi-file merge (no re-encode) when part order is clear"
 log "Safety: If multi-file order isn't clear, the book is skipped with a warning (does not stop the batch)."
@@ -768,34 +792,44 @@ while IFS= read -r -d '' book_dir; do
 
   [[ "$author" == "#recycle" ]] && continue
 
-  # Gather source candidates
+  # Gather source candidates. MP3/FLAC/OPUS all need re-encoding into the
+  # M4B/AAC output regardless of source codec, so they're gathered
+  # separately but combined into one "reencode_sources" bucket below and
+  # merged together in a single pass (this is what makes a mixed book -
+  # e.g. one FLAC + one MP3 - work: both land in the same merge call).
   mapfile -d '' -t mp3s < <(gather_audio_files "$book_dir" "mp3" || true)
+  mapfile -d '' -t flacs < <(gather_audio_files "$book_dir" "flac" || true)
+  mapfile -d '' -t opuses < <(gather_audio_files "$book_dir" "opus" || true)
   mapfile -d '' -t m4as < <(gather_audio_files "$book_dir" "m4a" || true)
 
   # For m4b parts: EXCLUDE temp files
   mapfile -d '' -t m4bs < <(find "$book_dir" -maxdepth 1 -type f ! -name "._*" ! -name ".DS_Store" -iname "*.m4b" ! -iname ".tmp_*.m4b" ! -iname "tmp_*.m4b" -print0 2>/dev/null || true)
 
   mp3_count=${#mp3s[@]}
+  flac_count=${#flacs[@]}
+  opus_count=${#opuses[@]}
+  reencode_sources=("${mp3s[@]}" "${flacs[@]}" "${opuses[@]}")
+  reencode_count=${#reencode_sources[@]}
   m4a_count=${#m4as[@]}
   m4b_count=${#m4bs[@]}
 
   # Determine if this folder is "already done":
-  # - if it contains exactly ONE real .m4b and no mp3/m4a, we skip as already converted.
+  # - if it contains exactly ONE real .m4b and no re-encodable/m4a source, we skip as already converted.
   # - if it contains MULTIPLE .m4b, we treat as a merge candidate (new feature).
-  if (( m4b_count == 1 )) && (( mp3_count == 0 )) && (( m4a_count == 0 )); then
+  if (( m4b_count == 1 )) && (( reencode_count == 0 )) && (( m4a_count == 0 )); then
     log "SKIP (already has single m4b): ${book_dir}"
     skipped_count=$((skipped_count + 1))
     continue
   fi
 
   # If nothing usable, ignore silently
-  if (( mp3_count == 0 )) && (( m4a_count == 0 )) && (( m4b_count == 0 )); then
+  if (( reencode_count == 0 )) && (( m4a_count == 0 )) && (( m4b_count == 0 )); then
     continue
   fi
 
-  # If MP3 + M4A coexist, MP3 wins (as before)
-  if (( mp3_count > 0 )) && (( m4a_count > 0 )); then
-    log "INFO: Both MP3 and M4A found, using MP3s only → ${book_dir}"
+  # If MP3/FLAC/OPUS + M4A coexist, the re-encodable sources win (as before)
+  if (( reencode_count > 0 )) && (( m4a_count > 0 )); then
+    log "INFO: Both $(reencode_format_label "$mp3_count" "$flac_count" "$opus_count") and M4A found, using $(reencode_format_label "$mp3_count" "$flac_count" "$opus_count") only → ${book_dir}"
   fi
 
   out_name="${book} - ${author}.m4b"
@@ -816,53 +850,58 @@ while IFS= read -r -d '' book_dir; do
   log "BOOK:   ${book}"
   log "PATH:   ${book_dir}"
   log "MP3s:   ${mp3_count}"
+  log "FLACs:  ${flac_count}"
+  log "OPUS:   ${opus_count}"
   log "M4As:   ${m4a_count}"
   log "M4Bs:   ${m4b_count}"
 
   ##########################################
-  # Branch 1: MP3 → M4B
+  # Branch 1: MP3/FLAC/OPUS → M4B (all always re-encoded; a mixed book -
+  # e.g. one FLAC + one MP3 - merges them together in one pass)
   ##########################################
-  if (( mp3_count > 0 )); then
-    # Safety: if multiple MP3s and order unclear, warn + fail this book only
-    if (( mp3_count > 1 )); then
-      if ! order_is_clear "$book_dir" "${mp3s[@]}"; then
-        warn_order_unclear "$book_dir" "$mp3_count"
+  if (( reencode_count > 0 )); then
+    fmt_label="$(reencode_format_label "$mp3_count" "$flac_count" "$opus_count")"
+
+    # Safety: if multiple sources and order unclear, warn + fail this book only
+    if (( reencode_count > 1 )); then
+      if ! order_is_clear "$book_dir" "${reencode_sources[@]}"; then
+        warn_order_unclear "$book_dir" "$reencode_count"
         failed_count=$((failed_count + 1))
         failed_books+=("${book_dir}")
         continue
       fi
     fi
-      warn_gaps "$book_dir" "${mp3s[@]}"
+      warn_gaps "$book_dir" "${reencode_sources[@]}"
 
-    mapfile -d '' -t sorted_mp3s < <(sorted_files_for_book "$book_dir" "${mp3s[@]}")
+    mapfile -d '' -t sorted_sources < <(sorted_files_for_book "$book_dir" "${reencode_sources[@]}")
 
-    first_mp3="${sorted_mp3s[0]}"
-    detected="$(detect_channels "$first_mp3")"
+    first_source="${sorted_sources[0]}"
+    detected="$(detect_channels "$first_source")"
     channels="$(resolve_channels "$detected")"
 
     [[ "$channels" == "1" ]] && mode_desc="mono" || mode_desc="stereo"
-    log "MODE:   MP3 merge (${mode_desc} @ ${BITRATE})"
+    log "MODE:   ${fmt_label} merge (${mode_desc} @ ${BITRATE})"
     log "OUTPUT: ${out_path}"
-    (( mp3_count > 1 )) && log_planned_order "${sorted_mp3s[@]}"
+    (( reencode_count > 1 )) && log_planned_order "${sorted_sources[@]}"
 
-    effective_bitrate=$(resolve_bitrate "${BITRATE}" "${mp3s[@]}")
+    effective_bitrate=$(resolve_bitrate "${BITRATE}" "${reencode_sources[@]}")
     audio_args=(--audio-bitrate="${effective_bitrate}" --audio-channels="${channels}")
 
     if is_dry_run; then
-      log "[DRY-RUN] m4b-tool merge ${sorted_mp3s[*]@Q} --output-file \"${tmp_path}\" ${audio_args[*]}"
+      log "[DRY-RUN] m4b-tool merge ${sorted_sources[*]@Q} --output-file \"${tmp_path}\" ${audio_args[*]}"
       created_count=$((created_count + 1))
-      created_files+=("${out_path} (DRY-RUN, from MP3)")
+      created_files+=("${out_path} (DRY-RUN, from ${fmt_label})")
       continue
     fi
 
-    log "__M4B_MERGE_TOTAL__:${#sorted_mp3s[@]}"
-    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge -v "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
+    log "__M4B_MERGE_TOTAL__:${#sorted_sources[@]}"
+    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge -v "${sorted_sources[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
     rc=$?
     if (( rc != 0 )); then
       if is_timeout_exit_code "$rc"; then
-        warn_timeout "$book_dir" "m4b-tool merge (MP3)" "$CONVERT_TIMEOUT_SECS"
+        warn_timeout "$book_dir" "m4b-tool merge (${fmt_label})" "$CONVERT_TIMEOUT_SECS"
       else
-        log "ERROR: m4b-tool merge (MP3) failed for: ${book_dir}"
+        log "ERROR: m4b-tool merge (${fmt_label}) failed for: ${book_dir}"
       fi
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
@@ -871,7 +910,7 @@ while IFS= read -r -d '' book_dir; do
     fi
 
     if [[ ! -f "${tmp_path}" ]]; then
-      log "ERROR: temp m4b not created (MP3): ${tmp_path}"
+      log "ERROR: temp m4b not created (${fmt_label}): ${tmp_path}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
       continue
@@ -879,26 +918,30 @@ while IFS= read -r -d '' book_dir; do
 
     size_bytes=$(stat -c%s "${tmp_path}" 2>/dev/null || echo 0)
     if [[ "${size_bytes}" -lt "${MIN_BYTES}" ]]; then
-      log "ERROR: temp m4b too small (${size_bytes} bytes, MP3). Keeping MP3s. Temp stays: ${tmp_path}"
+      log "ERROR: temp m4b too small (${size_bytes} bytes, ${fmt_label}). Keeping source files. Temp stays: ${tmp_path}"
       failed_count=$((failed_count + 1))
       failed_books+=("${book_dir}")
       continue
     fi
 
     mv -f "${tmp_path}" "${out_path}"
-    log "OK: Created (from MP3) ${out_path}"
+    log "OK: Created (from ${fmt_label}) ${out_path}"
     created_count=$((created_count + 1))
     created_files+=("${out_path}")
 
     backup_dir="${book_dir}/_backup_files"
     if is_dry_run; then
       log "[DRY-RUN] mkdir -p \"${backup_dir}\""
-      log "[DRY-RUN] move *.mp3 → \"${backup_dir}/\""
+      (( mp3_count > 0 ))  && log "[DRY-RUN] move *.mp3 → \"${backup_dir}/\""
+      (( flac_count > 0 )) && log "[DRY-RUN] move *.flac → \"${backup_dir}/\""
+      (( opus_count > 0 )) && log "[DRY-RUN] move *.opus → \"${backup_dir}/\""
     else
       mkdir -p "${backup_dir}"
-      move_to_backup "${book_dir}" "mp3" "${backup_dir}"
+      (( mp3_count > 0 ))  && move_to_backup "${book_dir}" "mp3" "${backup_dir}"
+      (( flac_count > 0 )) && move_to_backup "${book_dir}" "flac" "${backup_dir}"
+      (( opus_count > 0 )) && move_to_backup "${book_dir}" "opus" "${backup_dir}"
     fi
-    log "MP3s moved to: ${backup_dir}/"
+    log "${fmt_label} moved to: ${backup_dir}/"
 
     continue
   fi

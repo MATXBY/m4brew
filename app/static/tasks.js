@@ -52,7 +52,7 @@
         { title: "TEST", tone: "test", lines: ["Preview how many books will be converted.", "No files are changed."] },
         { title: "RUN",  tone: "convert", lines: ["Begins the actual conversion process.", "Batch converts eligible folders into single, chapterised M4B files."] },
         { title: "CHAPTERS", lines: ["Chapters are defined by each source file.", "Each file becomes a chapter in the final M4B."] },
-        { title: "SUPPORTED FILE TYPES", lines: ["MP3 → M4B", "M4A → M4B (single or multiple files)", "M4B parts → merged M4B (when part order is clear)"] }
+        { title: "SUPPORTED FILE TYPES", lines: ["MP3 → M4B", "FLAC → M4B", "OPUS → M4B", "M4A → M4B (single or multiple files)", "M4B parts → merged M4B (when part order is clear)"] }
       ]
     },
 

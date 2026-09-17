@@ -169,7 +169,7 @@ GET      /about          About page
 
 ### Bash Script Modes
 
-- **Convert**: Multi-file MP3/M4A folders → single M4B with chapters, originals backed up to `_backup_files/`
+- **Convert**: Multi-file MP3/FLAC/OPUS/M4A folders → single M4B with chapters, originals backed up to `_backup_files/`
 - **Cleanup**: Remove `_backup_files/` directories left by prior conversions
 - **Correct**: Rename output M4Bs to "Book - Author.m4b" format
 
