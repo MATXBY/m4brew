@@ -8,7 +8,7 @@ M4Brew is a self-hosted, containerised web app for batch-converting audiobook fo
 
 **Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
 
-**Status:** v1.8.0 — actively maintained. Changes should be focused and conservative.
+**Status:** v1.9.0 — actively maintained. Changes should be focused and conservative.
 
 ---
 
@@ -61,6 +61,8 @@ docker compose up -d --build
 ```
 
 **Always use `--build`** when changing Python, templates, or static files — the container must be rebuilt. Template changes are not picked up without a rebuild (Flask caches them in memory).
+
+**Docker Hub publishing is automated.** Pushing to `main` with changes under `app/`, `scripts/`, `entrypoint.sh`, `Dockerfile` or `requirements.txt` triggers `.github/workflows/docker-publish.yml`, which reads the current `APP_VERSION` from `app/web.py`, builds the image, and pushes both that version tag and `latest` to `matxby/m4brew` on Docker Hub. There is no need to manually `docker push` after a version bump — just commit and push to `main`.
 
 ---
 
@@ -193,3 +195,4 @@ Version is set in one place: `app/web.py` → `APP_VERSION` constant. It is pass
 - Volume mounts that go through Unassigned Devices need `:slave` — forgetting this means the container sees an empty directory.
 - The SMB share at `/Volumes/m4brew` (Mac) maps directly to `/mnt/user/appdata/m4brew` (Unraid). Edits on either side are the same files.
 - There is no staging environment. Changes go straight to production on Unraid.
+- The GitHub repo also has a `legacy-toolbox` branch — the project's original pre-rewrite codebase (`m4b-toolbox`/`mp4-toolbox`, v0.1.0–v1.7.5), with no shared history with `main`. Kept for reference only; ignore it for anything active. `main` is and always has been the repo's default branch.
