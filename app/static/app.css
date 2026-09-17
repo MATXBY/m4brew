@@ -421,28 +421,28 @@ pre{
 }
 
 
-.step-label:hover::before,
-.status-pill:hover::before {
-  opacity: 1;
-}
-
 /* Adjust text to make room for icon */
 
-/* Hover info icon for clickable elements */
-.step-label::before,
-.status-pill::before {
-  content: "ⓘ";
+/* Hover info icon for clickable elements - a real element (not ::before),
+   so it can be its own click target, scoped separately from the pill's
+   own click behaviour (e.g. the status bar pill's expand/collapse). */
+.info-icon{
   position: absolute;
   left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
   opacity: 0;
   transition: opacity 0.2s ease;
   color: var(--font2);
   font-size: 14px;
-  pointer-events: none;
+  line-height: 1;
+  cursor: pointer;
 }
 
-.step-label:hover::before,
-.status-pill:hover::before {
+.step-label:hover .info-icon,
+.status-pill:hover .info-icon,
+.info-icon:hover,
+.info-icon:focus-visible {
   opacity: 1;
 }
 

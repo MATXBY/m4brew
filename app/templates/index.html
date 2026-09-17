@@ -35,7 +35,8 @@ Do NOT assume this file is standalone.
       <!-- STEP 1 -->
       <div class="task-row">
         <div class="task-group">
-          <div class="step-label" data-help="step-convert" role="button" tabindex="0" aria-label="More info: Step 1 Convert">
+          <div class="step-label">
+            <span class="info-icon" data-help="step-convert" role="button" tabindex="0" aria-label="More info: Step 1 Convert">ⓘ</span>
             <span class="step-strong">STEP 1:</span>&nbsp;<span class="step-rest">Convert to m4b</span>
           </div>
 
@@ -58,7 +59,8 @@ Do NOT assume this file is standalone.
       <!-- STEP 2 -->
       <div class="task-row">
         <div class="task-group">
-          <div class="step-label" data-help="step-rename" role="button" tabindex="0" aria-label="More info: Step 2 Rename">
+          <div class="step-label">
+            <span class="info-icon" data-help="step-rename" role="button" tabindex="0" aria-label="More info: Step 2 Rename">ⓘ</span>
             <span class="step-strong">STEP 2:</span>&nbsp;<span class="step-rest">Rename books</span>
           </div>
 
@@ -81,7 +83,8 @@ Do NOT assume this file is standalone.
       <!-- STEP 3 -->
       <div class="task-row">
         <div class="task-group">
-          <div class="step-label" data-help="step-delete" role="button" tabindex="0" aria-label="More info: Step 3 Delete">
+          <div class="step-label">
+            <span class="info-icon" data-help="step-delete" role="button" tabindex="0" aria-label="More info: Step 3 Delete">ⓘ</span>
             <span class="step-strong">STEP 3:</span>&nbsp;<span class="step-rest">Remove backups</span>
           </div>
 
@@ -108,7 +111,7 @@ Do NOT assume this file is standalone.
     <!-- STATUS + LIVE -->
     <div class="status-wrap">
       <div class="status-top" id="statusTop">
-        <div class="status-pill status-pill--outlined is-two-line" id="statusPill"><span class="pill-line1">Ready to Brew</span><span class="pill-line2" style="display:none;"></span></div>
+        <div class="status-pill status-pill--outlined is-two-line" id="statusPill"><span class="info-icon" data-help="status-bar" role="button" tabindex="0" aria-label="More info: Status bar">ⓘ</span><span class="pill-line1">Ready to Brew</span><span class="pill-line2" style="display:none;"></span></div>
       </div>
 
       <div id="liveWrap" class="live-wrap" style="display:none;">
@@ -126,10 +129,10 @@ Do NOT assume this file is standalone.
 
           <div class="live-row"><div class="live-k">Task</div><div class="live-v" id="lvTask">—</div></div>
           <div class="live-row"><div class="live-k">Book</div><div class="live-v" id="lvBook">—</div></div>
-          <div class="live-row"><div class="live-k">Progress</div><div class="live-v" id="lvProgress">—</div></div>
+          <div class="live-row"><div class="live-k">Total Books</div><div class="live-v" id="lvProgress">—</div></div>
+          <div class="live-row" id="lvMergeRow" style="display:none;"><div class="live-k">File Progress</div><div class="live-v" id="lvMergeBar">—</div></div>
           <div class="live-row"><div class="live-k">Runtime</div><div class="live-v" id="lvRuntime">—</div></div>
           <div class="live-row"><div class="live-k">Audio</div><div class="live-v" id="lvAudio">—</div></div>
-          <div class="live-row"><div class="live-k">Stage</div><div class="live-v" id="lvStage">—</div></div>
           <div class="live-row"><div class="live-k">Warnings</div><div class="live-v" id="lvWarn">—</div></div>
           <div class="live-row"><div class="live-k">Errors</div><div class="live-v" id="lvErr">—</div></div>
           <div class="live-row"><div class="live-k">Skipped</div><div class="live-v" id="lvSkip">—</div></div>
@@ -155,5 +158,5 @@ Do NOT assume this file is standalone.
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='tasks.js', v='1.3.3') }}"></script>
+<script src="{{ url_for('static', filename='tasks.js', v='1.4.2') }}"></script>
 {% endblock %}

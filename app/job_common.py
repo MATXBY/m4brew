@@ -9,6 +9,7 @@ are read and written.
 """
 import json
 import os
+import re
 import signal
 import subprocess
 import time
@@ -98,6 +99,18 @@ def append_history_record(record: Dict[str, Any]) -> None:
     records = read_history()
     records.append(record)
     write_history(records)
+
+
+# -------------------------
+# Per-book merge progress (m4b-tool merge -v)
+# -------------------------
+# m4b-tool merge -v redraws a line like this in place via \r while it works:
+#   "   3 remaining /    3 total, preparing next task |"
+# Python's universal-newlines text mode already treats a bare \r as a line
+# break when reading a subprocess pipe, so each redraw arrives as its own
+# "line" here - no special \r handling needed on the read side.
+MERGE_TOTAL_MARKER = "__M4B_MERGE_TOTAL__:"
+MERGE_PROGRESS_RE = re.compile(r"(\d+)\s*remaining\s*/\s*(\d+)\s*total")
 
 
 def parse_summary_from_output(output: str) -> Optional[Dict[str, Any]]:
@@ -284,6 +297,18 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
     current = 0
     total = int(job.get("total") or 0)
 
+    # Per-book merge progress (m4b-tool merge -v), reset on every new book -
+    # this is NOT the same as current/total above (that's the batch's book
+    # counter). merge_total == 0 means "no bar" (nothing to show yet, or
+    # DRY_RUN, which never runs a real merge).
+    merge_current = 0
+    merge_total = 0
+    # m4b-tool -v redraws its "N remaining / M total" counter via \r dozens
+    # of times per second (one per spinner frame). We track the last
+    # *persisted* remaining count here so job_output.log only gets a new
+    # line when a file actually finishes, not on every redraw tick.
+    last_merge_remaining: Optional[int] = None
+
     # initial job persist (only write if something actually changed)
     changed = False
     changed |= set_if_changed(job, "pid", proc.pid)
@@ -292,6 +317,8 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
     changed |= set_if_changed(job, "current", 0)
     changed |= set_if_changed(job, "current_book", "")
     changed |= set_if_changed(job, "current_path", "")
+    changed |= set_if_changed(job, "merge_current", 0)
+    changed |= set_if_changed(job, "merge_total", 0)
     if changed:
         _save(job)
 
@@ -321,17 +348,54 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
                 break
 
             line = raw if raw.endswith("\n") else raw + "\n"
-            write_line(line)
-
             s = strip_log_prefix(line)
+
+            # m4b-tool -v's redrawn progress line: parse EVERY occurrence
+            # (so the live UI stays responsive) but only persist a line to
+            # job_output.log when the remaining count actually changes -
+            # otherwise a multi-hour run floods the log with near-identical
+            # spinner-frame noise.
+            m = MERGE_PROGRESS_RE.search(s)
+            if m:
+                # Fail-safe: if m4b-tool's output format ever changes and
+                # this stops matching, we simply never enter this block -
+                # the job still completes normally, just without a bar.
+                try:
+                    remaining = int(m.group(1))
+                    line_total = int(m.group(2))
+                    effective_total = merge_total if merge_total > 0 else line_total
+                    merge_current = max(0, min(effective_total, effective_total - remaining))
+                    changed = False
+                    changed |= set_if_changed(job, "merge_current", merge_current)
+                    if merge_total <= 0 and line_total > 0:
+                        merge_total = line_total
+                        changed |= set_if_changed(job, "merge_total", merge_total)
+                    if changed:
+                        _save(job)
+
+                    if remaining != last_merge_remaining:
+                        last_merge_remaining = remaining
+                        write_line(f"{merge_current} of {effective_total} files merged\n")
+                except Exception:
+                    pass
+                continue
+
+            write_line(line)
 
             # your script prints a divider per-book
             if s.startswith("----------------------------------------"):
                 current += 1
+                # New book: the per-book merge bar resets until the next
+                # __M4B_MERGE_TOTAL__ marker (or non-merge mode) arrives.
+                merge_current = 0
+                merge_total = 0
+                last_merge_remaining = None
                 changed = False
                 changed |= set_if_changed(job, "current", current)
                 changed |= set_if_changed(job, "current_book", current_book)
                 changed |= set_if_changed(job, "current_path", current_path)
+                changed |= set_if_changed(job, "merge_current", merge_current)
+                changed |= set_if_changed(job, "merge_total", merge_total)
                 if changed:
                     _save(job)
                 continue
@@ -346,6 +410,22 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
                 current_path = s.split("PATH:", 1)[1].strip()
                 if set_if_changed(job, "current_path", current_path):
                     _save(job)
+                continue
+
+            if s.startswith(MERGE_TOTAL_MARKER):
+                # Fail-safe: a bad/unexpected value here just skips the
+                # update - never crash or hang the job over a progress line.
+                try:
+                    merge_total = int(s.split(MERGE_TOTAL_MARKER, 1)[1].strip())
+                    merge_current = 0
+                    last_merge_remaining = None
+                    changed = False
+                    changed |= set_if_changed(job, "merge_total", merge_total)
+                    changed |= set_if_changed(job, "merge_current", merge_current)
+                    if changed:
+                        _save(job)
+                except Exception:
+                    pass
                 continue
 
         # Wait for process to end (if we broke out due to cancel, it may still be dying)
@@ -393,6 +473,8 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
         changed |= set_if_changed(job, "current", current)
         changed |= set_if_changed(job, "current_book", current_book)
         changed |= set_if_changed(job, "current_path", current_path)
+        changed |= set_if_changed(job, "merge_current", 0)
+        changed |= set_if_changed(job, "merge_total", 0)
         changed |= set_if_changed(job, "pid", None)
         if changed:
             _save(job)
@@ -421,5 +503,7 @@ def run_job(job: Dict[str, Any], env: Dict[str, str]) -> None:
 
         job["runtime_s"] = runtime_s
         job["pid"] = None
+        job["merge_current"] = 0
+        job["merge_total"] = 0
         _save(job)
         write_line(f"\n[worker-error] {e}\n")

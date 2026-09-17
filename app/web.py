@@ -53,7 +53,7 @@ def _get_secret_key() -> str:
     return key
 
 
-APP_VERSION = "1.8.0"
+APP_VERSION = "1.8.2"
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _get_secret_key()
@@ -214,6 +214,8 @@ def start_job(mode: str, dry_run: bool, root_folder: str, audio_mode: str, bitra
         "total": total,
         "current_book": "",
         "current_path": "",
+        "merge_current": 0,
+        "merge_total": 0,
         "pid": None,
         "exit_code": None,
         "runtime_s": None,

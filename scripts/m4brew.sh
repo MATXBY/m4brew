@@ -855,7 +855,8 @@ while IFS= read -r -d '' book_dir; do
       continue
     fi
 
-    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
+    log "__M4B_MERGE_TOTAL__:${#sorted_mp3s[@]}"
+    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge -v "${sorted_mp3s[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
     rc=$?
     if (( rc != 0 )); then
       if is_timeout_exit_code "$rc"; then
@@ -964,7 +965,8 @@ while IFS= read -r -d '' book_dir; do
         continue
       fi
 
-      timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_m4as[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
+      log "__M4B_MERGE_TOTAL__:${#sorted_m4as[@]}"
+      timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge -v "${sorted_m4as[@]}" --output-file "${tmp_path}" "${audio_args[@]}"
       rc=$?
       if (( rc != 0 )); then
         if is_timeout_exit_code "$rc"; then
@@ -1038,7 +1040,8 @@ while IFS= read -r -d '' book_dir; do
       continue
     fi
 
-    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge "${sorted_m4bs[@]}" --output-file "${tmp_path}"
+    log "__M4B_MERGE_TOTAL__:${#sorted_m4bs[@]}"
+    timeout -k 30 "$CONVERT_TIMEOUT_SECS" m4b-tool merge -v "${sorted_m4bs[@]}" --output-file "${tmp_path}"
     rc=$?
     if (( rc != 0 )); then
       if is_timeout_exit_code "$rc"; then

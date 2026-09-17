@@ -14,7 +14,7 @@
     <div class="stack">
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-theme" role="button" tabindex="0" aria-label="More info: Theme">SELECT:&nbsp;Theme</span>
+        <span class="label-pill step-label"><span class="info-icon" data-help="select-theme" role="button" tabindex="0" aria-label="More info: Theme">ⓘ</span>SELECT:&nbsp;Theme</span>
         {% set th = (settings.get("theme", "dark") if settings else "dark") %}
         <select class="field" id="theme" name="theme" onchange="applyTheme(this.value)">
           <option value="dark" {% if th == "dark" %}selected{% endif %}>Modern Dark</option>
@@ -32,7 +32,7 @@
         </select>
       </div>
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-effect" role="button" tabindex="0" aria-label="More info: Effect">SELECT:&nbsp;Effect</span>
+        <span class="label-pill step-label"><span class="info-icon" data-help="select-effect" role="button" tabindex="0" aria-label="More info: Effect">ⓘ</span>SELECT:&nbsp;Effect</span>
         {% set ef = (settings.get("effect", "none") if settings else "none") %}
         <select class="field" id="effect" name="effect" onchange="applyEffect(this.value)">
           <option value="none" {% if ef == "none" %}selected{% endif %}>None</option>
@@ -42,7 +42,7 @@
         </select>
       </div>
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder">SELECT:&nbsp;Mapped folder</span>
+        <span class="label-pill step-label"><span class="info-icon" data-help="select-source" role="button" tabindex="0" aria-label="More info: Mapped folder">ⓘ</span>SELECT:&nbsp;Mapped folder</span>
         <input type="hidden" id="root_folder" name="root_folder" value="{{ settings.get('root_folder','') if settings else '' }}">
         <select class="field" id="root_mount_pick" aria-label="Pick from mapped folders">
           <option value="">Loading folders…</option>
@@ -50,7 +50,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks">SELECT:&nbsp;Audio tracks</span>
+        <span class="label-pill step-label"><span class="info-icon" data-help="select-audio" role="button" tabindex="0" aria-label="More info: Audio tracks">ⓘ</span>SELECT:&nbsp;Audio tracks</span>
         <select class="field" id="audio_mode" name="audio_mode">
           {% set am = (settings.get("audio_mode") if settings else "match") %}
           <option value="match" {% if am == "match" %}selected{% endif %}>Match source</option>
@@ -60,7 +60,7 @@
       </div>
 
       <div class="setting-row">
-        <span class="label-pill step-label" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate">SELECT:&nbsp;Bitrate (kbps)</span>
+        <span class="label-pill step-label"><span class="info-icon" data-help="select-bitrate" role="button" tabindex="0" aria-label="More info: Bitrate">ⓘ</span>SELECT:&nbsp;Bitrate (kbps)</span>
         {% set br = (settings.get("bitrate", 96) if settings else 96)|string %}
         <select class="field" id="bitrate" name="bitrate">
           <option value="match" {% if br == "match" %}selected{% endif %}>Match source</option>
@@ -185,6 +185,18 @@
         ] }
       ]
     },
+    "select-effect": {
+      title: "BACKGROUND EFFECT",
+      body: ["Add an animated background effect to the interface. Uses your current theme\u2019s colours."],
+      boxes: [
+        { title: "", lines: [
+          "NONE \u2014 clean, no animation",
+          "AURORA \u2014 drifting colour blobs",
+          "STARS \u2014 floating stars rising upward",
+          "UNDERWATER \u2014 wide sunbeams swaying through water"
+        ]}
+      ]
+    },
     "select-source": {
       title: "FOLDERS: LOCATION & STRUCTURE",
       body: [
@@ -212,18 +224,6 @@
       body: ["Choose your preferred audio bitrate."],
       boxes: [
         { title: "", lines: ["MATCH SOURCE \u2014 detects the highest source bitrate and matches it", "FIXED \u2014 choose a specific bitrate (32\u2013320 kbps)"] }
-      ]
-    },
-    "select-effect": {
-      title: "BACKGROUND EFFECT",
-      body: ["Add an animated background effect to the interface. Uses your current theme\u2019s colours."],
-      boxes: [
-        { title: "", lines: [
-          "NONE \u2014 clean, no animation",
-          "AURORA \u2014 drifting colour blobs",
-          "STARS \u2014 floating stars rising upward",
-          "UNDERWATER \u2014 wide sunbeams swaying through water"
-        ]}
       ]
     }
   };

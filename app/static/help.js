@@ -37,10 +37,13 @@ function initHelpModal(helpData) {
     overlay.setAttribute("aria-hidden", "true");
   }
 
+  // Each [data-help] trigger is the small ⓘ icon inside its pill/section,
+  // not the whole pill - stop the click here so it never bubbles up to a
+  // parent's own click handler (e.g. the status bar pill's expand/collapse).
   document.querySelectorAll("[data-help]").forEach(el => {
-    el.addEventListener("click", () => openHelp(el.getAttribute("data-help")));
+    el.addEventListener("click", e => { e.stopPropagation(); openHelp(el.getAttribute("data-help")); });
     el.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openHelp(el.getAttribute("data-help")); }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); openHelp(el.getAttribute("data-help")); }
     });
   });
 

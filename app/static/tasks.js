@@ -84,6 +84,17 @@
         { title: "RUN",  tone: "delete", lines: ["RUN permanently deletes those backup folders."] },
         { title: "SAFETY FIRST", lines: ["M4Brew only moves originals after a successful conversion.", "Delete only removes already-backed-up folders."] }
       ]
+    },
+
+    "status-bar": {
+      title: "STATUS BAR",
+      body: [],
+      boxes: [
+        { title: "SMART BAR", tone: "convert", lines: ["A live view of the current job's progress. Click to expand"] },
+        { title: "SIMPLE VIEW", tone: "rename", lines: ["The essentials while a job runs: task, book, and progress."] },
+        { title: "ADVANCED VIEW", tone: "delete", lines: ["In progress full logs. All the info as it happens."] },
+        { title: "ALL LOGS", lines: ["For complete logs for every job go to the History tab."] }
+      ]
     }
   };
 
@@ -104,7 +115,6 @@
   const lvProgress = document.getElementById("lvProgress");
   const lvRuntime = document.getElementById("lvRuntime");
   const lvAudio = document.getElementById("lvAudio");
-  const lvStage = document.getElementById("lvStage");
   const lvWarn = document.getElementById("lvWarn");
   const lvErr = document.getElementById("lvErr");
   const lvSkip = document.getElementById("lvSkip");
@@ -304,8 +314,33 @@
     setLiveUI();
   });
 
+  // Per-book merge progress (m4b-tool merge -v), shown as a plain
+  // "current/total" number - not job.current/job.total (the whole-batch
+  // book counter, out of scope here). Resets to "no row" for each new book
+  // until the next merge's total is known.
+  function renderMergeBar(job){
+    const row = document.getElementById("lvMergeRow");
+    const bar = document.getElementById("lvMergeBar");
+    if(!row || !bar) return;
+
+    const running = job && (job.status === "running" || job.status === "canceling");
+    const total = running ? Number(job.merge_total || 0) : 0;
+    const current = running ? Number(job.merge_current || 0) : 0;
+
+    if(!running || !(total > 0)){
+      row.style.display = "none";
+      return;
+    }
+
+    row.style.display = "";
+    const lit = Math.max(0, Math.min(total, current));
+    bar.textContent = lit + "/" + total;
+  }
+
   function updateLivePanel(job){
-    if(!lvTask || !lvBook || !lvProgress || !lvRuntime || !lvAudio || !lvStage || !lvWarn || !lvErr || !lvSkip) return;
+    if(!lvTask || !lvBook || !lvProgress || !lvRuntime || !lvAudio || !lvWarn || !lvErr || !lvSkip) return;
+
+    renderMergeBar(job);
 
     if(!job || !job.status || job.status === "none"){
       lvTask.textContent = "—";
@@ -313,7 +348,6 @@
       lvProgress.textContent = "—";
       lvRuntime.textContent = "—";
       lvAudio.textContent = "—";
-      lvStage.textContent = "—";
       lvWarn.textContent = "—";
       lvErr.textContent = "—";
       lvSkip.textContent = "—";
@@ -337,14 +371,6 @@
     if (job.runtime_s != null) seconds = Number(job.runtime_s);
     else if (job.started) seconds = runtimeFromStarted(job.started);
     const rt = (seconds != null) ? fmtRuntime(seconds) : "—";
-    const isAnalyzing = (total === 0);
-
-    const st = (job.status === "running")
-      ? (mode === "convert" ? "Converting"
-        : mode === "correct" ? "Renaming"
-        : mode === "cleanup" ? "Deleting"
-        : "Running")
-      : (job.status === "finished" ? "Finished" : String(job.status));
 
     const settings = job.settings || {};
     const amRaw = settings.audio_mode ? String(settings.audio_mode) : "—";
@@ -364,7 +390,6 @@
     lvProgress.textContent = progress;
     lvRuntime.textContent = rt;
     lvAudio.textContent = audio;
-    lvStage.textContent = st;
     lvWarn.textContent = warnings;
     lvErr.textContent = errors;
     lvSkip.textContent = skipped;
