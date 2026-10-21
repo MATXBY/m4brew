@@ -785,7 +785,7 @@ warn_gaps() {
   done
 }
 
-while IFS= read -r -d '' book_dir; do
+while IFS= read -r -u 3 -d '' book_dir; do
   author_dir="$(dirname "$book_dir")"
   author="$(basename "$author_dir")"
   book="$(basename "$book_dir")"
@@ -963,7 +963,7 @@ while IFS= read -r -d '' book_dir; do
         continue
       fi
 
-      timeout -k 30 "$CONVERT_TIMEOUT_SECS" ffmpeg -v error -stats -i "${in_file}" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart "${tmp_path}"
+      timeout -k 30 "$CONVERT_TIMEOUT_SECS" ffmpeg -nostdin -v error -stats -i "${in_file}" -map 0:a -c copy -max_muxing_queue_size 9999 -movflags +faststart "${tmp_path}"
       rc=$?
       if (( rc != 0 )); then
         if is_timeout_exit_code "$rc"; then
@@ -1138,7 +1138,7 @@ while IFS= read -r -d '' book_dir; do
   log "SKIP (unsupported mix or already has m4b parts state): ${book_dir}"
   skipped_count=$((skipped_count + 1))
 
-done < <(find "${ROOT}" -mindepth 2 -maxdepth 2 -type d -print0 2>/dev/null)
+done 3< <(find "${ROOT}" -mindepth 2 -maxdepth 2 -type d -print0 2>/dev/null)
 
 END_EPOCH=$(date +%s)
 RUNTIME=$((END_EPOCH - START_EPOCH))
