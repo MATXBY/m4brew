@@ -24,6 +24,12 @@ jobs:
           VERSION=$(grep -oP '(?<=APP_VERSION = ")[^"]+' app/web.py)
           echo "Detected version: $VERSION"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Check secrets (lengths only)
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: for v in DH_USER DH_TOKEN; do val="${!v}"; echo "$v len=${#val} odd_bytes=$(printf '%s' "$val" | LC_ALL=C tr -d '\041-\176' | wc -c) starts=${val:0:5}"; done
+
 
       - name: Log in to Docker Hub
         env:
