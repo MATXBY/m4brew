@@ -8,7 +8,7 @@ M4Brew is a self-hosted, containerised web app for batch-converting audiobook fo
 
 **Stack:** Flask (Python) web UI + Bash processing engine, deployed as a Docker container via `docker-compose.yml`.
 
-**Status:** v1.9.0 — actively maintained. Changes should be focused and conservative.
+**Status:** v1.9.1 — actively maintained. Changes should be focused and conservative.
 
 ---
 
