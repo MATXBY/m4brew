@@ -9,10 +9,11 @@ on:
       - 'entrypoint.sh'
       - 'Dockerfile'
       - 'requirements.txt'
+      - '.github/workflows/**'
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -25,10 +26,10 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: printf '%s' "$DH_TOKEN" | tr -d '[:space:]' | docker login -u "$(printf '%s' "$DH_USER" | tr -d '[:space:]')" --password-stdin
 
       - name: Build and push
         uses: docker/build-push-action@v5
